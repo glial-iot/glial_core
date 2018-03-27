@@ -16,6 +16,7 @@ config.MQTT_TOKEN = "trqspu69qcz7"
 
 config.HTTP_PORT = 8080
 
+config.IMPACT_URL = "https://impact.iot.nokia.com"
 
 local http_client = require('http.client')
 local http_server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})
@@ -29,7 +30,7 @@ local function create_mqtt_token(username, password, tenant, description)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
    local headers = { ['Content-Type'] = 'application/json', ['Accept'] = 'application/json', ['Authorization'] = basic}
    local data = {description = description, groupName = tenant, username = username}
-   local url = 'https://impact.iot.nokia.com/m2m/token/mqtt'
+   local url = config.IMPACT_URL..'/m2m/token/mqtt'
    local r = http_client.put(url, json.encode(data), { headers = headers })
    return r.body
 end
@@ -37,7 +38,7 @@ end
 local function get_tokens(username, password, tenant)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
    local headers_table = { ['Content-Type'] = 'application/json', ['Accept'] = 'application/json', ['Authorization'] = basic}
-   local url = 'https://impact.iot.nokia.com/m2m/token?groupName='..tenant
+   local url = config.IMPACT_URL..'/m2m/token?groupName='..tenant
    local r = http_client.get(url, { headers = headers_table })
    return r.body
 end
@@ -45,7 +46,7 @@ end
 local function delete_token(username, password, tenant, token)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
    local headers_table = { ['Content-Type'] = 'application/json', ['Accept'] = 'application/json', ['Authorization'] = basic}
-   local url = 'https://impact.iot.nokia.com/m2m/token?groupName='..tenant..'&token='..token
+   local url = config.IMPACT_URL..'/m2m/token?groupName='..tenant..'&token='..token
    local r = http_client.delete(url, { headers = headers_table })
    return r.body
 end
@@ -55,7 +56,7 @@ end
 local function get_my_subscriptions(username, password)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
    local headers_table = { ['Content-Type'] = 'application/json', ['Accept'] = 'application/json', ['Authorization'] = basic}
-   local url = 'https://impact.iot.nokia.com/m2m/mysubscriptions'
+   local url = config.IMPACT_URL..'/m2m/mysubscriptions'
    local r = http_client.get(url, { headers = headers_table })
    return r.body
 end
@@ -63,7 +64,7 @@ end
 local function delete_subscription(username, password, subscription_id)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
    local headers_table = { ['Content-Type'] = 'application/json', ['Accept'] = 'application/json', ['Authorization'] = basic}
-   local url = 'https://impact.iot.nokia.com/m2m/subscriptions/'..subscription_id
+   local url = config.IMPACT_URL..'/m2m/subscriptions/'..subscription_id
    local r = http_client.delete(url, { headers = headers_table })
    return r.body
 end
@@ -72,7 +73,7 @@ local function new_subscription(username, password, tenant, subscription_topic)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
    local headers_table = { ['Content-Type'] = 'application/json', ['Accept'] = 'application/json', ['Authorization'] = basic}
    local data = {deletionPolicy = 0, groupName = tenant, subscriptionType = "resources", resources = {{resourcePath = subscription_topic}}}
-   local url = 'https://impact.iot.nokia.com/m2m/subscriptions?type=resources'
+   local url = config.IMPACT_URL..'/m2m/subscriptions?type=resources'
    print(json.encode(data))
    local r = http_client.post(url, json.encode(data), { headers = headers_table })
    return r.body
@@ -90,7 +91,7 @@ local function set_rest_callback(username, password, callback_url)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
    local headers = { ['Content-Type'] = 'application/json', ['Accept'] = 'application/json', ['Authorization'] = basic}
    local data = {headers = {}, url = callback_url}
-   local url = 'https://impact.iot.nokia.com/m2m/applications/registration'
+   local url = config.IMPACT_URL..'/m2m/applications/registration'
    local r = http_client.put(url, json.encode(data), { headers = headers })
    return r.body
 end
@@ -192,7 +193,7 @@ if (mqtt_ok ~= true) then
    os.exit()
 end
 
-mqtt_conn:subscribe('trqspu69qcz7/SK_TEST_DEVICE2/temperature/0/sensorValue', 0)
+--mqtt_conn:subscribe('trqspu69qcz7/SK_TEST_DEVICE2/temperature/0/sensorValue', 0)
 mqtt_conn:on_message(mqtt_message)
 
 
