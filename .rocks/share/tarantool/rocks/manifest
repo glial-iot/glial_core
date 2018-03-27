@@ -1,0 +1,49 @@
+commands = {}
+dependencies = {
+   http = {
+      ["scm-1"] = {
+         {
+            constraints = {
+               {
+                  op = ">=",
+                  version = {
+                     5, 1, string = "5.1"
+                  }
+               }
+            },
+            name = "lua"
+         }
+      }
+   }
+}
+modules = {
+   ["http.codes"] = {
+      "http/scm-1"
+   },
+   ["http.lib"] = {
+      "http/scm-1"
+   },
+   ["http.mime_types"] = {
+      "http/scm-1"
+   },
+   ["http.server"] = {
+      "http/scm-1"
+   }
+}
+repository = {
+   http = {
+      ["scm-1"] = {
+         {
+            arch = "installed",
+            commands = {},
+            dependencies = {},
+            modules = {
+               ["http.codes"] = "http/codes.lua",
+               ["http.lib"] = "http/lib.so",
+               ["http.mime_types"] = "http/mime_types.lua",
+               ["http.server"] = "http/server.lua"
+            }
+         }
+      }
+   }
+}

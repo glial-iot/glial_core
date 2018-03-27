@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+   <meta name="description" content="">
+   <meta name="author" content="">
+   <link rel="icon" href="favicon.ico">
+
+   <title>Nokia IMPACT dashboard</title>
+
+   <!-- Bootstrap core CSS -->
+   <link href="bootstrap.min.css" rel="stylesheet">
+
+   <!-- Custom styles for this template -->
+   <link href="dashboard.css" rel="stylesheet">
+</head>
+
+<body>
+   <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Nokia IMPACT dashboard</a>
+   </nav>
+
+   <div class="container-fluid">
+      <div class="row">
+      <nav class="col-md-1 d-none d-md-block bg-light sidebar">
+            <div class="sidebar-sticky">
+               <ul class="nav flex-column">
+                  <li class="nav-item">
+                     <a class="nav-link active" href="/dashboard">
+                        <span data-feather="home"></span>Dashboard</a>
+                  </li>
+                  <li class="nav-item">
+                     <a class="nav-link" href="/dashboard-subscriptions">
+                        <span data-feather="file"></span>Subscriptions</a>
+                  </li>
+                  <li class="nav-item">
+                     <a class="nav-link" href="/dashboard-settings">
+                        <span data-feather="file"></span>Settings</a>
+                  </li>
+               </ul>
+            </div>
+         </nav>
+
+         <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-3 px-4">
+            <form>
+               <div class="row input-group">
+                  <div class="col-md-3 mb-1">
+                     <input type="text" class="form-control" id="input_device" value="SK_TEST_DEVICE">
+                  </div>
+                  <div class="col-md-4 mb-1">
+                     <input type="text" class="form-control" id="input_topic" value="temperature/0/sensorValue">
+                  </div>
+                  <div class="col-md-1 mb-1">
+                     <input type="text" class="form-control" id="input_value" value="22">
+                  </div>
+                  <div class="col-md-2 mb-1">
+                     <button type="button" id="send_button" class="btn btn-success">Send to MQTT-IMPACT</button>
+                  </div>
+               </div>
+
+            </form>
+            <br>
+            <h2>IMPACT callback data:</h2>
+            <div class="table-responsive">
+               <table class="table table-striped table-sm" id="table_values_impact">
+                  <thead>
+                     <tr>
+                        <th>resourcePath</th>
+                        <th>serialNumber</th>
+                        <th>subscriptionId</th>
+                        <th>timestamp</th>
+                        <th>value</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+               </table>
+            </div>
+
+
+         </main>
+      </div>
+   </div>
+
+   <!-- Bootstrap core JavaScript
+    ================================================== -->
+   <!-- Placed at the end of the document so the pages load faster -->
+   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"></script>
+   <script src="popper.min.js"></script>
+   <script src="bootstrap.min.js"></script>
+
+   <script>
+      var button_xhr = new XMLHttpRequest();
+
+      $('#send_button').on('click', function (event) {
+         var value = document.getElementById("input_value").value
+         var topic = document.getElementById("input_device").value + "/" + document.getElementById("input_topic").value
+         button_xhr.onreadystatechange = mqtt_result
+         button_xhr.open('POST', 'action?type=mqtt_send&value=' + value + '&topic=' + topic, true);
+         button_xhr.send()
+         $("#send_button").removeClass("btn-success").addClass("btn-warning");
+      });
+
+      function mqtt_result() {
+         if (button_xhr.readyState == 4 && button_xhr.status == 200) {
+            var json_data = JSON.parse(button_xhr.responseText);
+            console.log(json_data, button_xhr.responseText)
+            if (json_data.mqtt_result == true)
+               setTimeout(function () { $("#send_button").removeClass("btn-warning").addClass("btn-success"); }, 300);
+         }
+      }
+
+
+      var xhr_tmr = new XMLHttpRequest();
+      function update_field_callback() {
+         if (xhr_tmr.readyState == 4 && xhr_tmr.status == 200) {
+            var json_data = JSON.parse(xhr_tmr.responseText);
+            if (json_data.none_data != "true") {
+               var html_element = "<tr><td>" + json_data["0"].reports["0"].resourcePath + "</td><td>" + json_data["0"].reports["0"].serialNumber + "</td><td>" + json_data["0"].reports["0"].subscriptionId + "</td><td>" + json_data["0"].reports["0"].timestamp + "</td><td>" + json_data["0"].reports["0"].value + "</td></tr>"
+               var table = document.getElementById('table_values_impact');
+               table.rows[table.rows.length - 1].outerHTML += html_element
+            }
+         }
+      }
+
+      function timer_update_field() {
+         xhr_tmr.open('POST', 'data', true);
+         xhr_tmr.send()
+      }
+
+      xhr_tmr.onreadystatechange = update_field_callback
+      setInterval(timer_update_field, 1000);
+   </script>
+
+
+</body>
+
+</html>

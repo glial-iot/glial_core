@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+   <meta name="description" content="">
+   <meta name="author" content="">
+   <link rel="icon" href="favicon.ico">
+
+
+   <title>Nokia IMPACT dashboard</title>
+
+   <!-- Bootstrap core CSS -->
+   <link href="bootstrap.min.css" rel="stylesheet">
+
+   <!-- Custom styles for this template -->
+   <link href="dashboard.css" rel="stylesheet">
+</head>
+
+<body>
+   <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Nokia IMPACT dashboard</a>
+   </nav>
+
+   <div class="container-fluid">
+      <div class="row">
+         <nav class="col-md-1 d-none d-md-block bg-light sidebar">
+            <div class="sidebar-sticky">
+               <ul class="nav flex-column">
+                  <li class="nav-item">
+                     <a class="nav-link" href="/dashboard">
+                        <span data-feather="home"></span>Dashboard</a>
+                  </li>
+                  <li class="nav-item">
+                     <a class="nav-link active" href="/dashboard-subscriptions">
+                        <span data-feather="file"></span>Subscriptions</a>
+                  </li>
+                  <li class="nav-item">
+                     <a class="nav-link" href="/dashboard-settings">
+                        <span data-feather="file"></span>Settings</a>
+                  </li>
+               </ul>
+            </div>
+         </nav>
+
+         <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-3 px-4">
+
+            <form>
+               <div class="row input-group">
+                  <div class="col-md-4 mb-2">
+                     <input type="text" class="form-control" id="new_subscription_topic" value="temperature/0/sensorValue">
+                  </div>
+                  <div class="col-md-2 mb-2">
+                     <button type="button" id="new_subscription_button" class="btn btn-success">Subscribe IMPACT topic</button>
+                  </div>
+                  <div class="col-md-3 mb-2 offset-md-2">
+                     <button type="button" id="get_my_subscriptions_button" class="btn btn-primary">Update my subscriptions</button>
+                  </div>
+               </div>
+
+            </form>
+            <br>
+            <h2>My subscriptions:</h2>
+            <div class="table-responsive">
+               <table class="table table-striped table-sm" id="table_subscriptions" >
+               </table>
+            </div>
+
+
+         </main>
+      </div>
+   </div>
+
+   <!-- Bootstrap core JavaScript
+    ================================================== -->
+   <!-- Placed at the end of the document so the pages load faster -->
+   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"></script>
+   <script src="popper.min.js"></script>
+   <script src="bootstrap.min.js"></script>
+
+   <script>
+
+      var new_subscription_button_xhr = new XMLHttpRequest();
+      var delete_subscription_button_xhr = new XMLHttpRequest();
+      var get_my_subscriptions_button_xhr = new XMLHttpRequest();
+
+      function update_subscriptions_table() {
+         get_my_subscriptions_button_xhr.onreadystatechange = get_my_subscriptions_result
+         get_my_subscriptions_button_xhr.open('POST', 'action?type=get_my_subscriptions', true);
+         get_my_subscriptions_button_xhr.send()
+      }
+
+      function delete_subscription_by_id(id) {
+         delete_subscription_button_xhr.onreadystatechange = delete_subscription_result
+         delete_subscription_button_xhr.open('POST', 'action?type=delete_subscription&subscription_id=' + id, true);
+         delete_subscription_button_xhr.send()
+      }
+
+      $('#get_my_subscriptions_button').on('click', function (event) {
+         update_subscriptions_table()
+         $("#get_my_subscriptions_button").removeClass("btn-primary").addClass("btn-warning");
+      });
+
+      function get_my_subscriptions_result() {
+         if (get_my_subscriptions_button_xhr.readyState == 4 && get_my_subscriptions_button_xhr.status == 200) {
+            $("#get_my_subscriptions_button").removeClass("btn-warning").addClass("btn-primary");
+            var json_data = JSON.parse(get_my_subscriptions_button_xhr.responseText);
+            var table_html = "<thead><tr><th>dp</th><th>groupName</th><th>resourcePath</th><th>subscriptionId</th><th>delete</th></tr></thead><tbody>"
+
+            if (json_data.code != 4019) {
+               for (let index = 0; index < json_data.subscriptions.length; index++) {
+                  var button_html = '<button type="button" deleteid="' + json_data.subscriptions[index].subscriptionId + '" class="btn btn-sm btn-danger button_delete_sub_class">Delete</button>'
+
+                  table_html += "<tr><td>" + json_data.subscriptions[index].deletionPolicy + "</td><td>" + json_data.subscriptions[index].groupName + "</td><td>" + json_data.subscriptions[index].resources["0"].resourcePath + "</td><td>" + json_data.subscriptions[index].subscriptionId + "</td><td>" + button_html + '</td></tr>'
+               }
+            }
+            table_html += "</tbody>"
+            document.getElementById('table_subscriptions').innerHTML = table_html
+
+            $('.button_delete_sub_class').on('click', function (event) {
+               $(this).removeClass("btn-danger").addClass("btn-warning");
+               delete_subscription_by_id($(this).attr('deleteid'))
+            });
+         }
+      }
+
+
+      function delete_subscription_result() {
+         if (delete_subscription_button_xhr.readyState == 4 && delete_subscription_button_xhr.status == 200) {
+            if (JSON.parse(delete_subscription_button_xhr.responseText).code == 1000)
+               update_subscriptions_table()
+         }
+      }
+
+
+      $('#new_subscription_button').on('click', function (event) {
+         new_subscription_button_xhr.onreadystatechange = new_subscription_result
+         new_subscription_button_xhr.open('POST', 'action?type=new_subscription&subscription_topic=' + document.getElementById("new_subscription_topic").value, true);
+         new_subscription_button_xhr.send()
+         $("#new_subscription_button").removeClass("btn-success").addClass("btn-warning");
+      });
+
+      function new_subscription_result() {
+         if (new_subscription_button_xhr.readyState == 4 && new_subscription_button_xhr.status == 200) {
+            if (JSON.parse(new_subscription_button_xhr.responseText).code == 1000) {
+               update_subscriptions_table()
+               $("#new_subscription_button").removeClass("btn-warning").addClass("btn-success");
+            }
+         }
+      }
+
+
+
+
+
+
+   update_subscriptions_table()
+   </script>
+
+
+</body>
+
+</html>
