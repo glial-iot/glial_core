@@ -82,6 +82,42 @@
 
    <script>
 
+      HTMLTableRowElement.prototype.insertCell = (function (oldInsertCell) {
+         return function (index) {
+            if (this.parentElement.tagName.toUpperCase() == "THEAD") {
+               if (index < -1 || index > this.cells.length) {
+               } else {
+                  let th = document.createElement("TH");
+                  if (arguments.length == 0 || index == -1 || index == this.cells.length)
+                     return this.appendChild(th);
+                  else
+                     return this.insertBefore(th, this.children[index]);
+               }
+            }
+            return oldInsertCell.apply(this, arguments);
+         }
+      })(HTMLTableRowElement.prototype.insertCell);
+
+      function add_row_table(table_name, type, table_data) {
+         var table_current_row;
+         if (type == "head")
+            table_current_row = document.getElementById(table_name).createTHead().insertRow(-1);
+         else
+         {
+            if (document.getElementById(table_name).tBodies.length == 0)
+               table_current_row = document.getElementById(table_name).createTBody().insertRow(-1);
+            else
+               table_current_row = document.getElementById(table_name).tBodies[0].insertRow(-1);
+         }
+
+         for (var j = 0; j < table_data.length; j++)
+            table_current_row.insertCell(-1).innerHTML = table_data[j];
+      }
+
+      function clear_table(table_name) {
+         document.getElementById(table_name).innerHTML = "";
+      }
+
       var new_subscription_button_xhr = new XMLHttpRequest();
       var delete_subscription_button_xhr = new XMLHttpRequest();
       var get_my_subscriptions_button_xhr = new XMLHttpRequest();
@@ -107,18 +143,16 @@
          if (get_my_subscriptions_button_xhr.readyState == 4 && get_my_subscriptions_button_xhr.status == 200) {
             $("#get_my_subscriptions_button").removeClass("btn-warning").addClass("btn-primary");
             var json_data = JSON.parse(get_my_subscriptions_button_xhr.responseText);
-            var table_html = "<thead><tr><th>dp</th><th>groupName</th><th>resourcePath</th><th>subscriptionId</th><th>delete</th></tr></thead><tbody>"
+            clear_table("table_subscriptions")
+            add_row_table("table_subscriptions", "head", ["dp", "groupName", "resourcePath", "subscriptionId", "delete"])
 
             if (json_data.code != 4019) {
                for (let index = 0; index < json_data.subscriptions.length; index++) {
                   var button_html = '<button type="button" deleteid="' + json_data.subscriptions[index].subscriptionId + '" class="btn btn-sm btn-danger button_delete_sub_class">Delete</button>'
 
-                  table_html += "<tr><td>" + json_data.subscriptions[index].deletionPolicy + "</td><td>" + json_data.subscriptions[index].groupName + "</td><td>" + json_data.subscriptions[index].resources["0"].resourcePath + "</td><td>" + json_data.subscriptions[index].subscriptionId + "</td><td>" + button_html + '</td></tr>'
+                  add_row_table("table_subscriptions", "body", [json_data.subscriptions[index].deletionPolicy, json_data.subscriptions[index].groupName, json_data.subscriptions[index].resources["0"].resourcePath, json_data.subscriptions[index].subscriptionId, button_html] )
                }
             }
-            table_html += "</tbody>"
-            document.getElementById('table_subscriptions').innerHTML = table_html
-
             $('.button_delete_sub_class').on('click', function (event) {
                $(this).removeClass("btn-danger").addClass("btn-warning");
                delete_subscription_by_id($(this).attr('deleteid'))
