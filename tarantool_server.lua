@@ -24,7 +24,7 @@ local http_server = require('http.server').new(nil, config.HTTP_PORT, {charset =
 
 io.stdout:setvbuf("no")
 
-local impact_data = ""
+local impact_last_data = ""
 
 
 local function create_mqtt_token(username, password, tenant, description)
@@ -141,23 +141,24 @@ local function mqtt_message(message_id, topic, payload, gos, retain)
 	print("New message. Topic "..topic..", data: "..payload)
 end
 
-local function impact_rest_http_handler(req)
+local function impact_rest_http_catcher(req)
    local body = req:read({delimiter = nil, chunk = 1000}, 10)
-   local status, data = pcall(json.decode, body)
-   if (status == true and data ~= nil) then
-      impact_data = data
+   local status, json_decoded_data = pcall(json.decode, body)
+   if (status == true and json_decoded_data ~= nil) then
+      impact_last_data = json_decoded_data
+      impact_rest_handler(json_decoded_data)
    end
    return { status = 200 }
 end
 
 local function http_server_data_handler(req)
       local return_object
-      if (impact_data ~= "") then
-         return_object = req:render{ json = { impact_data } }
+      if (impact_last_data ~= "") then
+         return_object = req:render{ json = { impact_last_data } }
       else
          return_object = req:render{ json = { none_data = "true" } }
       end
-      impact_data = ""
+      impact_last_data = ""
       return return_object
 end
 
@@ -237,7 +238,7 @@ end
 mqtt_conn:on_message(mqtt_message)
 
 
-http_server:route({ path = '/impact_rest_endpoint' }, impact_rest_http_handler)
+http_server:route({ path = '/impact_rest_endpoint' }, impact_rest_http_catcher)
 http_server:route({ path = '/data' }, http_server_data_handler)
 http_server:route({ path = '/action' }, http_server_action_handler)
 
