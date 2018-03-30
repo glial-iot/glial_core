@@ -17,6 +17,7 @@ config.MQTT_TOKEN = "trqspu69qcz7"
 config.HTTP_PORT = 8080
 
 config.IMPACT_URL = "https://impact.iot.nokia.com"
+config.NOOLITE_URL = "http://192.168.1.222"
 
 local http_client = require('http.client')
 local http_server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})
@@ -94,6 +95,45 @@ local function set_rest_callback(username, password, callback_url)
    local url = config.IMPACT_URL..'/m2m/applications/registration'
    local r = http_client.put(url, json.encode(data), { headers = headers })
    return r.body
+end
+
+
+
+
+local function noolite_action(command, channel)
+   if command == "on" then command = 2
+   elseif command == "off" then command = 0
+   elseif command == "toggle" then command = 4
+   end
+
+   local url = config.NOOLITE_URL..'/api.htm?ch='..channel..'&cmd='..command
+   local r = http_client.get(url)
+   return r.body
+end
+
+
+local function impact_rest_handler(json_data)
+   --print(inspect(json_data.reports))
+   for i = 1, #json_data.reports do
+      local subscriptionId = json_data.reports[i].subscriptionId
+      local serialNumber = json_data.reports[i].serialNumber
+      local resourcePath = json_data.reports[i].resourcePath
+      local value = json_data.reports[i].value
+      print(subscriptionId, serialNumber, resourcePath, value)
+
+      if (serialNumber == "NOOLITE_SK_0" or serialNumber == "NOOLITE_SK_1") then
+         if (resourcePath == "action/0/light") then
+            if (value == "on" or value == "off" or value == "toggle") then
+               if (serialNumber == "NOOLITE_SK_0") then
+                  noolite_action(value, 0)
+               elseif (serialNumber == "NOOLITE_SK_1") then
+                  noolite_action(value, 1)
+               end
+            end
+         end
+      end
+
+   end
 end
 
 
