@@ -139,14 +139,19 @@
       }
 
       var xhr_tmr = new XMLHttpRequest();
-      add_row_table("table_values_impact", "head", ["resourcePath", "serialNumber", "subscriptionId", "timestamp", "value"])
+
 
       function update_field_callback() {
          if (xhr_tmr.readyState == 4 && xhr_tmr.status == 200) {
             var json_data = JSON.parse(xhr_tmr.responseText);
             if (json_data.none_data != "true") {
-               var data_table = json_data["0"].reports["0"]
-               add_row_table("table_values_impact", "body", [data_table.resourcePath, data_table.serialNumber, data_table.subscriptionId, data_table.timestamp, data_table.value])
+               console.log(json_data)
+               clear_table("table_values_impact")
+               add_row_table("table_values_impact", "head", ["resourcePath", "serialNumber", "subscriptionId", "timestamp", "value"])
+               for (let index = 0; index < json_data[0].length; index++) {
+
+                  add_row_table("table_values_impact", "body", [json_data[0][index].resourcePath, json_data[0][index].serialNumber, json_data[0][index].subscriptionId, json_data[0][index].timestamp, json_data[0][index].value])
+               }
             }
          }
       }

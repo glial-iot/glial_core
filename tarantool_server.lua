@@ -24,7 +24,7 @@ local http_server = require('http.server').new(nil, config.HTTP_PORT, {charset =
 
 io.stdout:setvbuf("no")
 
-local impact_last_data = ""
+local impact_last_data_object = {}
 
 
 local function create_mqtt_token(username, password, tenant, description)
@@ -113,13 +113,20 @@ end
 
 
 local function impact_rest_handler(json_data)
-   --print(inspect(json_data.reports))
    for i = 1, #json_data.reports do
       local subscriptionId = json_data.reports[i].subscriptionId
       local serialNumber = json_data.reports[i].serialNumber
       local resourcePath = json_data.reports[i].resourcePath
       local value = json_data.reports[i].value
-      print(subscriptionId, serialNumber, resourcePath, value)
+      local timestamp = json_data.reports[i].timestamp
+
+      local last_num = #impact_last_data_object
+      impact_last_data_object[last_num+1]={}
+      impact_last_data_object[last_num+1].subscriptionId = subscriptionId
+      impact_last_data_object[last_num+1].serialNumber = serialNumber
+      impact_last_data_object[last_num+1].resourcePath = resourcePath
+      impact_last_data_object[last_num+1].value = value
+      impact_last_data_object[last_num+1].timestamp = timestamp
 
       if (serialNumber == "NOOLITE_SK_0" or serialNumber == "NOOLITE_SK_1") then
          if (resourcePath == "action/0/light") then
@@ -145,7 +152,6 @@ local function impact_rest_http_catcher(req)
    local body = req:read({delimiter = nil, chunk = 1000}, 10)
    local status, json_decoded_data = pcall(json.decode, body)
    if (status == true and json_decoded_data ~= nil) then
-      impact_last_data = json_decoded_data
       impact_rest_handler(json_decoded_data)
    end
    return { status = 200 }
@@ -153,12 +159,11 @@ end
 
 local function http_server_data_handler(req)
       local return_object
-      if (impact_last_data ~= "") then
-         return_object = req:render{ json = { impact_last_data } }
+      if (#impact_last_data_object > 0) then
+         return_object = req:render{ json = { impact_last_data_object } }
       else
          return_object = req:render{ json = { none_data = "true" } }
       end
-      impact_last_data = ""
       return return_object
 end
 
