@@ -5,6 +5,8 @@ local inspect = require 'inspect'
 local json = require 'json'
 local base64 = require 'base64'
 local fiber = require 'fiber'
+local box = box
+local impact_reports, settings
 
 local config = {}
 config.MQTT_IMPACT_HOST = "impact.iot.nokia.com"
@@ -27,8 +29,6 @@ local http_client = require('http.client')
 local http_server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})
 
 io.stdout:setvbuf("no")
-
-local impact_last_data_object = {}
 
 
 local function create_mqtt_token(username, password, tenant, description)
@@ -124,13 +124,7 @@ local function impact_rest_handler(json_data)
       local value = json_data.reports[i].value
       local timestamp = json_data.reports[i].timestamp
 
-      local last_num = #impact_last_data_object
-      impact_last_data_object[last_num+1]={}
-      impact_last_data_object[last_num+1].subscriptionId = subscriptionId
-      impact_last_data_object[last_num+1].serialNumber = serialNumber
-      impact_last_data_object[last_num+1].resourcePath = resourcePath
-      impact_last_data_object[last_num+1].value = value
-      impact_last_data_object[last_num+1].timestamp = timestamp
+      impact_reports:insert{nil, timestamp, subscriptionId, serialNumber, resourcePath, value}
 
       if (serialNumber == "NOOLITE_SK_0" or serialNumber == "NOOLITE_SK_1") then
          if (resourcePath == "action/0/light") then
@@ -166,13 +160,26 @@ local function impact_rest_http_catcher(req)
    return { status = 200 }
 end
 
+
 local function http_server_data_handler(req)
       local return_object
-      if (#impact_last_data_object > 0) then
-         return_object = req:render{ json = { impact_last_data_object } }
+      local tarantool_data = box.space.impact_reports:select{}
+
+      if (#tarantool_data > 0) then
+         local impact_data_object = {}
+         for i = 1, #tarantool_data do
+            impact_data_object[i] = {}
+            impact_data_object[i].resourcePath = tarantool_data[i][5]
+            impact_data_object[i].serialNumber = tarantool_data[i][4]
+            impact_data_object[i].subscriptionId = tarantool_data[i][3]
+            impact_data_object[i].timestamp = tarantool_data[i][2]
+            impact_data_object[i].value = tarantool_data[i][6]
+         end
+         return_object = req:render{ json = { impact_data_object } }
       else
          return_object = req:render{ json = { none_data = "true" } }
       end
+
       return return_object
 end
 
@@ -261,5 +268,32 @@ http_server:route({ path = '/' }, http_server_root_handler)
 http_server:route({ path = '/dashboard', file = 'dashboard.html' })
 http_server:route({ path = '/dashboard-subscriptions', file = 'dashboard-subscriptions.html' })
 http_server:route({ path = '/dashboard-settings', file = 'dashboard-settings.html' })
+
+
+
+box.cfg { listen = 3313 }
+
+if (box.space.impact_reports == nil) then
+   impact_reports = box.schema.space.create('impact_reports')
+   box.schema.sequence.create("impact_reports_sequence")
+   impact_reports:create_index('index', {sequence="impact_reports_sequence"})
+   impact_reports:create_index('timestamp', {type = 'tree', unique = false, parts = {2, 'unsigned'} })
+
+   settings = box.schema.space.create('settings')
+   settings:create_index('key', { parts = {1, 'string'} })
+
+   box.schema.user.grant('guest', 'read,write,execute', 'universe')
+else
+   impact_reports = box.space.impact_reports
+   settings = box.space.settings
+end
+
+--http_server_data_handler()
+
+--print(inspect(impact_reports.index.timestamp:min{100}))
+-- settings:insert{"token","test_token"}
+--print(inspect(settings.index.key:min{"test_token"}))
+
+
 
 http_server:start()
