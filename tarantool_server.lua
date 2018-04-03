@@ -1,18 +1,22 @@
 #!/usr/bin/env tarantool
 local mqtt = require 'mqtt'
-local mqtt_conn
+local mqtt_impact, mqtt_wb
 local inspect = require 'inspect'
 local json = require 'json'
 local base64 = require 'base64'
 local fiber = require 'fiber'
 
 local config = {}
-config.MQTT_HOST = "impact.iot.nokia.com"
-config.MQTT_PORT = 1883
-config.MQTT_LOGIN = "TEST_USER"
-config.MQTT_PASSWORD = "0wYlg9KJ5E+ksmvt7l2mU6ucSSo/WjRDCdCgd2pQpF0="
-config.MQTT_ID = "impact_tarantool_client"
-config.MQTT_TOKEN = "trqspu69qcz7"
+config.MQTT_IMPACT_HOST = "impact.iot.nokia.com"
+config.MQTT_IMPACT_PORT = 1883
+config.MQTT_IMPACT_LOGIN = "TEST_USER"
+config.MQTT_IMPACT_PASSWORD = "0wYlg9KJ5E+ksmvt7l2mU6ucSSo/WjRDCdCgd2pQpF0="
+config.MQTT_IMPACT_ID = "impact_tarantool_client"
+config.MQTT_IMPACT_TOKEN = "trqspu69qcz7"
+
+config.MQTT_WIRENBOARD_HOST = "192.168.1.59"
+config.MQTT_WIRENBOARD_PORT = 1883
+config.MQTT_WIRENBOARD_ID = "tarantool_client"
 
 config.HTTP_PORT = 8080
 
@@ -140,12 +144,17 @@ local function impact_rest_handler(json_data)
          end
       end
 
+      if (serialNumber == "WB") then
+         if (resourcePath == "action/0/buzzer") then
+            if (value == "on") then
+               mqtt_wb:publish("/devices/buzzer/controls/enabled/on", 1, mqtt.QOS_0, mqtt.NON_RETAIN)
+            elseif (value == "off") then
+               mqtt_wb:publish("/devices/buzzer/controls/enabled/on", 0, mqtt.QOS_0, mqtt.NON_RETAIN)
+            end
+         end
+      end
+
    end
-end
-
-
-local function mqtt_message(message_id, topic, payload, gos, retain)
-	print("New message. Topic "..topic..", data: "..payload)
 end
 
 local function impact_rest_http_catcher(req)
@@ -174,7 +183,7 @@ local function http_server_action_handler(req)
       if (type_param == "mqtt_send") then
          local value_param, topic_param = req:param("value"), req:param("topic")
          if (value_param == nil or topic_param == nil) then return nil end
-         local ok, err = mqtt_conn:publish(config.MQTT_TOKEN.."/"..topic_param, value_param, mqtt.QOS_0, mqtt.NON_RETAIN)
+         local ok, err = mqtt_impact:publish(config.MQTT_IMPACT_TOKEN.."/"..topic_param, value_param, mqtt.QOS_0, mqtt.NON_RETAIN)
          if ok then
             print(ok, err)
          end
@@ -226,27 +235,27 @@ local function set_callback()
    print("local url: "..url)
    print(set_rest_callback("test_user", "test_pass1", url))
 end
-
-
 fiber.create(set_callback)
 
-mqtt_conn = mqtt.new(config.MQTT_ID, true)
-mqtt_conn:login_set(config.MQTT_LOGIN, config.MQTT_PASSWORD)
-local mqtt_ok, mqtt_err = mqtt_conn:connect({host=config.MQTT_HOST,port=config.MQTT_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
-print(inspect(mqtt_ok,mqtt_err))
+mqtt_impact = mqtt.new(config.MQTT_IMPACT_ID, true)
+mqtt_impact:login_set(config.MQTT_IMPACT_LOGIN, config.MQTT_IMPACT_PASSWORD)
+local mqtt_ok, mqtt_err = mqtt_impact:connect({host=config.MQTT_IMPACT_HOST,port=config.MQTT_IMPACT_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
 if (mqtt_ok ~= true) then
    print ("Error mqtt: "..(mqtt_err or "No error"))
    os.exit()
 end
 
---mqtt_conn:subscribe('trqspu69qcz7/SK_TEST_DEVICE2/temperature/0/sensorValue', 0)
-mqtt_conn:on_message(mqtt_message)
+mqtt_wb = mqtt.new(config.MQTT_WIRENBOARD_ID, true)
+mqtt_ok, mqtt_err = mqtt_wb:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
+if (mqtt_ok ~= true) then
+   print ("Error mqtt: "..(mqtt_err or "No error"))
+   os.exit()
+end
 
 
 http_server:route({ path = '/impact_rest_endpoint' }, impact_rest_http_catcher)
 http_server:route({ path = '/data' }, http_server_data_handler)
 http_server:route({ path = '/action' }, http_server_action_handler)
-
 
 http_server:route({ path = '/' }, http_server_root_handler)
 http_server:route({ path = '/dashboard', file = 'dashboard.html' })
