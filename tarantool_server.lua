@@ -125,14 +125,15 @@ local function impact_rest_handler(json_data)
 
       impact_reports:insert{nil, timestamp, subscriptionId, serialNumber, resourcePath, value}
 
-      if (serialNumber == "NOOLITE_SK_0" or serialNumber == "NOOLITE_SK_1") then
-         if (resourcePath == "action/0/light") then
-            if (value == "on" or value == "off" or value == "toggle") then
-               if (serialNumber == "NOOLITE_SK_0") then
-                  noolite_action(value, 0)
-               elseif (serialNumber == "NOOLITE_SK_1") then
-                  noolite_action(value, 1)
-               end
+      if (resourcePath == "action/0/light") then
+         if (value == "on" or value == "off") then
+            if value == "on" then value = 1
+            elseif value == "off" then value = 0
+            end
+            if (serialNumber == "NOOLITE_SK_0") then
+               mqtt.wb:publish("/devices/noolite_tx_0x290/controls/state/on", value, mqtt.QOS_0, mqtt.NON_RETAIN)
+            elseif (serialNumber == "NOOLITE_SK_1") then
+               mqtt.wb:publish("/devices/noolite_tx_0x291/controls/state/on", value, mqtt.QOS_0, mqtt.NON_RETAIN)
             end
          end
       end
