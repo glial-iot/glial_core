@@ -163,18 +163,19 @@ end
 
 local function http_server_data_handler(req)
       local return_object
-      local tarantool_data = box.space.impact_reports:select{}
+      local impact_data_object, i = {}, 0
 
-      if (#tarantool_data > 0) then
-         local impact_data_object = {}
-         for i = 1, #tarantool_data do
-            impact_data_object[i] = {}
-            impact_data_object[i].resourcePath = tarantool_data[i][5]
-            impact_data_object[i].serialNumber = tarantool_data[i][4]
-            impact_data_object[i].subscriptionId = tarantool_data[i][3]
-            impact_data_object[i].timestamp = tarantool_data[i][2]
-            impact_data_object[i].value = tarantool_data[i][6]
-         end
+      for _, tuple in impact_reports.index.timestamp:pairs(nil, { iterator = box.index.REQ}) do
+         i = i + 1
+         impact_data_object[i] = {}
+         impact_data_object[i].timestamp = tuple[2]
+         impact_data_object[i].subscriptionId = tuple[3]
+         impact_data_object[i].serialNumber = tuple[4]
+         impact_data_object[i].resourcePath = tuple[5]
+         impact_data_object[i].value = tuple[6]
+      end
+
+      if (i > 0) then
          return_object = req:render{ json = { impact_data_object } }
       else
          return_object = req:render{ json = { none_data = "true" } }
