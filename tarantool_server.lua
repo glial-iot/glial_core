@@ -273,21 +273,14 @@ http_server:route({ path = '/dashboard-settings', file = 'dashboard-settings.htm
 
 
 box.cfg { listen = 3313 }
+box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
+impact_reports = box.schema.space.create('impact_reports', {if_not_exists = true})
+box.schema.sequence.create("impact_reports_sequence", {if_not_exists = true})
+impact_reports:create_index('index', {sequence="impact_reports_sequence", if_not_exists = true})
+impact_reports:create_index('timestamp', {type = 'tree', unique = false, parts = {2, 'unsigned'}, if_not_exists = true })
 
-if (box.space.impact_reports == nil) then
-   impact_reports = box.schema.space.create('impact_reports')
-   box.schema.sequence.create("impact_reports_sequence")
-   impact_reports:create_index('index', {sequence="impact_reports_sequence"})
-   impact_reports:create_index('timestamp', {type = 'tree', unique = false, parts = {2, 'unsigned'} })
-
-   settings = box.schema.space.create('settings')
-   settings:create_index('key', { parts = {1, 'string'} })
-
-   box.schema.user.grant('guest', 'read,write,execute', 'universe')
-else
-   impact_reports = box.space.impact_reports
-   settings = box.space.settings
-end
+settings = box.schema.space.create('settings', {if_not_exists = true})
+settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
 
 --http_server_data_handler()
 
