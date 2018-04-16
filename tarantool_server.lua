@@ -17,21 +17,6 @@ io.stdout:setvbuf("no")
 
 
 
-
-
-
-local function noolite_action(command, channel)
-   if command == "on" then command = 2
-   elseif command == "off" then command = 0
-   elseif command == "toggle" then command = 4
-   end
-
-   local url = config.NOOLITE_URL..'/api.htm?ch='..channel..'&cmd='..command
-   local r = http_client.get(url)
-   return r.body
-end
-
-
 local function impact_rest_handler(json_data)
    for i = 1, #json_data.reports do
       local subscriptionId = json_data.reports[i].subscriptionId
