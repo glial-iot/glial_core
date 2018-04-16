@@ -100,8 +100,8 @@ local function http_server_action_handler(req)
          return req:render{ json = { mqtt_result = ok } }
       end
       if (type_param == "get_token") then
-         --local answer = create_mqtt_token("test_user", "test_pass1", "test_tenant", "test_token2")
-         local answer = get_tokens("test_user", "test_pass1", "test_tenant")
+         --local answer = impact.create_mqtt_token("test_user", "test_pass1", "test_tenant", "test_token2")
+         local answer = impact.get_tokens("test_user", "test_pass1", "test_tenant")
 
          local return_object = req:render{ json = { data = answer } }
          return return_object
@@ -114,17 +114,17 @@ local function http_server_action_handler(req)
 
       end
       if (type_param == "get_my_subscriptions") then
-         local answer = get_my_subscriptions("test_user", "test_pass1")
+         local answer = impact.get_my_subscriptions("test_user", "test_pass1")
          --local return_object = req:render{ json = { data = answer } }
          return {status = 200, body = answer}
       end
 
       if (type_param == "delete_subscription") then
-         local answer = delete_subscription("test_user", "test_pass1", req:param("subscription_id"))
+         local answer = impact.delete_subscription("test_user", "test_pass1", req:param("subscription_id"))
          return {status = 200, body = answer}
       end
       if (type_param == "new_subscription") then
-         local answer = new_subscription("test_user", "test_pass1", "test_tenant", req:param("subscription_topic"))
+         local answer = impact.new_subscription("test_user", "test_pass1", "test_tenant", req:param("subscription_topic"))
          return {status = 200, body = answer}
       end
       return nil
@@ -142,8 +142,7 @@ local function set_callback()
    local r = http_client.get(ngrock_url_api)
    local data = json.decode(r.body)
    local url = data.tunnels[1].public_url.."/impact_rest_endpoint"
-   print("local url: "..url)
-   print(set_rest_callback("test_user", "test_pass1", url))
+   print("local url: "..url, impact.set_rest_callback("test_user", "test_pass1", url))
 end
 fiber.create(set_callback)
 
