@@ -282,9 +282,7 @@ impact_reports:create_index('timestamp', {type = 'tree', unique = false, parts =
 settings = box.schema.space.create('settings', {if_not_exists = true})
 settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
 
---http_server_data_handler()
 
---print(inspect(impact_reports.index.timestamp:min{100}))
 -- settings:insert{"token","test_token"}
 --print(inspect(settings.index.key:min{"test_token"}))
 
