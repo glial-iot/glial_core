@@ -220,6 +220,7 @@ mqtt.wb:subscribe('/devices/wb-mr6c_105/controls/Input 0 counter', 0)
 mqtt.wb:subscribe('/devices/wb-adc/controls/Vin', 0)
 mqtt.wb:subscribe('/devices/system/controls/Current uptime', 0)
 
+mqtt.wb:subscribe('/devices/vaisala/data', 0)
 
 http_server:route({ path = '/data_dashboard' }, http_server_data_dashboard_handler)
 http_server:route({ path = '/data' }, http_server_data_handler)
