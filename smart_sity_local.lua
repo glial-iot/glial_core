@@ -141,6 +141,7 @@ local function http_server_html_handler(req)
                         --{href = "/weather", name="Weather"},
                         {href = "/water", name="Water"},
                         {href = "/power", name="Power"},
+                        {href = "/vaisala", name="Vaisala"},
                         --{href = "/dashboard-subscriptions", name="Subscriptions"},
                         --{href = "/dashboard-settings", name="Settings"}
                      }, {}
@@ -246,7 +247,7 @@ http_server:route({ path = '/power', file = 'power.html' }, http_server_html_han
 http_server:route({ path = '/water', file = 'water.html' }, http_server_html_handler)
 http_server:route({ path = '/weather', file = 'weather.html' }, http_server_html_handler)
 http_server:route({ path = '/light', file = 'light.html' }, http_server_html_handler)
-
+http_server:route({ path = '/vaisala', file = 'vaisala.html' }, http_server_html_handler)
 
 --local table = impact_reports.index.serialNumber:select({'Ch 1 P L1'}, {limit = 5, iterator = 'REQ'})
 --print(inspect(table))
