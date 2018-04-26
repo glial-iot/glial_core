@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+
+
+    <title>Nokia IMPACT dashboard</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+        <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Nokia IMPACT dashboard</a>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-1 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        % for i,v in pairs(menu) do
+                        <li class="nav-item">
+                            <a class="nav-link<%= " "..(v.class or " ") %>" href="<%= v.href or " /# " %>">
+                                <span data-feather="file"></span>
+                                <%= v.name or "No name" %>
+                            </a>
+                        </li>
+                        % end
+                    </ul>
+                </div>
+            </nav>
+
+            <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-3 px-4">
+
+                <form>
+                    <div class="row input-group">
+                        <div class="col-md-11 mb-1">
+                            <button type="button" action-button="on_light_1" class="btn btn-success btn-action">On light 1</button>
+                            <button type="button" action-button="off_light_1" class="btn btn-success btn-action">Off light 1</button>
+                            <button type="button" action-button="on_light_2" class="btn btn-success btn-action">On light 2</button>
+                            <button type="button" action-button="off_light_2" class="btn btn-success btn-action">Off light 2</button>
+                        </div> <br>
+                        <div class="col-md-11 mb-1">
+                            <button type="button" action-button="on_ac" class="btn btn-success btn-action">On AC</button>
+                            <button type="button" action-button="off_ac" class="btn btn-success btn-action">Off AC</button>
+                        </div> <br>
+                        <div class="col-md-11 mb-1">
+                            <button type="button" action-button="on_fan" class="btn btn-success btn-action">On fan</button>
+                            <button type="button" action-button="off_fan" class="btn btn-success btn-action">Off fan</button>
+                        </div>
+                    </div>
+
+                </form>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="popper.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+
+    <script>
+        var button_xhr = new XMLHttpRequest();
+        var last_button_object;
+
+        function action_result() {
+            if (button_xhr.readyState == 4) {
+                if (button_xhr.status == 200) {
+                    var json_data = JSON.parse(button_xhr.responseText);
+                    if (json_data.result == true)
+                        last_button_object.removeClass("btn-warning").removeClass("btn-danger").addClass("btn-success");
+                    else
+                        last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
+                } else {
+                    last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
+                }
+            }
+        }
+
+        function send_action() {
+            button_xhr.open('POST', 'action?action=' + $(this).attr('action-button'), true);
+            button_xhr.send()
+            last_button_object = $(this)
+            $(this).removeClass("btn-success").removeClass("btn-danger").addClass("btn-warning");
+        }
+
+        $('.btn-action').on('click', send_action);
+        button_xhr.onreadystatechange = action_result
+    </script>
+
+
+</body>
+
+</html>

@@ -2,7 +2,6 @@
 local mqtt = require 'mqtt'
 local inspect = require 'inspect'
 local json = require 'json'
-local base64 = require 'base64'
 local fiber = require 'fiber'
 local impact = require 'impact'
 local box = box
@@ -173,7 +172,7 @@ http_server:route({ path = '/dashboard-settings', file = 'dashboard-settings.htm
 
 
 
-box.cfg { listen = 3313 }
+box.cfg { listen = 3313, log_level = 4, memtx_dir = "./db/memtx", vinyl_dir = "./db/vinyl", wal_dir = "./db/wal"  }
 box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 impact_reports = box.schema.space.create('impact_reports', {if_not_exists = true, engine = 'vinyl'})
 box.schema.sequence.create("impact_reports_sequence", {if_not_exists = true})
