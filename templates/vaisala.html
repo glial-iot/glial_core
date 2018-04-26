@@ -109,9 +109,22 @@
                 "id": "PM25",
                 "lineThickness": 2,
                 "tabIndex": 2,
-                "title": "PM25 (µg/m3)",
+                "title": "PM2.5 (µg/m3)",
                 "useLineColorForBulletBorder": true,
                 "valueField": "PM25"
+            }, {
+                "bullet": "round",
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "bulletSize": 5,
+                "customMarker": "",
+                "hideBulletsCount": 50,
+                "id": "PM10",
+                "lineThickness": 2,
+                "tabIndex": 2,
+                "title": "PM10 (µg/m3)",
+                "useLineColorForBulletBorder": true,
+                "valueField": "PM10"
             }],
             "guides": [],
             "valueAxis": [{
@@ -128,11 +141,13 @@
             },
             "titles": [],
             "dataLoader": {
-                "url": "data?item=PM25",
+                "url": "vaisala-data?item=PM",
                 "reload": 5,
                 "showCurtain": false
             }
         });
+
+
 
         var chart_2 = AmCharts.makeChart("chart2div", {
             "type": "serial",
@@ -172,15 +187,28 @@
                 "id": "PAa",
                 "lineThickness": 2,
                 "tabIndex": 2,
-                "title": "Atmosphere pressure (mbar)",
+                "title": "Atmosphere pressure (mbar), AQT",
                 "useLineColorForBulletBorder": true,
                 "valueField": "PAa"
+            }, {
+                "bullet": "round",
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "bulletSize": 5,
+                "customMarker": "",
+                "hideBulletsCount": 50,
+                "id": "PAw",
+                "lineThickness": 2,
+                "tabIndex": 2,
+                "title": "Atmosphere pressure (mmHg), WXT536",
+                "useLineColorForBulletBorder": true,
+                "valueField": "PAw"
             }],
             "guides": [],
             "valueAxis": [{
-                "id": "power",
+                "id": "PA",
                 "axisAlpha": 0.32,
-                "title": "Atmosphere pressure (mbar)"
+                "title": "Atmosphere pressure"
             }],
             "allLabels": [],
             "balloon": {
@@ -192,7 +220,7 @@
             },
             "titles": [],
             "dataLoader": {
-                "url": "data?item=PAa",
+                "url": "vaisala-data?item=PA",
                 "reload": 5,
                 "showCurtain": false
             }
@@ -236,14 +264,27 @@
                 "id": "RHa",
                 "lineThickness": 2,
                 "tabIndex": 2,
-                "title": "Air humidity (%)",
+                "title": "Air humidity (%), AQT",
                 "useLineColorForBulletBorder": true,
                 "valueField": "RHa"
+            }, {
+                "bullet": "round",
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "bulletSize": 5,
+                "customMarker": "",
+                "hideBulletsCount": 50,
+                "id": "RHw",
+                "lineThickness": 2,
+                "tabIndex": 2,
+                "title": "Air humidity (%), WXT536",
+                "useLineColorForBulletBorder": true,
+                "valueField": "RHw"
             }],
             "guides": [],
             "valueAxes": [{
-                "id": "RHa",
-                "title": "Air humidity (%)"
+                "id": "RH",
+                "title": "Relative air humidity (%)"
             }],
             "allLabels": [],
             "balloon": {
@@ -255,7 +296,7 @@
             },
             "titles": [],
             "dataLoader": {
-                "url": "data?item=RHa",
+                "url": "vaisala-data?item=RH",
                 "reload": 5,
                 "showCurtain": false
             }
@@ -299,9 +340,22 @@
                 "id": "Ta",
                 "lineThickness": 2,
                 "tabIndex": 2,
-                "title": "Air temperature (degrees Celsius)",
+                "title": "Air temperature (degrees Celsius), AQT",
                 "useLineColorForBulletBorder": true,
                 "valueField": "Ta"
+            }, {
+                "bullet": "round",
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "bulletSize": 5,
+                "customMarker": "",
+                "hideBulletsCount": 50,
+                "id": "Tw",
+                "lineThickness": 2,
+                "tabIndex": 2,
+                "title": "Air temperature (degrees Celsius), WXT536",
+                "useLineColorForBulletBorder": true,
+                "valueField": "Tw"
             }],
             "guides": [],
             "valueAxes": [{
@@ -319,7 +373,7 @@
             },
             "titles": [],
             "dataLoader": {
-                "url": "data?item=Ta",
+                "url": "vaisala-data?item=T",
                 "reload": 5,
                 "showCurtain": false
             }

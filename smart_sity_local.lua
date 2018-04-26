@@ -77,6 +77,50 @@ local function http_server_data_handler(req)
    return return_object
 end
 
+local function http_server_data_vaisala_handler(req)
+   local type_item = req:param("item")
+   local return_object
+   local impact_data_object, i = {}, 0
+   local table = ReverseTable(impact_reports.index.secondary:select(nil, {iterator = 'REQ'}))
+   for _, tuple in pairs(table) do
+      local serialNumber = tuple[4]
+      if (type_item == "PM") then
+         if (serialNumber == "PM25" or serialNumber == "PM10") then
+            i = i + 1
+            impact_data_object[i] = {}
+            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+            impact_data_object[i][serialNumber] = tuple[6]
+         end
+      end
+      if (type_item == "PA") then
+         if (serialNumber == "PAa" or serialNumber == "PAw") then
+            i = i + 1
+            impact_data_object[i] = {}
+            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+            impact_data_object[i][serialNumber] = tuple[6]
+         end
+      end
+      if (type_item == "RH") then
+         if (serialNumber == "RHa" or serialNumber == "RHw") then
+            i = i + 1
+            impact_data_object[i] = {}
+            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+            impact_data_object[i][serialNumber] = tuple[6]
+         end
+      end
+      if (type_item == "T") then
+         if (serialNumber == "Ta" or serialNumber == "Tw") then
+            i = i + 1
+            impact_data_object[i] = {}
+            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+            impact_data_object[i][serialNumber] = tuple[6]
+         end
+      end
+   end
+   return_object = req:render{ json = impact_data_object }
+   return return_object
+end
+
 local function http_server_data_dashboard_handler(req)
       local return_object
       local impact_data_object, i = {}, 0
@@ -162,7 +206,7 @@ local function mqtt_callback(message_id, topic, payload, gos, retain)
    --print(message_id, topic, payload, gos, retain)
    local _, _, sensor_topic, sensor_address = string.find(topic, "(/devices/.+/controls/)(.+)$")
    if (sensor_address ~= nil) then
-      local value = tonumber(payload)
+      local value = payload
       local timestamp = os.time()
       local resourcePath = sensor_topic
       local serialNumber = sensor_address
@@ -190,71 +234,77 @@ local function mqtt_callback(message_id, topic, payload, gos, retain)
 end
 
 
-box.cfg { listen = 3313, log_level = 4, memtx_dir = "./db", vinyl_dir = "./db", wal_dir = "./db"  }
-box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 
-impact_reports = box.schema.space.create('impact_reports', {if_not_exists = true, engine = 'vinyl'})
-box.schema.sequence.create("impact_reports_sequence", {if_not_exists = true})
-impact_reports:create_index('primary', {sequence="impact_reports_sequence", if_not_exists = true})
-impact_reports:create_index('secondary', {type = 'tree', unique = false, parts = {2, 'unsigned', 4, 'string'}, if_not_exists = true })
-impact_reports:create_index('serialNumber', {type = 'tree', unique = false, parts = {4, 'string'}, if_not_exists = true })
+local function database_config()
+   box.cfg { listen = 3313, log_level = 4, memtx_dir = "./db", vinyl_dir = "./db", wal_dir = "./db"  }
+   box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 
-settings = box.schema.space.create('settings', {if_not_exists = true, engine = 'vinyl'})
-settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
+   impact_reports = box.schema.space.create('impact_reports', {if_not_exists = true, engine = 'vinyl'})
+   box.schema.sequence.create("impact_reports_sequence", {if_not_exists = true})
+   impact_reports:create_index('primary', {sequence="impact_reports_sequence", if_not_exists = true})
+   impact_reports:create_index('secondary', {type = 'tree', unique = false, parts = {2, 'unsigned', 4, 'string'}, if_not_exists = true })
+   impact_reports:create_index('serialNumber', {type = 'tree', unique = false, parts = {4, 'string'}, if_not_exists = true })
 
-
-mqtt.wb = mqtt.new(config.MQTT_WIRENBOARD_ID, true)
-local mqtt_ok, mqtt_err = mqtt.wb:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
-if (mqtt_ok ~= true) then
-   print ("Error mqtt: "..(mqtt_err or "No error"))
-   os.exit()
+   settings = box.schema.space.create('settings', {if_not_exists = true, engine = 'vinyl'})
+   settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
 end
 
-mqtt.wb:on_message(mqtt_callback)
-mqtt.wb:subscribe('/devices/wb-w1/controls/+', 0)
 
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Urms L1', 0)
+local function mqtt_connect()
+   fiber.sleep(0.2)
+   --mqtt.wb = mqtt.new(config.MQTT_WIRENBOARD_ID, true)
+   --local mqtt_ok, mqtt_err = mqtt.wb:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
+   if (mqtt_ok ~= true) then
+      print ("Error mqtt: "..(mqtt_err or "No error"))
+   else
+      mqtt.wb:on_message(mqtt_callback)
+      mqtt.wb:subscribe('/devices/wb-w1/controls/+', 0)
 
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Frequency', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Urms L1', 0)
 
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L1', 0) --общее
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L2', 0) --внутреннее питание
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L3', 0) --розетка
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Total P', 0) --суммарное
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Frequency', 0)
 
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L1', 0) --общее
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L2', 0) --внутреннее питание
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L3', 0) --розетка
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L1', 0) --общее
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L2', 0) --внутреннее питание
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L3', 0) --розетка
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Total P', 0) --суммарное
 
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L1', 0) --общее
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L2', 0) --внутреннее питание
-mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L3', 0) --розетка
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L1', 0) --общее
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L2', 0) --внутреннее питание
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L3', 0) --розетка
 
-mqtt.wb:subscribe('/devices/wb-mr6c_105/controls/Input 0 counter', 0)
-mqtt.wb:subscribe('/devices/wb-adc/controls/Vin', 0)
-mqtt.wb:subscribe('/devices/system/controls/Current uptime', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L1', 0) --общее
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L2', 0) --внутреннее питание
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L3', 0) --розетка
 
-mqtt.wb:subscribe('/devices/vaisala/data', 0)
+      mqtt.wb:subscribe('/devices/wb-mr6c_105/controls/Input 0 counter', 0)
+      mqtt.wb:subscribe('/devices/wb-adc/controls/Vin', 0)
+      mqtt.wb:subscribe('/devices/system/controls/Current uptime', 0)
 
-http_server:route({ path = '/data_dashboard' }, http_server_data_dashboard_handler)
-http_server:route({ path = '/data' }, http_server_data_handler)
-http_server:route({ path = '/action' }, http_server_action_handler)
-
-http_server:route({ path = '/' }, http_server_root_handler)
-http_server:route({ path = '/dashboard', file = 'dashboard.html' }, http_server_html_handler)
-http_server:route({ path = '/internal-temperature', file = 'dashboard-temperature.html' }, http_server_html_handler)
-http_server:route({ path = '/power', file = 'power.html' }, http_server_html_handler)
-http_server:route({ path = '/water', file = 'water.html' }, http_server_html_handler)
-http_server:route({ path = '/weather', file = 'weather.html' }, http_server_html_handler)
-http_server:route({ path = '/light', file = 'light.html' }, http_server_html_handler)
-http_server:route({ path = '/vaisala', file = 'vaisala.html' }, http_server_html_handler)
-
---local table = impact_reports.index.serialNumber:select({'Ch 1 P L1'}, {limit = 5, iterator = 'REQ'})
---print(inspect(table))
+      mqtt.wb:subscribe('/devices/vaisala/data', 0)
+   end
+end
 
 
---os.exit()
+local function http_config()
+   http_server:route({ path = '/data_dashboard' }, http_server_data_dashboard_handler)
+   http_server:route({ path = '/data' }, http_server_data_handler)
+   http_server:route({ path = '/action' }, http_server_action_handler)
+
+   http_server:route({ path = '/' }, http_server_root_handler)
+   http_server:route({ path = '/dashboard', file = 'dashboard.html' }, http_server_html_handler)
+   http_server:route({ path = '/internal-temperature', file = 'dashboard-temperature.html' }, http_server_html_handler)
+   http_server:route({ path = '/power', file = 'power.html' }, http_server_html_handler)
+   http_server:route({ path = '/water', file = 'water.html' }, http_server_html_handler)
+   http_server:route({ path = '/weather', file = 'weather.html' }, http_server_html_handler)
+   http_server:route({ path = '/light', file = 'light.html' }, http_server_html_handler)
+
+   http_server:route({ path = '/vaisala', file = 'vaisala.html' }, http_server_html_handler)
+   http_server:route({ path = '/vaisala-data' }, http_server_data_vaisala_handler)
+end
 
 
-
+database_config()
+fiber.create(mqtt_connect)
+http_config()
 http_server:start()
