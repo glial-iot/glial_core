@@ -8,7 +8,7 @@ config.MQTT_IMPACT_PASSWORD = "0wYlg9KJ5E+ksmvt7l2mU6ucSSo/WjRDCdCgd2pQpF0="
 config.MQTT_IMPACT_ID = "impact_tarantool_client"
 config.MQTT_IMPACT_TOKEN = "trqspu69qcz7"
 
-config.MQTT_WIRENBOARD_HOST = "192.168.1.57"
+config.MQTT_WIRENBOARD_HOST = "192.168.1.111"
 config.MQTT_WIRENBOARD_PORT = 1883
 config.MQTT_WIRENBOARD_ID = "tarantool_client"
 
