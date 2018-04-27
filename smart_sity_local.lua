@@ -24,42 +24,6 @@ local function ReverseTable(t)
     return reversedTable
 end
 
-local function impact_rest_handler(json_data)
-   for i = 1, #json_data.reports do
-      local subscriptionId = json_data.reports[i].subscriptionId
-      local serialNumber = json_data.reports[i].serialNumber
-      local resourcePath = json_data.reports[i].resourcePath
-      local value = json_data.reports[i].value
-      local timestamp = json_data.reports[i].timestamp
-
-      impact_reports:insert{nil, timestamp, subscriptionId, serialNumber, resourcePath, value}
-
-      if (resourcePath == "action/0/light") then
-         if (value == "on" or value == "off") then
-            if value == "on" then value = 1
-            elseif value == "off" then value = 0
-            end
-            if (serialNumber == "NOOLITE_SK_0") then
-               mqtt.wb:publish("/devices/noolite_tx_0x290/controls/state/on", value, mqtt.QOS_0, mqtt.NON_RETAIN)
-            elseif (serialNumber == "NOOLITE_SK_1") then
-               mqtt.wb:publish("/devices/noolite_tx_0x291/controls/state/on", value, mqtt.QOS_0, mqtt.NON_RETAIN)
-            end
-         end
-      end
-
-      if (serialNumber == "WB") then
-         if (resourcePath == "action/0/buzzer") then
-            if (value == "on") then
-               mqtt.wb:publish("/devices/buzzer/controls/enabled/on", 1, mqtt.QOS_0, mqtt.NON_RETAIN)
-            elseif (value == "off") then
-               mqtt.wb:publish("/devices/buzzer/controls/enabled/on", 0, mqtt.QOS_0, mqtt.NON_RETAIN)
-            end
-         end
-      end
-
-   end
-end
-
 
 local function http_server_data_handler(req)
    local type_item = req:param("item")
