@@ -80,6 +80,7 @@
             "marginLeft": 40,
             "marginRight": 40,
             "tapToActivate": false,
+            "synchronizeGrid": true,
             "theme": "light",
             "categoryAxis": {
                 "equalSpacing": true,
@@ -106,11 +107,13 @@
                 "bulletSize": 5,
                 "customMarker": "",
                 "hideBulletsCount": 50,
+                "lineColor": "#FCD202",
                 "id": "PM25",
                 "lineThickness": 2,
                 "tabIndex": 2,
                 "title": "PM2.5 (µg/m3)",
                 "useLineColorForBulletBorder": true,
+                "valueAxis": "PM25",
                 "valueField": "PM25"
             }, {
                 "bullet": "round",
@@ -119,17 +122,35 @@
                 "bulletSize": 5,
                 "customMarker": "",
                 "hideBulletsCount": 50,
+                "lineColor": "#B0DE09",
                 "id": "PM10",
                 "lineThickness": 2,
                 "tabIndex": 2,
                 "title": "PM10 (µg/m3)",
                 "useLineColorForBulletBorder": true,
+                "valueAxis": "PM10",
                 "valueField": "PM10"
             }],
             "guides": [],
             "valueAxes": [{
+                "id": "PM10",
+                "title": "PM10 (µg/m3)",
+                "axisColor": "#B0DE09",
+                "axisThickness": 10,
+                "position": "right"
+            }, {
                 "id": "PM25",
-                "title": "PM2.5 (µg/m3)"
+                "title": "PM2.5 (µg/m3)",
+                "axisColor": "#FCD202",
+                "axisThickness": 10,
+                "position": "left",
+                "guides": [{
+                    "dashLength": 6,
+                    "inside": true,
+                    "label": "Max",
+                    "lineAlpha": 1,
+                    "value": 10
+                }]
             }],
             "allLabels": [],
             "balloon": {
@@ -184,11 +205,13 @@
                 "bulletSize": 5,
                 "customMarker": "",
                 "hideBulletsCount": 50,
+                "lineColor": "#FCD202",
                 "id": "PAa",
                 "lineThickness": 2,
                 "tabIndex": 2,
                 "title": "Atmosphere pressure (mbar), AQT",
                 "useLineColorForBulletBorder": true,
+                "valueAxis": "PAa",
                 "valueField": "PAa"
             }, {
                 "bullet": "round",
@@ -197,18 +220,28 @@
                 "bulletSize": 5,
                 "customMarker": "",
                 "hideBulletsCount": 50,
+                "lineColor": "#B0DE09",
                 "id": "PAw",
                 "lineThickness": 2,
                 "tabIndex": 2,
                 "title": "Atmosphere pressure (mmHg), WXT536",
                 "useLineColorForBulletBorder": true,
+                "valueAxis": "PAw",
                 "valueField": "PAw"
             }],
             "guides": [],
-                "id": "PA",
-                "axisAlpha": 0.32,
-                "title": "Atmosphere pressure"
             "valueAxes": [{
+                "id": "PAw",
+                "title": "Atmosphere pressure (mmHg), WXT536",
+                "axisColor": "#B0DE09",
+                "axisThickness": 10,
+                "position": "right"
+            }, {
+                "id": "PAa",
+                "title": "Atmosphere pressure (mbar), AQT",
+                "axisColor": "#FCD202",
+                "axisThickness": 10,
+                "position": "left"
             }],
             "allLabels": [],
             "balloon": {
