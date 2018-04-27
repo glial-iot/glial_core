@@ -251,11 +251,11 @@ end
 
 
 local function mqtt_connect()
-   fiber.sleep(0.2)
-   --mqtt.wb = mqtt.new(config.MQTT_WIRENBOARD_ID, true)
-   --local mqtt_ok, mqtt_err = mqtt.wb:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
-   if (mqtt_ok ~= true) then
-      print ("Error mqtt: "..(mqtt_err or "No error"))
+   --fiber.sleep(0.2)
+   mqtt.wb = mqtt.new(config.MQTT_WIRENBOARD_ID, true)
+   local mqtt_status, mqtt_err = mqtt.wb:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
+   if (mqtt_status ~= true) then
+      print ("MQTT error: "..(mqtt_err or "unknown error"))
    else
       mqtt.wb:on_message(mqtt_callback)
       mqtt.wb:subscribe('/devices/wb-w1/controls/+', 0)
@@ -305,6 +305,7 @@ end
 
 
 database_config()
-fiber.create(mqtt_connect)
+--fiber.create(mqtt_connect)
+mqtt_connect()
 http_config()
 http_server:start()
