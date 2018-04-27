@@ -28,80 +28,125 @@ end
 local function http_server_data_handler(req)
    local type_item = req:param("item")
    local return_object
-   local impact_data_object, i = {}, 0
+   local data_object, i = {}, 0
    local table = ReverseTable(impact_reports.index.serialNumber:select({type_item}, {limit = 30000, iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[4]
       i = i + 1
-      impact_data_object[i] = {}
-      impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
-      impact_data_object[i][serialNumber] = tuple[6]
+      data_object[i] = {}
+      data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+      data_object[i][serialNumber] = tuple[6]
    end
-   return_object = req:render{ json = impact_data_object }
+   return_object = req:render{ json = data_object }
    return return_object
 end
 
 local function http_server_data_vaisala_handler(req)
    local type_item = req:param("item")
    local return_object
-   local impact_data_object, i = {}, 0
+   local data_object, i = {}, 0
    local table = ReverseTable(impact_reports.index.secondary:select(nil, {iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[4]
+      local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+
       if (type_item == "PM") then
          if (serialNumber == "PM25" or serialNumber == "PM10") then
             i = i + 1
-            impact_data_object[i] = {}
-            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
-            impact_data_object[i][serialNumber] = tuple[6]
+            data_object[i] = {}
+            data_object[i].date = date
+            data_object[i][serialNumber] = tuple[6]
          end
       end
       if (type_item == "PA") then
          if (serialNumber == "PAa" or serialNumber == "PAw") then
             i = i + 1
-            impact_data_object[i] = {}
-            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
-            impact_data_object[i][serialNumber] = tuple[6]
+            data_object[i] = {}
+            data_object[i].date = date
+            data_object[i][serialNumber] = tuple[6]
          end
       end
       if (type_item == "RH") then
          if (serialNumber == "RHa" or serialNumber == "RHw") then
             i = i + 1
-            impact_data_object[i] = {}
-            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
-            impact_data_object[i][serialNumber] = tuple[6]
+            data_object[i] = {}
+            data_object[i].date = date
+            data_object[i][serialNumber] = tuple[6]
          end
       end
       if (type_item == "T") then
          if (serialNumber == "Ta" or serialNumber == "Tw") then
             i = i + 1
-            impact_data_object[i] = {}
-            impact_data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
-            impact_data_object[i][serialNumber] = tuple[6]
+            data_object[i] = {}
+            data_object[i].date = date
+            data_object[i][serialNumber] = tuple[6]
          end
       end
    end
-   return_object = req:render{ json = impact_data_object }
+   return_object = req:render{ json = data_object }
+   return return_object
+end
+
+local function http_server_data_temperature_handler(req)
+   local type_item = req:param("item")
+   local return_object
+   local data_object, i = {}, 0
+   local table = ReverseTable(impact_reports.index.secondary:select(nil, {iterator = 'REQ'}))
+   for _, tuple in pairs(table) do
+      local serialNumber = tuple[4]
+      local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+      if (type_item == "local") then
+         if (serialNumber == "28-000008e7f176" or serialNumber == "28-000008e538e6") then
+            i = i + 1
+            data_object[i] = {}
+            data_object[i].date = date
+            data_object[i][serialNumber] = tuple[6]
+         end
+      end
+   end
+   return_object = req:render{ json = data_object }
+   return return_object
+end
+
+
+local function http_server_data_power_handler(req)
+   local type_item = req:param("item")
+   local return_object
+   local data_object, i = {}, 0
+   local table = ReverseTable(impact_reports.index.secondary:select(nil, {iterator = 'REQ'}))
+   for _, tuple in pairs(table) do
+      local serialNumber = tuple[4]
+      local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+      if (type_item == "I") then
+         if (serialNumber == "Ch 1 Irms L1" or serialNumber == "Ch 1 Irms L2" or serialNumber == "Ch 1 Irms L3") then
+            i = i + 1
+            data_object[i] = {}
+            data_object[i].date = date
+            data_object[i][serialNumber] = tuple[6]
+         end
+      end
+   end
+   return_object = req:render{ json = data_object }
    return return_object
 end
 
 local function http_server_data_dashboard_handler(req)
       local return_object
-      local impact_data_object, i = {}, 0
+      local data_object, i = {}, 0
 
       for _, tuple in impact_reports.index.secondary:pairs(nil, { iterator = box.index.REQ}) do
          i = i + 1
-         impact_data_object[i] = {}
-         impact_data_object[i].timestamp = tuple[2]
-         impact_data_object[i].subscriptionId = tuple[3]
-         impact_data_object[i].serialNumber = tuple[4]
-         impact_data_object[i].resourcePath = tuple[5]
-         impact_data_object[i].value = tuple[6]
+         data_object[i] = {}
+         data_object[i].timestamp = tuple[2]
+         data_object[i].subscriptionId = tuple[3]
+         data_object[i].serialNumber = tuple[4]
+         data_object[i].resourcePath = tuple[5]
+         data_object[i].value = tuple[6]
          if i > 100 then break end
       end
 
       if (i > 0) then
-         return_object = req:render{ json =  impact_data_object  }
+         return_object = req:render{ json =  data_object  }
       else
          return_object = req:render{ json = { none_data = "true" } }
       end
@@ -144,7 +189,7 @@ local function http_server_html_handler(req)
    local proto_menu, menu = {
                         {href = "/dashboard", name="Dashboard"},
                         --{href = "/dashboard-graph", name="Graph"},
-                        {href = "/internal-temperature", name="Internal Temperature"},
+                        {href = "/temperature", name="Temperature"},
                         {href = "/light", name="Light"},
                         --{href = "/weather", name="Weather"},
                         {href = "/water", name="Water"},
@@ -166,7 +211,7 @@ local function http_server_html_handler(req)
    return req:render{ menu = menu }
 end
 
-local function mqtt_callback(message_id, topic, payload, gos, retain)
+local function mqtt_message_callback(message_id, topic, payload, gos, retain)
    --print(message_id, topic, payload, gos, retain)
    local _, _, sensor_topic, sensor_address = string.find(topic, "(/devices/.+/controls/)(.+)$")
    if (sensor_address ~= nil) then
@@ -198,7 +243,6 @@ local function mqtt_callback(message_id, topic, payload, gos, retain)
 end
 
 
-
 local function database_config()
    box.cfg { listen = 3313, log_level = 4, memtx_dir = "./db", vinyl_dir = "./db", wal_dir = "./db"  }
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
@@ -221,25 +265,28 @@ local function mqtt_connect()
    if (mqtt_status ~= true) then
       print ("MQTT error: "..(mqtt_err or "unknown error"))
    else
-      mqtt.wb:on_message(mqtt_callback)
+      mqtt.wb:on_message(mqtt_message_callback)
       mqtt.wb:subscribe('/devices/wb-w1/controls/+', 0)
 
+
+
+      -- 1: питание щитка, 2:розетка реле 3: пилот
+
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L1', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L2', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L3', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Total P', 0)
+
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L1', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L2', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L3', 0)
+
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L1', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L2', 0)
+      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L3', 0)
+
       mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Urms L1', 0)
-
       mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Frequency', 0)
-
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L1', 0) --общее
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L2', 0) --внутреннее питание
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L3', 0) --розетка
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Total P', 0) --суммарное
-
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L1', 0) --общее
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L2', 0) --внутреннее питание
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L3', 0) --розетка
-
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L1', 0) --общее
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L2', 0) --внутреннее питание
-      mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L3', 0) --розетка
 
       mqtt.wb:subscribe('/devices/wb-mr6c_105/controls/Input 0 counter', 0)
       mqtt.wb:subscribe('/devices/wb-adc/controls/Vin', 0)
@@ -251,14 +298,21 @@ end
 
 
 local function http_config()
-   http_server:route({ path = '/data_dashboard' }, http_server_data_dashboard_handler)
+
    http_server:route({ path = '/data' }, http_server_data_handler)
    http_server:route({ path = '/action' }, http_server_action_handler)
 
    http_server:route({ path = '/' }, http_server_root_handler)
+
    http_server:route({ path = '/dashboard', file = 'dashboard.html' }, http_server_html_handler)
-   http_server:route({ path = '/internal-temperature', file = 'dashboard-temperature.html' }, http_server_html_handler)
+   http_server:route({ path = '/data_dashboard' }, http_server_data_dashboard_handler)
+
+   http_server:route({ path = '/temperature', file = 'temperature.html' }, http_server_html_handler)
+   http_server:route({ path = '/temperature-data' }, http_server_data_temperature_handler)
+
    http_server:route({ path = '/power', file = 'power.html' }, http_server_html_handler)
+   http_server:route({ path = '/power-data' }, http_server_data_power_handler)
+
    http_server:route({ path = '/water', file = 'water.html' }, http_server_html_handler)
    http_server:route({ path = '/weather', file = 'weather.html' }, http_server_html_handler)
    http_server:route({ path = '/light', file = 'light.html' }, http_server_html_handler)

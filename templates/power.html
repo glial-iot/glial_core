@@ -109,13 +109,43 @@
                 "id": "Ch 1 Irms L1",
                 "lineThickness": 2,
                 "tabIndex": 2,
-                "title": "Current",
+                "title": "External sockets (L1)",
                 "useLineColorForBulletBorder": true,
+                "valueAxis": "Current",
                 "valueField": "Ch 1 Irms L1"
+            }, {
+                "bullet": "round",
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "bulletSize": 5,
+                "customMarker": "",
+                "hideBulletsCount": 50,
+                "id": "Ch 1 Irms L2",
+                "lineThickness": 2,
+                "tabIndex": 2,
+                "title": "Internal shield current (L2)",
+                "useLineColorForBulletBorder": true,
+                "valueAxis": "Current",
+                "valueField": "Ch 1 Irms L2"
+            }, {
+                "bullet": "round",
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "bulletSize": 5,
+                "customMarker": "",
+                "hideBulletsCount": 50,
+                "id": "Ch 1 Irms L3",
+                "lineThickness": 2,
+                "tabIndex": 2,
+                "title": "Relay-controlled internal socket (L3)",
+                "useLineColorForBulletBorder": true,
+                "valueAxis": "Current",
+                "valueField": "Ch 1 Irms L3"
             }],
             "guides": [],
             "valueAxes": [{
                 "id": "Current",
+                "logarithmic": false,
                 "title": "Current (A)"
             }],
             "allLabels": [],
@@ -128,7 +158,7 @@
             },
             "titles": [],
             "dataLoader": {
-                "url": "data?item=Ch 1 Irms L1",
+                "url": "power-data?item=I",
                 "reload": 5,
                 "showCurtain": false
             }
@@ -179,7 +209,7 @@
             "guides": [],
             "valueAxes": [{
                 "id": "power",
-                "logarithmic": false,
+                "logarithmic": true,
                 "axisAlpha": 0.32,
                 "title": "Power (W)"
             }],
@@ -241,10 +271,17 @@
                 "useLineColorForBulletBorder": true,
                 "valueField": "Urms L1"
             }],
-            "guides": [],
+            "guides": [{
+                "dashLength": 6,
+                "inside": true,
+                "label": "Standart",
+                "lineAlpha": 1,
+                "value": 230
+            }],
             "valueAxes": [{
                 "id": "enegry",
-                "title": "Voltage (V)"
+                "title": "Voltage (V)",
+                "guides": []
             }],
             "allLabels": [],
             "balloon": {
