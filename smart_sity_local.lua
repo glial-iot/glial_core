@@ -188,10 +188,8 @@ end
 local function http_server_html_handler(req)
    local proto_menu, menu = {
                         {href = "/dashboard", name="Dashboard"},
-                        --{href = "/dashboard-graph", name="Graph"},
                         {href = "/temperature", name="Temperature"},
                         {href = "/light", name="Light"},
-                        --{href = "/weather", name="Weather"},
                         {href = "/water", name="Water"},
                         {href = "/power", name="Power"},
                         {href = "/vaisala", name="Vaisala"},
