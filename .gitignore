@@ -2,3 +2,4 @@
 *.snap
 /.rocks/.rocks
 *.vylog
+/db
