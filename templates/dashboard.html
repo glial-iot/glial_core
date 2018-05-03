@@ -135,7 +135,7 @@
         }
 
         function timer_update_field() {
-            xhr_tmr.open('POST', 'data_dashboard', true);
+            xhr_tmr.open('POST', 'dashboard-data?limit=100', true);
             xhr_tmr.send()
         }
 

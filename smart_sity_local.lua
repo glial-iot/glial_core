@@ -26,26 +26,28 @@ end
 
 
 local function http_server_data_handler(req)
-   local type_item = req:param("item")
+   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local table = ReverseTable(impact_reports.index.serialNumber:select({type_item}, {limit = 30000, iterator = 'REQ'}))
+   local table = ReverseTable(impact_reports.index.serialNumber:select({type_item}, {iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[4]
       i = i + 1
       data_object[i] = {}
       data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
       data_object[i][serialNumber] = tuple[6]
+      if (type_limit ~= nil and type_limit <= i) then break end
    end
    return_object = req:render{ json = data_object }
    return return_object
 end
 
 local function http_server_data_vaisala_handler(req)
-   local type_item = req:param("item")
-   local return_object
+   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local data_object, i = {}, 0
-   local table = ReverseTable(impact_reports.index.secondary:select(nil, {iterator = 'REQ'}))
+   local raw_table = impact_reports.index.primary:select(nil, {iterator = 'REQ'})
+   local table = ReverseTable(raw_table)
+
    for _, tuple in pairs(table) do
       local serialNumber = tuple[4]
       local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
@@ -82,17 +84,16 @@ local function http_server_data_vaisala_handler(req)
             data_object[i][serialNumber] = tuple[6]
          end
       end
-      if i > 10000 then break end
+      if (type_limit ~= nil and type_limit <= i) then break end
    end
-   return_object = req:render{ json = data_object }
-   return return_object
+   return req:render{ json = data_object }
 end
 
 local function http_server_data_temperature_handler(req)
-   local type_item = req:param("item")
+   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local table = ReverseTable(impact_reports.index.secondary:select(nil, {iterator = 'REQ'}))
+   local table = ReverseTable(impact_reports.index.primary:select(nil, {iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[4]
       local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
@@ -104,6 +105,7 @@ local function http_server_data_temperature_handler(req)
             data_object[i][serialNumber] = tuple[6]
          end
       end
+      if (type_limit ~= nil and type_limit <= i) then break end
    end
    return_object = req:render{ json = data_object }
    return return_object
@@ -111,10 +113,11 @@ end
 
 
 local function http_server_data_power_handler(req)
-   local type_item = req:param("item")
+   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local table = ReverseTable(impact_reports.index.secondary:select(nil, {iterator = 'REQ'}))
+   local raw_table = impact_reports.index.primary:select(nil, {iterator = 'REQ'})
+   local table = ReverseTable(raw_table)
    for _, tuple in pairs(table) do
       local serialNumber = tuple[4]
       local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
@@ -125,6 +128,7 @@ local function http_server_data_power_handler(req)
             data_object[i].date = date
             data_object[i][serialNumber] = tuple[6]
          end
+         if (type_limit ~= nil and type_limit <= i) then break end
       end
    end
    return_object = req:render{ json = data_object }
@@ -132,27 +136,28 @@ local function http_server_data_power_handler(req)
 end
 
 local function http_server_data_dashboard_handler(req)
-      local return_object
-      local data_object, i = {}, 0
+   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
+   local return_object
+   local data_object, i = {}, 0
 
-      for _, tuple in impact_reports.index.secondary:pairs(nil, { iterator = box.index.REQ}) do
-         i = i + 1
-         data_object[i] = {}
-         data_object[i].timestamp = tuple[2]
-         data_object[i].subscriptionId = tuple[3]
-         data_object[i].serialNumber = tuple[4]
-         data_object[i].resourcePath = tuple[5]
-         data_object[i].value = tuple[6]
-         if i > 100 then break end
-      end
+   for _, tuple in impact_reports.index.primary:pairs(nil, { iterator = box.index.REQ}) do
+      i = i + 1
+      data_object[i] = {}
+      data_object[i].timestamp = tuple[2]
+      data_object[i].subscriptionId = tuple[3]
+      data_object[i].serialNumber = tuple[4]
+      data_object[i].resourcePath = tuple[5]
+      data_object[i].value = tuple[6]
+      if (type_limit ~= nil and type_limit <= i) then break end
+   end
 
-      if (i > 0) then
-         return_object = req:render{ json =  data_object  }
-      else
-         return_object = req:render{ json = { none_data = "true" } }
-      end
+   if (i > 0) then
+      return_object = req:render{ json =  data_object  }
+   else
+      return_object = req:render{ json = { none_data = "true" } }
+   end
 
-      return return_object
+   return return_object
 end
 
 
@@ -246,7 +251,7 @@ local function database_config()
    box.cfg { listen = 3313, log_level = 4, memtx_dir = "./db", vinyl_dir = "./db", wal_dir = "./db"  }
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 
-   impact_reports = box.schema.space.create('impact_reports', {if_not_exists = true, engine = 'vinyl'})
+   impact_reports = box.schema.space.create('impact_reports', {if_not_exists = true})
    box.schema.sequence.create("impact_reports_sequence", {if_not_exists = true})
    impact_reports:create_index('primary', {sequence="impact_reports_sequence", if_not_exists = true})
    impact_reports:create_index('secondary', {type = 'tree', unique = false, parts = {2, 'unsigned', 4, 'string'}, if_not_exists = true })
@@ -258,7 +263,6 @@ end
 
 
 local function mqtt_connect()
-   --fiber.sleep(0.2)
    mqtt.wb = mqtt.new(config.MQTT_WIRENBOARD_ID, true)
    local mqtt_status, mqtt_err = mqtt.wb:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
    if (mqtt_status ~= true) then
@@ -304,7 +308,7 @@ local function http_config()
    http_server:route({ path = '/' }, http_server_root_handler)
 
    http_server:route({ path = '/dashboard', file = 'dashboard.html' }, http_server_html_handler)
-   http_server:route({ path = '/data_dashboard' }, http_server_data_dashboard_handler)
+   http_server:route({ path = '/dashboard-data' }, http_server_data_dashboard_handler)
 
    http_server:route({ path = '/temperature', file = 'temperature.html' }, http_server_html_handler)
    http_server:route({ path = '/temperature-data' }, http_server_data_temperature_handler)
@@ -322,7 +326,6 @@ end
 
 
 database_config()
---fiber.create(mqtt_connect)
 mqtt_connect()
 http_config()
 http_server:start()
