@@ -82,6 +82,7 @@ local function http_server_data_vaisala_handler(req)
             data_object[i][serialNumber] = tuple[6]
          end
       end
+      if i > 10000 then break end
    end
    return_object = req:render{ json = data_object }
    return return_object
