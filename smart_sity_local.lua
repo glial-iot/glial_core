@@ -57,7 +57,7 @@ local function http_server_data_vaisala_handler(req)
             i = i + 1
             data_object[i] = {}
             data_object[i].date = date
-            data_object[i][serialNumber] = tuple[6]
+            data_object[i][serialNumber] = tonumber(tuple[6])
          end
       end
       if (type_item == "PA") then
@@ -65,7 +65,7 @@ local function http_server_data_vaisala_handler(req)
             i = i + 1
             data_object[i] = {}
             data_object[i].date = date
-            data_object[i][serialNumber] = tuple[6]
+            data_object[i][serialNumber] = tonumber(tuple[6])
          end
       end
       if (type_item == "RH") then
@@ -73,7 +73,7 @@ local function http_server_data_vaisala_handler(req)
             i = i + 1
             data_object[i] = {}
             data_object[i].date = date
-            data_object[i][serialNumber] = tuple[6]
+            data_object[i][serialNumber] = tonumber(tuple[6])
          end
       end
       if (type_item == "T") then
@@ -81,7 +81,7 @@ local function http_server_data_vaisala_handler(req)
             i = i + 1
             data_object[i] = {}
             data_object[i].date = date
-            data_object[i][serialNumber] = tuple[6]
+            data_object[i][serialNumber] = tonumber(tuple[6])
          end
       end
       if (type_limit ~= nil and type_limit <= i) then break end
@@ -102,7 +102,7 @@ local function http_server_data_temperature_handler(req)
             i = i + 1
             data_object[i] = {}
             data_object[i].date = date
-            data_object[i][serialNumber] = tuple[6]
+            data_object[i][serialNumber] = tonumber(tuple[6])
          end
       end
       if (type_limit ~= nil and type_limit <= i) then break end
@@ -126,7 +126,7 @@ local function http_server_data_power_handler(req)
             i = i + 1
             data_object[i] = {}
             data_object[i].date = date
-            data_object[i][serialNumber] = tuple[6]
+            data_object[i][serialNumber] = tonumber(tuple[6])
          end
          if (type_limit ~= nil and type_limit <= i) then break end
       end
