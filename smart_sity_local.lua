@@ -293,7 +293,7 @@ local function mqtt_connect()
       mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Urms L1', 0)
       mqtt.wb:subscribe('/devices/wb-map12h_156/controls/Frequency', 0)
 
-      mqtt.wb:subscribe('/devices/wb-mr6c_105/controls/Input 0 counter', 0)
+      mqtt.wb:subscribe('/devices/wb-mr6c_105/controls/Input 6 counter', 0)
       mqtt.wb:subscribe('/devices/wb-adc/controls/Vin', 0)
       mqtt.wb:subscribe('/devices/system/controls/Current uptime', 0)
 
