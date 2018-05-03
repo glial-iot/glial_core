@@ -181,6 +181,8 @@ local function http_server_action_handler(req)
          result, emessage = mqtt.wb:publish("/devices/wb-mr6c_105/controls/K5/on", "1", mqtt.QOS_1, mqtt.NON_RETAIN)
       elseif (action_param == "off_fan") then
          result, emessage = mqtt.wb:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt.QOS_1, mqtt.NON_RETAIN)
+      elseif (action_param == "tarantool_stop") then
+         os.exit()
       end
       print(result, action_param, emessage)
       return req:render{ json = { result = result } }
