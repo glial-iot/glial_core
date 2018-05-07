@@ -216,6 +216,9 @@ local function http_server_action_handler(req)
          result, emessage = mqtt.wb:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt.QOS_1, mqtt.NON_RETAIN)
       elseif (action_param == "tarantool_stop") then
          os.exit()
+      elseif (action_param == "wipe_storage") then
+         result, emessage = os.execute("rm -rf ./db/*")
+         if (result == 0) then result = true end
       end
       print(result, action_param, emessage)
       return req:render{ json = { result = result } }
