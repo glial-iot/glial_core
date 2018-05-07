@@ -226,7 +226,7 @@ local function http_server_action_handler(req)
 end
 
 local function http_server_root_handler(req)
-   return req:redirect_to('/dashboard')
+   return req:redirect_to('/bus_storage')
 end
 
 local function http_server_html_handler(req)
