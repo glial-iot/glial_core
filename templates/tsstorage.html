@@ -92,28 +92,6 @@
             document.getElementById(table_name).innerHTML = "";
         }
 
-        var button_xhr = new XMLHttpRequest();
-
-        $('#send_button').on('click', function(event) {
-            var value = document.getElementById("input_value").value
-            var topic = document.getElementById("input_device").value + "/" + document.getElementById("input_topic").value
-            button_xhr.onreadystatechange = mqtt_result
-            button_xhr.open('POST', 'action?type=mqtt_send&value=' + value + '&topic=' + topic, true);
-            button_xhr.send()
-            $("#send_button").removeClass("btn-success").addClass("btn-warning");
-        });
-
-        function mqtt_result() {
-            if (button_xhr.readyState == 4 && button_xhr.status == 200) {
-                var json_data = JSON.parse(button_xhr.responseText);
-                console.log(json_data, button_xhr.responseText)
-                if (json_data.mqtt_result == true)
-                    setTimeout(function() {
-                        $("#send_button").removeClass("btn-warning").addClass("btn-success");
-                    }, 300);
-            }
-        }
-
         var xhr_tmr = new XMLHttpRequest();
 
 
@@ -130,12 +108,12 @@
                 }
             }
             if (xhr_tmr.readyState == 4) {
-                setTimeout(timer_update_field, 2000)
+                setTimeout(timer_update_field, 200)
             }
         }
 
         function timer_update_field() {
-            xhr_tmr.open('POST', 'dashboard-data?limit=100', true);
+            xhr_tmr.open('POST', 'tsstorage-data?limit=30', true);
             xhr_tmr.send()
         }
 

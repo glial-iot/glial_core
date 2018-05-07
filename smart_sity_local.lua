@@ -144,7 +144,7 @@ local function http_server_data_power_handler(req)
 end
 
 
-local function http_server_data_dashboard_handler(req)
+local function http_server_data_tsstorage_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
@@ -259,11 +259,11 @@ local function endpoints_config()
    endpoints[#endpoints+1] = {"/data", nil, nil, http_server_data_handler}
    endpoints[#endpoints+1] = {"/action", nil, nil, http_server_action_handler}
 
-   endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/dashboard-data", nil, nil, http_server_data_dashboard_handler}
-
    endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
    endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
+
+   endpoints[#endpoints+1] = {"/tsstorage", "tsstorage.html", "TS Storage", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/tsstorage-data", nil, nil, http_server_data_tsstorage_handler}
 
    endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_server_html_handler}
    endpoints[#endpoints+1] = {"/temperature-data", nil, nil, http_server_data_temperature_handler}
