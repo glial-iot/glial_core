@@ -11,6 +11,9 @@ function system.reverse_table(t)
    return reversedTable
 end
 
+function system.round(value, rounds)
+   return tonumber(string.format("%."..(tostring(rounds or 2)).."f", value))
+end
 
 
 return system

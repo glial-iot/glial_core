@@ -5,6 +5,7 @@ local log = require 'log'
 local bus = {}
 local box = box
 local scripts_events = require 'scripts_events'
+local system = require 'system'
 local fifo_storage, fifo_storage_sequence
 
 function bus.events_handler(topic, value)
