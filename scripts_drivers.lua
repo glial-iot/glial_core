@@ -141,7 +141,9 @@ function scripts_drivers.tarantool_stat_driver()
 end
 
 
-function scripts_drivers.start()
+
+
+function scripts_drivers.start() -- сделать возможность выборочного отключения драйверов
    for name, func in pairs(scripts_drivers) do
       if (name ~= "start") then
          func()
