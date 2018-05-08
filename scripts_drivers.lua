@@ -12,7 +12,7 @@ function scripts_drivers.map12h_driver()
       local _, _, sensor_address = string.find(topic, "/devices/wb%-map12h_156/controls/(.+)$")
       if (sensor_address ~= nil and payload) then
          local local_topic = "/wb-map12h/"..sensor_address
-         bus.update_value(local_topic, tonumber(payload))
+         bus.update_value_average(local_topic, tonumber(payload), 10)
       end
    end
 
