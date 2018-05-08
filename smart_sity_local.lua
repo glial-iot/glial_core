@@ -279,6 +279,8 @@ local function endpoints_config()
 
    endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_server_html_handler}
    endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler}
+
+   endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_server_html_handler}
    --endpoints[#endpoints+1] = {"192.168.1.111", nil, "WirenBoard", nil}
 
    return endpoints
