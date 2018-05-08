@@ -18,25 +18,18 @@ local scripts_drivers = require 'scripts_drivers'
 local scripts_events = require 'scripts_events'
 local ts_storage = require 'ts_storage'
 local bus = require 'bus'
+local system = require "system"
 
 io.stdout:setvbuf("no")
 
 
-local function ReverseTable(t)
-    local reversedTable = {}
-    local itemCount = #t
-    for k, v in ipairs(t) do
-        reversedTable[itemCount + 1 - k] = v
-    end
-    return reversedTable
-end
 
 
 local function http_server_data_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local table = ReverseTable(ts_storage.object.index.serial_number:select({type_item}, {iterator = 'REQ'}))
+   local table = system.reverse_table(ts_storage.object.index.serial_number:select({type_item}, {iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[5]
       i = i + 1
@@ -53,7 +46,7 @@ local function http_server_data_vaisala_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local data_object, i = {}, 0
    local raw_table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
-   local table = ReverseTable(raw_table)
+   local table = system.reverse_table(raw_table)
 
    for _, tuple in pairs(table) do
       local serialNumber = tuple[5]
@@ -101,7 +94,7 @@ local function http_server_data_temperature_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local table = ReverseTable(ts_storage.object.index.primary:select(nil, {iterator = 'REQ'}))
+   local table = system.reverse_table(ts_storage.object.index.primary:select(nil, {iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[5]
       local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[3])
@@ -125,7 +118,7 @@ local function http_server_data_power_handler(req)
    local return_object
    local data_object, i = {}, 0
    local raw_table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
-   local table = ReverseTable(raw_table)
+   local table = system.reverse_table(raw_table)
    for _, tuple in pairs(table) do
       local serialNumber = tuple[5]
       local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[3])
