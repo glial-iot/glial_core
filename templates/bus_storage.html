@@ -73,7 +73,7 @@
             }
         })(HTMLTableRowElement.prototype.insertCell);
 
-        function add_row_table(table_name, type, table_data) {
+        function add_row_table(table_name, type, table_data, new_flag) {
             var table_current_row;
             if (type == "head")
                 table_current_row = document.getElementById(table_name).createTHead().insertRow(-1);
@@ -83,7 +83,8 @@
                 else
                     table_current_row = document.getElementById(table_name).tBodies[0].insertRow(-1);
             }
-
+            if (new_flag == true)
+                table_current_row.style.background = "rgb(200, 255, 200)";
             for (var j = 0; j < table_data.length; j++)
                 table_current_row.insertCell(-1).innerHTML = table_data[j];
         }
@@ -94,6 +95,7 @@
 
 
         var xhr_tmr = new XMLHttpRequest();
+        var old_values = {};
 
         function update_field_callback() {
             if (xhr_tmr.readyState == 4 && xhr_tmr.status == 200) {
@@ -103,12 +105,18 @@
                     clear_table("table_values_bus_storage")
                     add_row_table("table_values_bus_storage", "head", ["topic", "timestamp", "value"])
                     for (let index = 0; index < json_data.length; index++) {
-                        add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value])
+                        if (old_values[json_data[index].topic] == json_data[index].value) {
+                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value], false)
+                        } else {
+                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value], true)
+                        }
+                        old_values[json_data[index].topic] = json_data[index].value
+                            //console.log(old_values)
                     }
                 }
             }
             if (xhr_tmr.readyState == 4) {
-                setTimeout(timer_update_field, 500)
+                setTimeout(timer_update_field, 1000)
             }
         }
 
