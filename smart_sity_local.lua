@@ -15,6 +15,7 @@ local http_client = require('http.client')
 local http_server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})
 
 local scripts_drivers = require 'scripts_drivers'
+local scripts_events = require 'scripts_events'
 local ts_storage = require 'ts_storage'
 local bus = require 'bus'
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env tarantool
 
+local log = require 'log'
+
 local bus = {}
 local box = box
 local scripts_events = require 'scripts_events'
@@ -7,7 +9,7 @@ local fifo_storage, fifo_storage_sequence
 
 function bus.events_handler(topic, value)
    for name, item in pairs(scripts_events) do
-      if (item.topic == topic) then
+      if (item.topic ~= nil and item.topic == topic) then
          print("Event "..name.." started on topic "..topic)
          return item.event_function(topic, value)
       end
