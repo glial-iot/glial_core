@@ -1,6 +1,7 @@
 #!/usr/bin/env tarantool
 local scripts_drivers = {}
 local bus = require 'bus'
+local ts_storage = require 'ts_storage'
 local system = require 'system'
 local log = require 'log'
 
@@ -132,6 +133,7 @@ function scripts_drivers.tarantool_stat_driver()
          bus.update_value("/tarantool/arena_used", system.round((stats.arena_used)/1000/1000), 2)
          bus.update_value("/tarantool/quota_used_ratio", tonumber(quota_used_ratio_number))
          fiber.sleep(10)
+         bus.update_value("/tarantool/ts_storage_count", ts_storage.object.index.primary:count())
       end
    end
    fiber.create(system_stats)
