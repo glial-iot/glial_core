@@ -124,10 +124,10 @@ function scripts_drivers.tarantool_stat_driver()
          _, _, arena_used_ratio_number = string.find(stats.arena_used_ratio, "(.+)%%$")
          _, _, quota_used_ratio_number = string.find(stats.quota_used_ratio, "(.+)%%$")
          bus.update_value("/tarantool/arena_used_ratio", tonumber(arena_used_ratio_number))
-         bus.update_value("/tarantool/arena_size", tonumber(stats.arena_size))
-         bus.update_value("/tarantool/arena_used", tonumber(stats.arena_used))
+         bus.update_value("/tarantool/arena_size", tonumber(stats.arena_size)/1000/1000)
+         bus.update_value("/tarantool/arena_used", tonumber(stats.arena_used)/1000/1000)
          bus.update_value("/tarantool/quota_used_ratio", tonumber(quota_used_ratio_number))
-         fiber.sleep(5)
+         fiber.sleep(10)
       end
    end
    fiber.create(system_stats)
