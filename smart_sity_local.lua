@@ -1,5 +1,4 @@
 #!/usr/bin/env tarantool
-local mqtt = require 'mqtt'
 local inspect = require 'inspect'
 local json = require 'json'
 local fiber = require 'fiber'
@@ -194,36 +193,6 @@ local function http_server_data_bus_storage_handler(req)
 end
 
 
-local function http_server_action_handler(req)
-   local action_param = req:param("action")
-   local result, emessage
-   if (action_param ~= nil) then
-      if (action_param == "on_light_1") then
-         result, emessage = mqtt.wb:publish("/devices/noolite_tx_0x290/controls/state/on", "1", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "off_light_1") then
-         result, emessage = mqtt.wb:publish("/devices/noolite_tx_0x290/controls/state/on", "0", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "on_light_2") then
-         result, emessage = mqtt.wb:publish("/devices/noolite_tx_0x291/controls/state/on", "1", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "off_light_2") then
-         result, emessage = mqtt.wb:publish("/devices/noolite_tx_0x291/controls/state/on", "0", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "on_ac") then
-         result, emessage = mqtt.wb:publish("/devices/wb-mr6c_105/controls/K4/on", "1", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "off_ac") then
-         result, emessage = mqtt.wb:publish("/devices/wb-mr6c_105/controls/K4/on", "0", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "on_fan") then
-         result, emessage = mqtt.wb:publish("/devices/wb-mr6c_105/controls/K5/on", "1", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "off_fan") then
-         result, emessage = mqtt.wb:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt.QOS_1, mqtt.NON_RETAIN)
-      elseif (action_param == "tarantool_stop") then
-         os.exit()
-      elseif (action_param == "wipe_storage") then
-         result, emessage = os.execute("rm -rf ./db/*")
-         if (result == 0) then result = true end
-      end
-      print(result, action_param, emessage)
-      return req:render{ json = { result = result } }
-   end
-end
 
 local function http_server_root_handler(req)
    return req:redirect_to('/bus_storage')
@@ -260,7 +229,6 @@ local function endpoints_config()
    local endpoints = {}
    endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
    endpoints[#endpoints+1] = {"/data", nil, nil, http_server_data_handler}
-   endpoints[#endpoints+1] = {"/action", nil, nil, http_server_action_handler}
 
    endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
    endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
