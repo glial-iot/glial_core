@@ -13,7 +13,7 @@ local average_data = {}
 function bus.events_handler(topic, value)
    for name, item in pairs(scripts_events) do
       if (item.topic ~= nil and item.topic == topic) then
-         print("Event "..name.." started on topic "..topic)
+         --print("Event "..name.." started on topic "..topic)
          return item.event_function(topic, value)
       end
    end
