@@ -1,12 +1,69 @@
 #!/usr/bin/env tarantool
-local scripts_events = {}
+local log = require 'log'
+local ts_storage = require 'ts_storage'
 
+local scripts_events = {}
+scripts_events.types = {HTTP = 1, TOPIC = 2}
 
 scripts_events.vaisala_event = {}
+scripts_events.vaisala_event.type = scripts_events.types.TOPIC
 scripts_events.vaisala_event.topic = "/vaisala/H2S"
 function scripts_events.vaisala_event.event_function(topic, value)
    local bus = require 'bus'
    bus.update_value(topic.."_x100", value*100)
+end
+
+
+scripts_events.mqtt_events = {}
+scripts_events.mqtt_events.type = scripts_events.types.HTTP
+scripts_events.mqtt_events.endpoint = "/action"
+scripts_events.mqtt_events.event_function = function(req) --обернуть в универсальную функицю, подумать
+   local params = req:param()
+   local mqtt_local = require 'mqtt'
+   local config_local = require 'config'
+
+
+   if (params["action"] ~= nil) then
+      local result, emessage
+      --print(require('inspect')(params["action"]))
+      local mqtt_object = mqtt_local.new(config_local.MQTT_WIRENBOARD_ID.."_action_driver", true)
+      mqtt_object:connect({host=config_local.MQTT_WIRENBOARD_HOST,port=config_local.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt_local.LOG_ALL})
+
+      if (params["action"] == "on_light_1") then
+         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x290/controls/state/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "off_light_1") then
+         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x290/controls/state/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "on_light_2") then
+         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x291/controls/state/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "off_light_2") then
+         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x291/controls/state/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "on_ac") then
+         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K4/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "off_ac") then
+         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K4/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "on_fan") then
+         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "off_fan") then
+         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+      elseif (params["action"] == "tarantool_stop") then
+         os.exit()
+      elseif (params["action"] == "wipe_storage") then
+         result, emessage = os.execute("rm -rf ./db/*")
+         if (result == 0) then result = true end
+      end
+      log.info("Action: "..tostring(result).."/"..emessage)
+      return req:render{ json = { result = result } }
+   end
+end
+
+
+scripts_events.test_http_event = {}
+scripts_events.test_http_event.type = scripts_events.types.HTTP
+scripts_events.test_http_event.endpoint = "/action2"
+scripts_events.test_http_event.event_function = function(req)
+   local inspect = require 'inspect'
+   local params = req:param()
+   print(inspect(params))
 end
 
 

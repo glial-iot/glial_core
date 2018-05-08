@@ -295,6 +295,15 @@ local function http_config(endpoints_list)
    end
 end
 
+local function events_action_config()
+   for name, item in pairs(scripts_events) do
+      if (item ~= nil and item.type ~= nil and item.type == scripts_events.types.HTTP and item.endpoint ~= nil) then
+         print("Event "..name.." bind on endpoint "..item.endpoint)
+         http_server:route({ path = item.endpoint, file = item.file_endpoint }, item.event_function)
+      end
+   end
+end
+
 
 local function fifo_storage_worker()
    while true do
@@ -318,6 +327,7 @@ ts_storage.init()
 
 local endpoints_object = endpoints_config()
 http_config(endpoints_object)
+events_action_config()
 
 fiber.create(fifo_storage_worker)
 scripts_drivers.start()
