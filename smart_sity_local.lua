@@ -269,7 +269,7 @@ end
 
 local function fifo_storage_worker()
    while true do
-      fiber.sleep(0.01)
+      fiber.sleep(0.001)
       local key, topic, timestamp, value = bus.get_delete_value()
       if (key ~= nil) then
          bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
