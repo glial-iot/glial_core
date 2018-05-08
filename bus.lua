@@ -73,10 +73,10 @@ function bus.get_delete_value()
       --print("fifo_storage_worker:", key, topic, timestamp, value)
       fifo_storage:delete(key)
       if (key > bus.max_key_value) then bus.max_key_value = key end
+      return key, topic, timestamp, value
    else
       fifo_storage_sequence:reset()
    end
-   return key, topic, timestamp, value
 end
 
 
