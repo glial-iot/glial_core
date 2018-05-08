@@ -50,6 +50,7 @@
 
                 <div id="chart1div" style="width:100%;height:350px;"></div>
                 <div id="chart2div" style="width:100%;height:350px;"></div>
+                <div id="chart3div" style="width:100%;height:350px;"></div>
 
             </main>
         </div>
@@ -220,6 +221,71 @@
             "titles": [],
             "dataLoader": {
                 "url": "tarantool-data?item=ratios",
+                "reload": 5,
+                "showCurtain": false
+            }
+        });
+
+
+        var chart_3 = AmCharts.makeChart("chart3div", {
+            "type": "serial",
+            "categoryField": "date",
+            "dataDateFormat": "YYYY-MM-DD, JJ:NN:SS",
+            "autoMarginOffset": 20,
+            "marginLeft": 40,
+            "marginRight": 40,
+            "tapToActivate": false,
+            "theme": "light",
+            "categoryAxis": {
+                "equalSpacing": true,
+                "minPeriod": "mm",
+                "parseDates": true,
+                "showFirstLabel": false,
+                "showLastLabel": false
+            },
+            "chartCursor": {
+                "enabled": true,
+                "cursorAlpha": 1,
+                "cursorColor": "#258cbb",
+                "limitToGraph": "g1",
+                "pan": true,
+                "valueLineAlpha": 0.2,
+                "valueLineBalloonEnabled": true,
+                "valueLineEnabled": true,
+                "valueZoomable": true
+            },
+            "graphs": [{
+                "bullet": "round",
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "bulletSize": 5,
+                "customMarker": "",
+                "hideBulletsCount": 50,
+                "id": "/tarantool/ts_storage_count",
+                "lineThickness": 2,
+                "tabIndex": 2,
+                "title": "TS storage count",
+                "useLineColorForBulletBorder": true,
+                "valueAxis": "parts",
+                "valueField": "/tarantool/ts_storage_count"
+            }],
+            "guides": [],
+            "valueAxes": [{
+                "id": "parts",
+                "logarithmic": false,
+                "title": "Parts"
+            }],
+            "allLabels": [],
+            "balloon": {
+                "borderThickness": 1,
+                "shadowAlpha": 0
+            },
+            "legend": {
+                "enabled": true
+            },
+            "titles": [],
+            "dataLoader": {
+                "url": "tarantool-data?item=tscount",
                 "reload": 5,
                 "showCurtain": false
             }

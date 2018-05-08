@@ -1,6 +1,8 @@
 #!/usr/bin/env tarantool
 local log = require 'log'
 local ts_storage = require 'ts_storage'
+local system = require "system"
+
 
 local scripts_events = {}
 scripts_events.types = {HTTP = 1, TOPIC = 2}
@@ -51,7 +53,7 @@ scripts_events.mqtt_events.event_function = function(req) --обернуть в 
          result, emessage = os.execute("rm -rf ./db/*")
          if (result == 0) then result = true end
       end
-      log.info("Action: "..tostring(result).."/"..emessage)
+      log.info("Action: "..tostring(result).."/"..(emessage or "nil"))
       return req:render{ json = { result = result } }
    end
 end
@@ -74,7 +76,7 @@ scripts_events.tarantool_web_graph.event_function = function(req)
    local params = req:param()
    local data_object, i = {}, 0
    local table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
-   --local table = ReverseTable(table)
+   table = system.reverse_table(table)
 
    for _, tuple in pairs(table) do
       local topic = tuple[2]
@@ -90,6 +92,13 @@ scripts_events.tarantool_web_graph.event_function = function(req)
          end
       elseif (params["item"] == "mem") then
          if (topic == "/tarantool/arena_size" or topic == "/tarantool/arena_used") then
+            i = i + 1
+            data_object[i] = {}
+            data_object[i].date = date
+            data_object[i][topic] = tonumber(value)
+         end
+      elseif (params["item"] == "tscount") then
+         if (topic == "/tarantool/ts_storage_count") then
             i = i + 1
             data_object[i] = {}
             data_object[i].date = date
