@@ -6,7 +6,7 @@ local fiber = require 'fiber'
 local impact = require 'impact'
 local log = require 'log'
 local box = box
-local settings, bus_storage, ts_storage_object
+local settings, bus_storage
 
 local proto_menu = {}
 
@@ -36,7 +36,7 @@ local function http_server_data_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local table = ReverseTable(ts_storage_object.index.serial_number:select({type_item}, {iterator = 'REQ'}))
+   local table = ReverseTable(ts_storage.object.index.serial_number:select({type_item}, {iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[5]
       i = i + 1
@@ -52,7 +52,7 @@ end
 local function http_server_data_vaisala_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local data_object, i = {}, 0
-   local raw_table = ts_storage_object.index.primary:select(nil, {iterator = 'REQ'})
+   local raw_table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
    local table = ReverseTable(raw_table)
 
    for _, tuple in pairs(table) do
@@ -101,7 +101,7 @@ local function http_server_data_temperature_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local table = ReverseTable(ts_storage_object.index.primary:select(nil, {iterator = 'REQ'}))
+   local table = ReverseTable(ts_storage.object.index.primary:select(nil, {iterator = 'REQ'}))
    for _, tuple in pairs(table) do
       local serialNumber = tuple[5]
       local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[3])
@@ -124,7 +124,7 @@ local function http_server_data_power_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
-   local raw_table = ts_storage_object.index.primary:select(nil, {iterator = 'REQ'})
+   local raw_table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
    local table = ReverseTable(raw_table)
    for _, tuple in pairs(table) do
       local serialNumber = tuple[5]
@@ -149,7 +149,7 @@ local function http_server_data_tsstorage_handler(req)
    local return_object
    local data_object, i = {}, 0
 
-   for _, tuple in ts_storage_object.index.primary:pairs(nil, { iterator = box.index.REQ}) do
+   for _, tuple in ts_storage.object.index.primary:pairs(nil, { iterator = box.index.REQ}) do
       i = i + 1
       data_object[i] = {}
       data_object[i].timestamp = tuple[3]
@@ -314,7 +314,7 @@ end
 box_config()
 database_init()
 bus.init()
-ts_storage_object = ts_storage.init()
+ts_storage.init()
 
 local endpoints_object = endpoints_config()
 http_config(endpoints_object)
