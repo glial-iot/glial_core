@@ -132,6 +132,7 @@ function scripts_drivers.tarantool_stat_driver()
          bus.update_value("/tarantool/arena_size", system.round((stats.arena_size)/1000/1000), 2)
          bus.update_value("/tarantool/arena_used", system.round((stats.arena_used)/1000/1000), 2)
          bus.update_value("/tarantool/quota_used_ratio", tonumber(quota_used_ratio_number))
+         bus.update_value("/tarantool/max_bus_key", tonumber(bus.max_key_value))
          bus.update_value("/tarantool/ts_storage_count", ts_storage.object.index.primary:count())
          fiber.sleep(60)
       end
