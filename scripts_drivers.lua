@@ -5,7 +5,9 @@ local ts_storage = require 'ts_storage'
 local system = require 'system'
 local log = require 'log'
 
-function scripts_drivers.map12h_driver()
+scripts_drivers.map12h_driver = {}
+scripts_drivers.map12h_driver.active = true
+scripts_drivers.map12h_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
    local function map12h_driver_mqtt_callback(message_id, topic, payload, gos, retain)
@@ -41,13 +43,12 @@ function scripts_drivers.map12h_driver()
    end
 end
 
-
-function scripts_drivers.vaisala_driver()
+scripts_drivers.vaisala_driver = {}
+scripts_drivers.vaisala_driver.active = false
+scripts_drivers.vaisala_driver.driver_function = function()
    local config = require 'config'
    local mqtt = require 'mqtt'
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
-      --print(payload)
-
       local _, _, vaisala_sensor_topic = string.find(topic, "(/devices/vaisala/data)")
       if (vaisala_sensor_topic ~= nil and payload ~= nil) then
          local vaisala_data = {}
@@ -55,8 +56,8 @@ function scripts_drivers.vaisala_driver()
 
          for value_name, value_data in pairs(vaisala_data) do
             local local_topic = "/vaisala/"..value_name
-            --bus.update_value(local_topic, tonumber(value_data))
-            --bus.update_value_average(local_topic, tonumber(value_data), 5)
+            bus.update_value(local_topic, tonumber(value_data))
+            bus.update_value_average(local_topic, tonumber(value_data), 5)
          end
 
       end
@@ -72,8 +73,9 @@ function scripts_drivers.vaisala_driver()
    end
 end
 
-
-function scripts_drivers.mercury_driver()
+scripts_drivers.mercury_driver = {}
+scripts_drivers.mercury_driver.active = true
+scripts_drivers.mercury_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
@@ -93,8 +95,9 @@ function scripts_drivers.mercury_driver()
    end
 end
 
-
-function scripts_drivers.wirenboard_driver()
+scripts_drivers.wirenboard_driver = {}
+scripts_drivers.wirenboard_driver.active = true
+scripts_drivers.wirenboard_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
@@ -118,8 +121,9 @@ function scripts_drivers.wirenboard_driver()
    end
 end
 
-
-function scripts_drivers.tarantool_stat_driver()
+scripts_drivers.tarantool_stat_driver = {}
+scripts_drivers.tarantool_stat_driver.active = true
+scripts_drivers.tarantool_stat_driver.driver_function = function()
    local fiber = require 'fiber'
 
    local function system_stats()
@@ -144,9 +148,9 @@ end
 
 
 function scripts_drivers.start() -- сделать возможность выборочного отключения драйверов
-   for name, func in pairs(scripts_drivers) do
-      if (name ~= "start") then
-         func()
+   for name, driver_object in pairs(scripts_drivers) do
+      if (name ~= "start" and driver_object.active == true) then
+         driver_object.driver_function()
          log.warn("Started "..name)
       end
    end
