@@ -111,10 +111,10 @@ scripts_events.tarantool_web_graph.event_function = function(req)
 end
 
 
-scripts_events.tarantool_web_graph = {}
-scripts_events.tarantool_web_graph.type = scripts_events.types.HTTP
-scripts_events.tarantool_web_graph.endpoint = "/vaisala-data"
-scripts_events.tarantool_web_graph.event_function = function(req)
+scripts_events.vaisala_web_graph = {}
+scripts_events.vaisala_web_graph.type = scripts_events.types.HTTP
+scripts_events.vaisala_web_graph.endpoint = "/vaisala-data"
+scripts_events.vaisala_web_graph.event_function = function(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local data_object, i = {}, 0
    local raw_table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
