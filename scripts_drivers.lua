@@ -56,8 +56,7 @@ scripts_drivers.vaisala_driver.driver_function = function()
 
          for value_name, value_data in pairs(vaisala_data) do
             local local_topic = "/vaisala/"..value_name
-            bus.update_value(local_topic, tonumber(value_data))
-            bus.update_value_average(local_topic, tonumber(value_data), 5)
+            bus.update_value_average(local_topic, tonumber(value_data), 10)
          end
 
       end
