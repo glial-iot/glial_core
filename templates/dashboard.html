@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+
+    <title>Nokia IMPACT</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+    <link href="local_settings.css" rel="stylesheet">
+
+</head>
+
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+        <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Nokia IMPACT</a>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-1 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        % for i,v in pairs(menu) do
+                        <li class="nav-item">
+                            <a class="nav-link<%= " "..(v.class or " ") %>" href="<%= v.href or " /# " %>">
+                                <span data-feather="file"></span>
+                                <%= v.name or "No name" %>
+                            </a>
+                        </li>
+                        % end
+                    </ul>
+                </div>
+                <footer class="text-muted text-center text-small">
+                    <p class="mb-1">Nokia EE IoT Laboratory &copy; 2018</p>
+                </footer>
+            </nav>
+
+
+            <div class="album bg-light col-md-11 ml-sm-auto col-lg-11 pt-3">
+
+                <div class="text-center">
+                    <img class="d-block mx-auto mb-4" src="nokia.svg" alt="" width="600">
+                    <br><br>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=009900&fg=eceeef&size=30&text=Bus storage">
+
+                            <div class="card-body">
+                                <p class="card-text">Single bus for controlling IOT devices based on IMPACT.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/bus_storage';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=666600&fg=eceeef&size=30&text=Time series storage log">
+
+                            <div class="card-body">
+                                <p class="card-text">Time Series Storage is a system of storing data that is variable in time (such, for example, as the value from counters). Graphs of resource consumption are based on these data.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/tsstorage';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=009999&fg=eceeef&size=30&text=Temperature">
+
+                            <div class="card-body">
+                                <p class="card-text">Data from the OneWire temperature sensors (physical data collection using WirenBoard)</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/temperature';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=336666&fg=eceeef&size=30&text=Power metrics">
+
+                            <div class="card-body">
+                                <p class="card-text">Power quality analyzer data: voltage, frequency, current, power consumption, harmonics, and other metrics.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/power';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=006699&fg=eceeef&size=30&text=Vaisala weather station">
+
+                            <div class="card-body">
+                                <p class="card-text">Data from Vaisala weather station: temperature, humidity, amount of harmful substances and particles</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/vaisala';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=0033CC&fg=eceeef&size=30&text=Water counter (wirenboard)">
+
+                            <div class="card-body">
+                                <p class="card-text">Data from the water meter (physical data collection using WirenBoard).</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/water';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=CC9900&fg=eceeef&size=30&text=Control panel">
+
+                            <div class="card-body">
+                                <p class="card-text">System control panel and commands for available actuators.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/control';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=993366&fg=eceeef&size=30&text=Tarantool storage metrics">
+
+                            <div class="card-body">
+                                <p class="card-text">Internal data store metrics (common bus and time series database).</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='/tarantool';" type="button" class="btn btn-sm btn-outline-secondary">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=996666&fg=eceeef&size=30&text=Linergo control panel">
+
+                            <div class="card-body">
+                                <p class="card-text">Partner system control panel: Linergo (data collection systems).</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='http://a.linergo.ru/login.xhtml';" type="button" class="btn btn-sm btn-outline-secondary">Go to panel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=CC0000&fg=eceeef&size=30&text=GasCloud control panel">
+
+                            <div class="card-body">
+                                <p class="card-text">Partner system control panel: Gas Clous (smart gas meters).</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='http://gascloud.ru/';" type="button" class="btn btn-sm btn-outline-secondary">Go to panel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=CCCC00&fg=eceeef&size=30&text=Unilight control panel">
+
+                            <div class="card-body">
+                                <p class="card-text">Partner system control panel: Uni Light (automated lighting control systems).</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='http://unilight.su/';" type="button" class="btn btn-sm btn-outline-secondary">Go to panel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card mb-3 box-shadow">
+                            <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=663399&fg=eceeef&size=30&text=M2M Connect control panel">
+
+                            <div class="card-body">
+                                <p class="card-text">Partner system control panel: M2M Connect (system for collecting readings and controlling devices).</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button onclick="location.href='https://www.m2mconnect.ru/Account/Login';" type="button" class="btn btn-sm btn-outline-secondary">Go to panel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="jquery-slim.min.js"></script>
+    <script src="popper.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+    <script src="holder.min.js"></script>
+
+
+
+
+</body>
+
+</html>

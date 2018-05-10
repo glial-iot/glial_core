@@ -189,7 +189,7 @@ end
 
 
 local function http_server_root_handler(req)
-   return req:redirect_to('/bus_storage')
+   return req:redirect_to('/dashboard')
 end
 
 local function http_server_html_handler(req)
@@ -222,6 +222,7 @@ end
 local function endpoints_config()
    local endpoints = {}
    endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
+   endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler}
    endpoints[#endpoints+1] = {"/data", nil, nil, http_server_data_handler}
 
    endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
