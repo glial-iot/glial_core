@@ -4,9 +4,11 @@ local bus = require 'bus'
 local ts_storage = require 'ts_storage'
 local system = require 'system'
 local log = require 'log'
+local logger = require 'logger'
 
 scripts_drivers.map12h_driver = {}
 scripts_drivers.map12h_driver.active = true
+scripts_drivers.map12h_driver.name = "map12h_driver"
 scripts_drivers.map12h_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
@@ -45,6 +47,7 @@ end
 
 scripts_drivers.vaisala_driver = {}
 scripts_drivers.vaisala_driver.active = true
+scripts_drivers.vaisala_driver.name = "vaisala_driver"
 scripts_drivers.vaisala_driver.driver_function = function()
    local config = require 'config'
    local mqtt = require 'mqtt'
@@ -74,6 +77,7 @@ end
 
 scripts_drivers.mercury_driver = {}
 scripts_drivers.mercury_driver.active = true
+scripts_drivers.mercury_driver.name = "mercury_driver"
 scripts_drivers.mercury_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
@@ -96,6 +100,7 @@ end
 
 scripts_drivers.wirenboard_driver = {}
 scripts_drivers.wirenboard_driver.active = true
+scripts_drivers.wirenboard_driver.name = "wirenboard_driver"
 scripts_drivers.wirenboard_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
@@ -122,6 +127,7 @@ end
 
 scripts_drivers.tarantool_stat_driver = {}
 scripts_drivers.tarantool_stat_driver.active = true
+scripts_drivers.tarantool_stat_driver.name = "tarantool_stat_driver"
 scripts_drivers.tarantool_stat_driver.driver_function = function()
    local fiber = require 'fiber'
 
@@ -144,13 +150,24 @@ scripts_drivers.tarantool_stat_driver.driver_function = function()
 end
 
 
+scripts_drivers.fake_off_driver = {}
+scripts_drivers.fake_off_driver.active = false
+scripts_drivers.fake_off_driver.name = "fake_off_driver"
+scripts_drivers.fake_off_driver.driver_function = function()
+   local a = 1
+end
 
 
-function scripts_drivers.start() -- сделать возможность выборочного отключения драйверов
+
+function scripts_drivers.start()
    for name, driver_object in pairs(scripts_drivers) do
-      if (name ~= "start" and driver_object.active == true) then
-         driver_object.driver_function()
-         log.warn("Started "..name)
+      if (name ~= "start") then
+         if (driver_object.active == true) then
+            driver_object.driver_function() --добавить обработку ошибок с pcall и передачу ошибок в лог
+            logger.add_entry(logger.INFO, "Drivers subsystem", 'Driver "'..driver_object.name..'" start (active)')
+         else
+            logger.add_entry(logger.INFO, "Drivers subsystem", 'Driver "'..driver_object.name..'" not start (non-active)')
+         end
       end
    end
 end

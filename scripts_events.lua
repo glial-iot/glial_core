@@ -1,8 +1,8 @@
 #!/usr/bin/env tarantool
 local log = require 'log'
 local ts_storage = require 'ts_storage'
+local logger = require 'logger'
 local system = require "system"
-
 
 local scripts_events = {}
 scripts_events.types = {HTTP = 1, TOPIC = 2}
@@ -19,6 +19,7 @@ end
 scripts_events.mqtt_events = {}
 scripts_events.mqtt_events.type = scripts_events.types.HTTP
 scripts_events.mqtt_events.endpoint = "/action"
+scripts_events.mqtt_events.name = "mqtt_events"
 scripts_events.mqtt_events.event_function = function(req) --обернуть в универсальную функицю, подумать
    local params = req:param()
    local mqtt_local = require 'mqtt'
@@ -62,16 +63,19 @@ end
 scripts_events.test_http_event = {}
 scripts_events.test_http_event.type = scripts_events.types.HTTP
 scripts_events.test_http_event.endpoint = "/action2"
+scripts_events.test_http_event.name = "test_http_event"
 scripts_events.test_http_event.event_function = function(req)
+   local func_name = scripts_events.test_http_event.name
    local inspect = require 'inspect'
    local params = req:param()
-   print(inspect(params))
+   logger.add_entry(logger.INFO, func_name, inspect(params))
 end
 
 
 scripts_events.tarantool_web_graph = {}
 scripts_events.tarantool_web_graph.type = scripts_events.types.HTTP
 scripts_events.tarantool_web_graph.endpoint = "/tarantool-data"
+scripts_events.tarantool_web_graph.name = "tarantool_web_graph"
 scripts_events.tarantool_web_graph.event_function = function(req)
    local params = req:param()
    local data_object, i = {}, 0
@@ -114,6 +118,7 @@ end
 scripts_events.vaisala_web_graph = {}
 scripts_events.vaisala_web_graph.type = scripts_events.types.HTTP
 scripts_events.vaisala_web_graph.endpoint = "/vaisala-data"
+scripts_events.vaisala_web_graph.name = "vaisala_web_graph"
 scripts_events.vaisala_web_graph.event_function = function(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local data_object, i = {}, 0

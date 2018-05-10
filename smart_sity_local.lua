@@ -18,11 +18,9 @@ local scripts_events = require 'scripts_events'
 local ts_storage = require 'ts_storage'
 local bus = require 'bus'
 local system = require "system"
+local logger = require "logger"
 
 io.stdout:setvbuf("no")
-
-
-
 
 local function http_server_data_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
@@ -174,6 +172,9 @@ local function endpoints_config()
    endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler}
    endpoints[#endpoints+1] = {"/data", nil, nil, http_server_data_handler}
 
+   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/logger-data", nil, nil, logger.return_all_entry}
+
    endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
    endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
 
@@ -213,11 +214,11 @@ local function http_config(endpoints_list)
    end
 end
 
-local function events_action_config()
+local function events_action_config() -- перенести в events
    for name, item in pairs(scripts_events) do
       if (item ~= nil and item.type ~= nil and item.type == scripts_events.types.HTTP and item.endpoint ~= nil) then
-         print("Event "..name.." bind on endpoint "..item.endpoint)
          http_server:route({ path = item.endpoint, file = item.file_endpoint }, item.event_function)
+         logger.add_entry(logger.INFO, "Events subsystem", 'Event "'..item.name..'" bind endpoint "'..item.endpoint..'"')
       end
    end
 end
@@ -241,14 +242,24 @@ end
 
 
 box_config()
-database_init()
+
+logger.init()
+logger.add_entry(logger.INFO, "Main system", "System starts up...")
+
+--database_init()
 bus.init()
+fiber.create(fifo_storage_worker)
+
+logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
 ts_storage.init()
+logger.add_entry(logger.INFO, "Main system", "Time Series storage initialized")
 
 http_config(endpoints_config())
+logger.add_entry(logger.INFO, "Main system", "Events configured")
 events_action_config()
 
-fiber.create(fifo_storage_worker)
 scripts_drivers.start()
+logger.add_entry(logger.INFO, "Main system", "Drivers started")
 
+logger.add_entry(logger.INFO, "Main system", "System started")
 http_server:start()
