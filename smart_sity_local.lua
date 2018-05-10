@@ -243,8 +243,15 @@ local function endpoints_config()
    endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler}
 
    endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_server_html_handler}
-   --endpoints[#endpoints+1] = {"192.168.1.111", nil, "WirenBoard", nil}
 
+   endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+   endpoints[#endpoints+1] = {"http://192.168.1.111/", nil, "⨠ WirenBoard", nil}
+   endpoints[#endpoints+1] = {"http://192.168.1.45:9000/", nil, "⨠ Portainer", nil}
+   endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+   endpoints[#endpoints+1] = {"http://a.linergo.ru/login.xhtml", nil, "⨠ Linergo", nil}
+   endpoints[#endpoints+1] = {"http://gascloud.ru/", nil, "⨠ GasCloud", nil}
+   endpoints[#endpoints+1] = {"http://unilight.su/", nil, "⨠ Unilight", nil}
+   endpoints[#endpoints+1] = {"https://www.m2mconnect.ru/Account/Login", nil, "⨠ M2M Connect", nil}
    return endpoints
 end
 
