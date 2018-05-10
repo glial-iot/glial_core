@@ -212,9 +212,6 @@ end
 
 
 local function database_init()
-   bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
-   bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
-
    --settings = box.schema.space.create('settings', {if_not_exists = true, engine = 'vinyl'})
    --settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
 end
@@ -294,7 +291,7 @@ end
 
 box_config()
 database_init()
-bus.init()
+bus_storage = bus.init()
 ts_storage.init()
 
 local endpoints_object = endpoints_config()

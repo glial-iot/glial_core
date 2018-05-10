@@ -6,7 +6,7 @@ local bus = {}
 local box = box
 local scripts_events = require 'scripts_events'
 local system = require 'system'
-local fifo_storage, fifo_storage_sequence
+local fifo_storage, fifo_storage_sequence, bus_storage
 bus.max_key_value = 0
 local average_data = {}
 
@@ -23,6 +23,11 @@ function bus.init()
    fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true})
    fifo_storage_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
    fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
+
+   bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
+   bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
+
+   return bus_storage
 end
 
 function bus.update_value(topic, value)
