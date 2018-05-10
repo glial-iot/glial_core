@@ -44,7 +44,7 @@ scripts_drivers.map12h_driver.driver_function = function()
 end
 
 scripts_drivers.vaisala_driver = {}
-scripts_drivers.vaisala_driver.active = false
+scripts_drivers.vaisala_driver.active = true
 scripts_drivers.vaisala_driver.driver_function = function()
    local config = require 'config'
    local mqtt = require 'mqtt'
