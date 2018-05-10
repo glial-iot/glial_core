@@ -51,7 +51,7 @@ scripts_events.mqtt_events.event_function = function(req) --обернуть в 
          os.exit()
       elseif (params["action"] == "wipe_storage") then
          result, emessage = os.execute("rm -rf ./db/*")
-         if (result == 0) then result = true end
+         os.exit()
       end
       log.info("Action: "..tostring(result).."/"..(emessage or "nil"))
       return req:render{ json = { result = result } }
