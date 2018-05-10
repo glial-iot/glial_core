@@ -42,53 +42,6 @@ local function http_server_data_handler(req)
    return return_object
 end
 
-local function http_server_data_vaisala_handler(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local data_object, i = {}, 0
-   local raw_table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
-   local table = system.reverse_table(raw_table)
-
-   for _, tuple in pairs(table) do
-      local serialNumber = tuple[5]
-      local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[3])
-      local value = tuple[4]
-
-      if (type_item == "PM") then
-         if (serialNumber == "PM25" or serialNumber == "PM10") then
-            i = i + 1
-            data_object[i] = {}
-            data_object[i].date = date
-            data_object[i][serialNumber] = tonumber(value)
-         end
-      end
-      if (type_item == "PA") then
-         if (serialNumber == "PAa" or serialNumber == "PAw") then
-            i = i + 1
-            data_object[i] = {}
-            data_object[i].date = date
-            data_object[i][serialNumber] = tonumber(value)
-         end
-      end
-      if (type_item == "RH") then
-         if (serialNumber == "RHa" or serialNumber == "RHw") then
-            i = i + 1
-            data_object[i] = {}
-            data_object[i].date = date
-            data_object[i][serialNumber] = tonumber(value)
-         end
-      end
-      if (type_item == "T") then
-         if (serialNumber == "Ta" or serialNumber == "Tw") then
-            i = i + 1
-            data_object[i] = {}
-            data_object[i].date = date
-            data_object[i][serialNumber] = tonumber(value)
-         end
-      end
-      if (type_limit ~= nil and type_limit <= i) then break end
-   end
-   return req:render{ json = data_object }
-end
 
 local function http_server_data_temperature_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
@@ -235,7 +188,6 @@ local function endpoints_config()
    endpoints[#endpoints+1] = {"/power-data", nil, nil, http_server_data_power_handler}
 
    endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/vaisala-data", nil, nil, http_server_data_vaisala_handler}
 
    endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_server_html_handler}
    endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler}
