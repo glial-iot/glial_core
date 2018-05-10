@@ -5,7 +5,6 @@ local fiber = require 'fiber'
 local impact = require 'impact'
 local log = require 'log'
 local box = box
-local settings, bus_storage
 
 local proto_menu = {}
 
@@ -120,7 +119,7 @@ local function http_server_data_bus_storage_handler(req)
    local return_object
    local data_object, i = {}, 0
 
-   for _, tuple in bus_storage.index.topic:pairs() do
+   for _, tuple in bus.bus_storage.index.topic:pairs() do
       i = i + 1
       data_object[i] = {}
       data_object[i].topic = tuple[1]
@@ -228,7 +227,7 @@ local function fifo_storage_worker()
    while true do
       local key, topic, timestamp, value = bus.get_delete_value()
       if (key ~= nil) then
-         bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
+         bus.bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
          local _, _, new_topic, name = string.find(topic, "(/.+/)(.+)$")
          if (topic ~= nil and name ~= nil) then
             ts_storage.update_value(topic, value, name)
@@ -243,11 +242,10 @@ end
 
 box_config()
 database_init()
-bus_storage = bus.init()
+bus.init()
 ts_storage.init()
 
-local endpoints_object = endpoints_config()
-http_config(endpoints_object)
+http_config(endpoints_config())
 events_action_config()
 
 fiber.create(fifo_storage_worker)

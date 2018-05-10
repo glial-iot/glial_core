@@ -6,7 +6,6 @@ local bus = {}
 local box = box
 local scripts_events = require 'scripts_events'
 local system = require 'system'
-local fifo_storage, fifo_storage_sequence, bus_storage
 bus.max_key_value = 0
 local average_data = {}
 
@@ -20,20 +19,20 @@ function bus.events_handler(topic, value)
 end
 
 function bus.init()
-   fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true})
-   fifo_storage_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
-   fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
+   bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true})
+   bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
+   bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
 
-   bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
-   bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
+   bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
+   bus.bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
 
-   return bus_storage
+   return bus.bus_storage
 end
 
 function bus.update_value(topic, value)
    local timestamp = os.time()
    local new_value  = bus.events_handler(topic, value)
-   fifo_storage:insert{nil, topic, timestamp, (new_value or value)}
+   bus.fifo_storage:insert{nil, topic, timestamp, (new_value or value)}
 end
 
 function bus.update_value_average(topic, value, period)
@@ -56,7 +55,7 @@ function bus.update_value_average(topic, value, period)
          timestamp = math.floor((average_data[topic].timestamp + timestamp)/2)
       end
 
-      fifo_storage:insert{nil, topic, timestamp, average_value}
+      bus.fifo_storage:insert{nil, topic, timestamp, average_value}
       --print("average(topic "..topic..") calc: "..average_value)
       average_data[topic].timestamp = timestamp + period
       average_data[topic].data = nil
@@ -68,7 +67,7 @@ function bus.update_value_average(topic, value, period)
 end
 
 function bus.get_delete_value()
-   local table = fifo_storage.index.primary:select(nil, {iterator = 'EQ', limit = 1})
+   local table = bus.fifo_storage.index.primary:select(nil, {iterator = 'EQ', limit = 1})
    local key, topic, timestamp, value
    if (table[1] ~= nil) then
       key = table[1][1]
@@ -76,11 +75,11 @@ function bus.get_delete_value()
       timestamp = table[1][3]
       value = table[1][4]
       --print("fifo_storage_worker:", key, topic, timestamp, value)
-      fifo_storage:delete(key)
+      bus.fifo_storage:delete(key)
       if (key > bus.max_key_value) then bus.max_key_value = key end
       return key, topic, timestamp, value
    else
-      fifo_storage_sequence:reset()
+      bus.fifo_sequence:reset()
    end
 end
 
