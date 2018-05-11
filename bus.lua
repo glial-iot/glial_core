@@ -1,22 +1,48 @@
 #!/usr/bin/env tarantool
 
 local log = require 'log'
+local logger = require 'logger'
 
 local bus = {}
 local box = box
 local scripts_events = require 'scripts_events'
 local system = require 'system'
+
+local fiber = require 'fiber'
+local ts_storage = require 'ts_storage'
+
 bus.max_key_value = 0
 local average_data = {}
 
 function bus.events_handler(topic, value)
    for name, item in pairs(scripts_events) do
-      if (item.topic ~= nil and item.topic == topic) then
+      if (item ~= nil and type(item) == "table" and item.topic ~= nil and item.topic == topic) then
          --print("Event "..name.." started on topic "..topic)
-         return item.event_function(topic, value)
+         local status, data = pcall(item.event_function, topic, value)
+         if (status == true) then
+            return data
+         else
+            logger.add_entry(logger.ERROR, "Events subsystem", 'Event "'..item.name..'" run failed (internal error: '..(data or "")..')')
+         end
       end
    end
 end
+
+function bus.fifo_storage_worker()
+   while true do
+      local key, topic, timestamp, value = bus.get_delete_value()
+      if (key ~= nil) then
+         bus.bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
+         local _, _, new_topic, name = string.find(topic, "(/.+/)(.+)$")
+         if (topic ~= nil and name ~= nil) then
+            ts_storage.update_value(topic, value, name)
+         end
+      else
+         fiber.sleep(0.01)
+      end
+   end
+end
+
 
 function bus.init()
    bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true})
@@ -26,7 +52,7 @@ function bus.init()
    bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
    bus.bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
 
-   return bus.bus_storage
+   fiber.create(bus.fifo_storage_worker)
 end
 
 function bus.update_value(topic, value)

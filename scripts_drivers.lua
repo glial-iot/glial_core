@@ -5,6 +5,7 @@ local ts_storage = require 'ts_storage'
 local system = require 'system'
 local log = require 'log'
 local logger = require 'logger'
+local inspect = require 'inspect'
 
 scripts_drivers.map12h_driver = {}
 scripts_drivers.map12h_driver.active = true
@@ -12,6 +13,8 @@ scripts_drivers.map12h_driver.name = "map12h_driver"
 scripts_drivers.map12h_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
+   local net_box = require 'net.box'
+
    local function map12h_driver_mqtt_callback(message_id, topic, payload, gos, retain)
       local _, _, sensor_address = string.find(topic, "/devices/wb%-map12h_156/controls/(.+)$")
       if (sensor_address ~= nil and payload) then
@@ -20,28 +23,34 @@ scripts_drivers.map12h_driver.driver_function = function()
       end
    end
 
-   local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_map12h_driver", true)
-   local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
-   if (mqtt_status ~= true) then
-      print ("MQTT(map12h_driver) error: "..(mqtt_err or "unknown error"))
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   if (conn.state == "connecting") then
+      conn:close()
+      local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_map12h_driver", true)
+      local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
+      if (mqtt_status ~= true) then
+         print ("MQTT(map12h_driver) error: "..(mqtt_err or "unknown error"))
+      else
+         mqtt_object:on_message(map12h_driver_mqtt_callback)
+
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L1', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L2', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L3', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Total P', 0)
+
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L1', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L2', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L3', 0)
+
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L1', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L2', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L3', 0)
+
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Urms L1', 0)
+         mqtt_object:subscribe('/devices/wb-map12h_156/controls/Frequency', 0)
+      end
    else
-      mqtt_object:on_message(map12h_driver_mqtt_callback)
-
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L1', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L2', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 P L3', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Total P', 0)
-
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L1', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L2', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 Irms L3', 0)
-
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L1', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L2', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Ch 1 AP energy L3', 0)
-
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Urms L1', 0)
-      mqtt_object:subscribe('/devices/wb-map12h_156/controls/Frequency', 0)
+      error('Connect to host '..config.MQTT_WIRENBOARD_HOST..' failed')
    end
 end
 
@@ -51,6 +60,8 @@ scripts_drivers.vaisala_driver.name = "vaisala_driver"
 scripts_drivers.vaisala_driver.driver_function = function()
    local config = require 'config'
    local mqtt = require 'mqtt'
+   local net_box = require 'net.box'
+
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
       local _, _, vaisala_sensor_topic = string.find(topic, "(/devices/vaisala/data)")
       if (vaisala_sensor_topic ~= nil and payload ~= nil) then
@@ -65,13 +76,19 @@ scripts_drivers.vaisala_driver.driver_function = function()
       end
    end
 
-   local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_vaisala_driver", true)
-   local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
-   if (mqtt_status ~= true) then
-      print ("MQTT(vaisala_driver) error: "..(mqtt_err or "unknown error"))
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   if (conn.state == "connecting") then
+      conn:close()
+      local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_vaisala_driver", true)
+      local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
+      if (mqtt_status ~= true) then
+         print ("MQTT(vaisala_driver) error: "..(mqtt_err or "unknown error"))
+      else
+         mqtt_object:on_message(driver_mqtt_callback)
+         mqtt_object:subscribe('/devices/vaisala/data', 0)
+      end
    else
-      mqtt_object:on_message(driver_mqtt_callback)
-      mqtt_object:subscribe('/devices/vaisala/data', 0)
+      error('Connect to host '..config.MQTT_WIRENBOARD_HOST..' failed')
    end
 end
 
@@ -81,6 +98,8 @@ scripts_drivers.mercury_driver.name = "mercury_driver"
 scripts_drivers.mercury_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
+   local net_box = require 'net.box'
+
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
       local _, _, local_topic, item = string.find(topic, "(/devices/mercury200.+/controls/)(.+)$")
       if (local_topic ~= nil and payload ~= nil) then
@@ -88,13 +107,19 @@ scripts_drivers.mercury_driver.driver_function = function()
       end
    end
 
-   local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_mercury_driver", true)
-   local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
-   if (mqtt_status ~= true) then
-      print ("MQTT(mercury_driver) error: "..(mqtt_err or "unknown error"))
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   if (conn.state == "connecting") then
+      conn:close()
+      local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_mercury_driver", true)
+      local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
+      if (mqtt_status ~= true) then
+         print ("MQTT(mercury_driver) error: "..(mqtt_err or "unknown error"))
+      else
+         mqtt_object:on_message(driver_mqtt_callback)
+         mqtt_object:subscribe('/devices/mercury200.02_34892924/controls/+', 0)
+      end
    else
-      mqtt_object:on_message(driver_mqtt_callback)
-      mqtt_object:subscribe('/devices/mercury200.02_34892924/controls/+', 0)
+      error('Connect to host '..config.MQTT_WIRENBOARD_HOST..' failed')
    end
 end
 
@@ -104,6 +129,8 @@ scripts_drivers.wirenboard_driver.name = "wirenboard_driver"
 scripts_drivers.wirenboard_driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
+   local net_box = require 'net.box'
+
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
       local _, _, device, item = string.find(topic, "/devices/(.+)/controls/(.+)$")
       if (device ~= nil and item ~= nil and item ~= payload) then
@@ -111,17 +138,23 @@ scripts_drivers.wirenboard_driver.driver_function = function()
       end
    end
 
-   local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_wirenboard_driver", true)
-   local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
-   if (mqtt_status ~= true) then
-      print ("MQTT(wirenboard_driver) error: "..(mqtt_err or "unknown error"))
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   if (conn.state == "connecting") then
+      conn:close()
+      local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_wirenboard_driver", true)
+      local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
+      if (mqtt_status ~= true) then
+         print ("MQTT(wirenboard_driver) error: "..(mqtt_err or "unknown error"))
+      else
+         mqtt_object:on_message(driver_mqtt_callback)
+         mqtt_object:subscribe('/devices/wb-w1/controls/+', 0)
+
+         mqtt_object:subscribe('/devices/wb-mr6c_105/controls/Input 6 counter', 0)
+
+         mqtt_object:subscribe('/devices/wb-adc/controls/Vin', 0)
+      end
    else
-      mqtt_object:on_message(driver_mqtt_callback)
-      mqtt_object:subscribe('/devices/wb-w1/controls/+', 0)
-
-      mqtt_object:subscribe('/devices/wb-mr6c_105/controls/Input 6 counter', 0)
-
-      mqtt_object:subscribe('/devices/wb-adc/controls/Vin', 0)
+      error('Connect to host '..config.MQTT_WIRENBOARD_HOST..' failed')
    end
 end
 
@@ -132,6 +165,7 @@ scripts_drivers.tarantool_stat_driver.driver_function = function()
    local fiber = require 'fiber'
 
    local function system_stats()
+      fiber.sleep(2)
       while true do
          local stats = box.slab.info()
          local _, arena_used_ratio_number, quota_used_ratio_number
@@ -153,9 +187,7 @@ end
 scripts_drivers.fake_off_driver = {}
 scripts_drivers.fake_off_driver.active = false
 scripts_drivers.fake_off_driver.name = "fake_off_driver"
-scripts_drivers.fake_off_driver.driver_function = function()
-   local a = 1
-end
+
 
 
 
@@ -163,8 +195,12 @@ function scripts_drivers.start()
    for name, driver_object in pairs(scripts_drivers) do
       if (name ~= "start") then
          if (driver_object.active == true) then
-            driver_object.driver_function() --добавить обработку ошибок с pcall и передачу ошибок в лог
-            logger.add_entry(logger.INFO, "Drivers subsystem", 'Driver "'..driver_object.name..'" start (active)')
+            local status, err_msg = pcall(driver_object.driver_function)
+            if (status == true) then
+               logger.add_entry(logger.INFO, "Drivers subsystem", 'Driver "'..driver_object.name..'" start (active)')
+            else
+               logger.add_entry(logger.ERROR, "Drivers subsystem", 'Driver "'..driver_object.name..'" not start (internal error: '..(err_msg or "")..')')
+            end
          else
             logger.add_entry(logger.INFO, "Drivers subsystem", 'Driver "'..driver_object.name..'" not start (non-active)')
          end

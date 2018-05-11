@@ -205,53 +205,29 @@ local function endpoints_list()
 end
 
 
-local function events_action_config() -- перенести в events
-   for name, item in pairs(scripts_events) do
-      if (item ~= nil and item.type ~= nil and item.type == scripts_events.types.HTTP and item.endpoint ~= nil) then
-         http_server:route({ path = item.endpoint, file = item.file_endpoint }, item.event_function)
-         logger.add_entry(logger.INFO, "Events subsystem", 'Event "'..item.name..'" bind endpoint "'..item.endpoint..'"')
-      end
-   end
-end
-
-
-local function fifo_storage_worker()
-   while true do
-      local key, topic, timestamp, value = bus.get_delete_value()
-      if (key ~= nil) then
-         bus.bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
-         local _, _, new_topic, name = string.find(topic, "(/.+/)(.+)$")
-         if (topic ~= nil and name ~= nil) then
-            ts_storage.update_value(topic, value, name)
-         end
-         --fiber.sleep(0.001)
-      else
-         fiber.sleep(0.01)
-      end
-   end
-end
 
 
 box_config()
 
 logger.init()
-logger.add_entry(logger.INFO, "Main system", "System starts up...")
+logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
 
 --database_init()
 bus.init()
-fiber.create(fifo_storage_worker)
-
 logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
+
 ts_storage.init()
 logger.add_entry(logger.INFO, "Main system", "Time Series storage initialized")
 
-logger.add_entry(logger.INFO, "Main system", "Events configured")
-events_action_config()
 http_system.init_server()
 http_system.init_client()
 proto_menu = http_system.enpoints_menu_config(endpoints_list())
+logger.add_entry(logger.INFO, "Main system", "Http subsystem initialized")
 
+logger.add_entry(logger.INFO, "Main system", "Configuring events...")
+scripts_events.init()
+
+logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
 scripts_drivers.start()
-logger.add_entry(logger.INFO, "Main system", "Drivers started")
 
 logger.add_entry(logger.INFO, "Main system", "System started")

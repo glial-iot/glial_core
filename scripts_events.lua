@@ -3,6 +3,7 @@ local log = require 'log'
 local ts_storage = require 'ts_storage'
 local logger = require 'logger'
 local system = require "system"
+local inspect = require 'inspect'
 
 local scripts_events = {}
 scripts_events.types = {HTTP = 1, TOPIC = 2}
@@ -15,7 +16,6 @@ function scripts_events.vaisala_event.event_function(topic, value)
    --bus.update_value(topic.."_x100", value*100)
 end
 
-
 scripts_events.mqtt_events = {}
 scripts_events.mqtt_events.type = scripts_events.types.HTTP
 scripts_events.mqtt_events.endpoint = "/action"
@@ -24,37 +24,44 @@ scripts_events.mqtt_events.event_function = function(req) --обернуть в 
    local params = req:param()
    local mqtt_local = require 'mqtt'
    local config_local = require 'config'
-
+   local net_box = require 'net.box'
 
    if (params["action"] ~= nil) then
-      local result, emessage
-      --print(require('inspect')(params["action"]))
-      local mqtt_object = mqtt_local.new(config_local.MQTT_WIRENBOARD_ID.."_action_driver", true)
-      mqtt_object:connect({host=config_local.MQTT_WIRENBOARD_HOST,port=config_local.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt_local.LOG_ALL})
 
-      if (params["action"] == "on_light_1") then
-         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x290/controls/state/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "off_light_1") then
-         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x290/controls/state/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "on_light_2") then
-         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x291/controls/state/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "off_light_2") then
-         result, emessage = mqtt_object:publish("/devices/noolite_tx_0x291/controls/state/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "on_ac") then
-         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K4/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "off_ac") then
-         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K4/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "on_fan") then
-         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "off_fan") then
-         result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
-      elseif (params["action"] == "tarantool_stop") then
-         os.exit()
+      if (params["action"] == "tarantool_stop") then
+         logger.add_entry(logger.INFO, "tarantool_stop", 'test entry')
+         --os.exit()
       elseif (params["action"] == "wipe_storage") then
-         result, emessage = os.execute("rm -rf ./db/*")
+         os.execute("rm -rf ./db/*")
          os.exit()
       end
-      log.info("Action: "..tostring(result).."/"..(emessage or "nil"))
+
+      local result, emessage
+      local conn = net_box.connect(config_local.MQTT_WIRENBOARD_HOST..":"..config_local.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+      if (conn:ping() == true) then
+         local mqtt_object = mqtt_local.new(config_local.MQTT_WIRENBOARD_ID.."_action_driver", true)
+         mqtt_object:connect({host=config_local.MQTT_WIRENBOARD_HOST,port=config_local.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt_local.LOG_ALL})
+         if (params["action"] == "on_light_1") then
+            result, emessage = mqtt_object:publish("/devices/noolite_tx_0x290/controls/state/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         elseif (params["action"] == "off_light_1") then
+            result, emessage = mqtt_object:publish("/devices/noolite_tx_0x290/controls/state/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         elseif (params["action"] == "on_light_2") then
+            result, emessage = mqtt_object:publish("/devices/noolite_tx_0x291/controls/state/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         elseif (params["action"] == "off_light_2") then
+            result, emessage = mqtt_object:publish("/devices/noolite_tx_0x291/controls/state/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         elseif (params["action"] == "on_ac") then
+            result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K4/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         elseif (params["action"] == "off_ac") then
+            result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K4/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         elseif (params["action"] == "on_fan") then
+            result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         elseif (params["action"] == "off_fan") then
+            result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
+         end
+      else
+         logger.add_entry(logger.INFO, scripts_events.mqtt_events.name, 'Connect to host '..config_local.MQTT_WIRENBOARD_HOST.." failed")
+      end
+      --log.info("Action: "..tostring(result).."/"..(emessage or "nil"))
       return req:render{ json = { result = result } }
    end
 end
@@ -109,7 +116,7 @@ scripts_events.tarantool_web_graph.event_function = function(req)
             data_object[i][topic] = tonumber(value)
          end
       end
-      if (params["limit"] ~= nil and params["limit"] <= i) then break end
+      if (params["limit"] ~= nil and tonumber(params["limit"]) <= i) then break end
    end
    return req:render{ json = data_object }
 end
