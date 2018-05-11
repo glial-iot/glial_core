@@ -10,7 +10,6 @@ local proto_menu = {}
 local git_version
 
 local http_system = require 'http_system'
-
 local scripts_drivers = require 'scripts_drivers'
 local scripts_webevents = require 'scripts_webevents'
 local ts_storage = require 'ts_storage'
@@ -33,7 +32,7 @@ local function http_server_data_tsstorage_handler(req)
       data_object[i].value = tuple[4]
       if (type_limit ~= nil and type_limit <= i) then break end
    end
---
+
    if (i > 0) then
       return_object = req:render{ json =  data_object  }
    else
@@ -55,7 +54,6 @@ local function http_server_data_bus_storage_handler(req)
       data_object[i].timestamp = tuple[2]
       data_object[i].value = tuple[3]
       if (type_limit ~= nil and type_limit <= i) then break end
-      --print(tuple[1], tuple[2], tuple[3])
    end
 
    if (i > 0) then
@@ -66,8 +64,6 @@ local function http_server_data_bus_storage_handler(req)
 
    return return_object
 end
-
-
 
 local function http_server_root_handler(req)
    return req:redirect_to('/dashboard')
@@ -101,6 +97,7 @@ local function git_version_get()
    git_version = handle:read("*a")
    handle:close()
 end
+
 
 local function endpoints_list()
    local endpoints = {}
@@ -144,16 +141,12 @@ local function endpoints_list()
    return endpoints
 end
 
-
-
-
 box_config()
 git_version_get()
 
 logger.init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
 logger.add_entry(logger.INFO, "Main system", "GLUE System, "..git_version)
-
 
 --database_init()
 bus.init()
@@ -165,7 +158,7 @@ logger.add_entry(logger.INFO, "Main system", "Time Series storage initialized")
 http_system.init_server()
 http_system.init_client()
 proto_menu = http_system.enpoints_menu_config(endpoints_list())
-logger.add_entry(logger.INFO, "Main system", "Http subsystem initialized")
+logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
 logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
 scripts_webevents.init()
