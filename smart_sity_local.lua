@@ -157,7 +157,6 @@ local function box_config()
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
-
 local function database_init()
    --settings = box.schema.space.create('settings', {if_not_exists = true, engine = 'vinyl'})
    --settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
@@ -171,6 +170,9 @@ local function endpoints_list()
 
    endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_server_html_handler}
    endpoints[#endpoints+1] = {"/logger-data", nil, nil, logger.return_all_entry}
+   endpoints[#endpoints+1] = {"/logger-ext", nil, nil, logger.tarantool_pipe_log_handler}
+   endpoints[#endpoints+1] = {"/logger-action", nil, nil, logger.actions}
+
 
    endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
    endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
