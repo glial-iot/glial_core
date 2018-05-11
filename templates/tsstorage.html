@@ -44,7 +44,7 @@
             <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-3 px-4">
                 <h2>All data:</h2>
                 <div class="table-responsive">
-                    <table class="table table-striped table-sm" id="table_values_impact"></table>
+                    <table class="table table-striped table-sm" id="ts_values"></table>
                 </div>
 
 
@@ -107,10 +107,10 @@
                 var json_data = JSON.parse(xhr_tmr.responseText);
                 if (json_data.none_data != "true") {
                     //console.log(json_data)
-                    clear_table("table_values_impact")
-                    add_row_table("table_values_impact", "head", ["resourcePath", "serialNumber", "subscriptionId", "timestamp", "value"])
+                    clear_table("ts_values")
+                    add_row_table("ts_values", "head", ["resourcePath", "serialNumber", "subscriptionId", "timestamp", "value"])
                     for (let index = 0; index < json_data.length; index++) {
-                        add_row_table("table_values_impact", "body", [json_data[index].resourcePath, json_data[index].serialNumber, json_data[index].subscriptionId, json_data[index].timestamp, json_data[index].value])
+                        add_row_table("ts_values", "body", [json_data[index].resourcePath, json_data[index].serialNumber, json_data[index].subscriptionId, json_data[index].timestamp, json_data[index].value])
                     }
                 }
             }
