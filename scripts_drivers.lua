@@ -212,15 +212,22 @@ end
 
 function scripts_drivers.data(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local data_object
+   local result
    if (type_item == "get") then
-      local scripts_drivers_handle = fio.open("./scripts_drivers.lua")
-      local scripts_drivers_data = scripts_drivers_handle:read()
-      scripts_drivers_handle:close()
+      local fh = fio.open("./scripts_drivers.lua")
+      local scripts_drivers_data = fh:read()
+      fh:close()
       return { body = scripts_drivers_data }
+   elseif (type_item == "set") then
+      local fh = fio.open("./scripts_drivers.lua", {"O_RDWR", "O_CREAT", "O_SYNC"})
+      result = fh:write(req.post_params.file)
+      if (result == false) then
+          logger.add_entry(logger.ERROR, "Drivers subsystem", 'Drivers file not save')
+      end
+      fh:close()
    end
 
-
+   return req:render{ json = { result = result } }
 end
 
 return scripts_drivers

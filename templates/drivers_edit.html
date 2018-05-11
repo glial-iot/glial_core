@@ -52,19 +52,17 @@
                 </div>
             </nav>
 
+            <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-2 px-1">
+                <div class="col-md-11 mb-1">
+                    <button type="button" action-button="save_drivers" class="btn btn-success btn-action">Save file</button>
+                </div>
+            </main>
 
-
-            <div class="ml-sm-auto col-lg-11 pt-3">
-                <pre id="editor">
-                        function logger.init()
-                           logger.storage = box.schema.space.create('logger_storage_2', {if_not_exists = true})
-                           logger.sequence = box.schema.sequence.create("logger_storage_sequence", {if_not_exists = true})
-                           logger.storage:create_index('key', {sequence="logger_storage_sequence", if_not_exists = true})
-                           logger.storage:create_index('level', {type = 'tree', unique = false, parts = {2, 'string'}, if_not_exists = true })
-                           logger.storage:create_index('source', {type = 'tree', unique = false, parts = {3, 'string'}, if_not_exists = true })
-                        end
-                     </pre>
+            <div class="ml-sm-auto col-lg-11 pt-1">
+                <pre id="editor"></pre>
             </div>
+
+
         </div>
     </div>
 
@@ -75,8 +73,12 @@
     <script src="popper.min.js"></script>
     <script src="bootstrap.min.js"></script>
 
-    <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace/ace.js"></script>
+    <!--     <script src="ace/ext-language_tools.js"></script> -->
+
     <script>
+        /*         ace.require("ace/ext/language_tools");  */
+
         var editor = ace.edit("editor");
         editor.setTheme("ace/theme/crimson_editor");
         editor.session.setMode("ace/mode/lua");
@@ -84,25 +86,67 @@
         editor.session.setWrapLimitRange(null);
         editor.setShowPrintMargin(false);
         editor.setFontSize(10);
+        /* editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true
+        }); */
+
+        editor.commands.addCommand({
+            name: 'myCommand',
+            bindKey: {
+                win: 'Ctrl-S',
+                mac: 'Command-S'
+            },
+            exec: function(editor) {
+                alert('ctrl-s');
+            }
+        });
 
 
-
-
-
-        var xhr_tmr = new XMLHttpRequest();
-        var old_values = {};
+        var xhr_file_field = new XMLHttpRequest();
 
         function update_field_callback() {
-            if (xhr_tmr.readyState == 4 && xhr_tmr.status == 200) {
-                editor.setValue(xhr_tmr.responseText);;
+            if (xhr_file_field.readyState == 4 && xhr_file_field.status == 200) {
+                editor.setValue(xhr_file_field.responseText);
                 editor.selection.clearSelection();
             }
         }
+        xhr_file_field.onreadystatechange = update_field_callback
+        xhr_file_field.open('POST', 'drivers_edit_data?item=get', true);
+        xhr_file_field.send()
 
 
-        xhr_tmr.onreadystatechange = update_field_callback
-        xhr_tmr.open('POST', 'drivers_edit_data?item=get', true);
-        xhr_tmr.send()
+        /* https://craig.is/killing/mice
+         */
+        var button_xhr = new XMLHttpRequest();
+        var last_button_object;
+
+        function action_result() {
+            if (button_xhr.readyState == 4) {
+                if (button_xhr.status == 200) {
+                    var json_data = JSON.parse(button_xhr.responseText);
+                    if (json_data.result == true)
+                        last_button_object.removeClass("btn-warning").removeClass("btn-danger").addClass("btn-success");
+                    else
+                        last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
+                } else {
+                    last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
+                }
+            }
+        }
+
+        function send_action() {
+            button_xhr.open('POST', 'drivers_edit_data?item=set', true);
+            button_xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            var file = "file=" + encodeURIComponent(editor.getValue())
+            button_xhr.send(file)
+            last_button_object = $(this)
+            $(this).removeClass("btn-success").removeClass("btn-danger").addClass("btn-warning");
+        }
+
+        $('.btn-action').on('click', send_action);
+        button_xhr.onreadystatechange = action_result
     </script>
 
 
