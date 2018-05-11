@@ -1,3 +1,7 @@
 body {
     zoom: 0.8;
 }
+
+.nav-link {
+    padding: .3rem 0.5rem;
+}
