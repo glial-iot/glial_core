@@ -175,4 +175,15 @@ scripts_events.vaisala_web_graph.event_function = function(req)
    return req:render{ json = data_object }
 end
 
+
+function scripts_events.init()
+   local http_system = require 'http_system'
+   for name, item in pairs(scripts_events) do
+      if (item ~= nil) and (type(item) == "table") and (item.type ~= nil) and (item.type == scripts_events.types.HTTP) and (item.endpoint ~= nil) then
+         http_system.server:route({ path = item.endpoint, file = item.file_endpoint }, item.event_function)
+         logger.add_entry(logger.INFO, "Events subsystem", 'Event "'..item.name..'" bind endpoint "'..item.endpoint..'"')
+      end
+   end
+end
+
 return scripts_events

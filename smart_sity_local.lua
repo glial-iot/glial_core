@@ -8,10 +8,7 @@ local box = box
 
 local proto_menu = {}
 
-local config = require 'config'
-
-local http_client = require('http.client')
-local http_server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})
+local http_system = require 'http_system'
 
 local scripts_drivers = require 'scripts_drivers'
 local scripts_events = require 'scripts_events'
@@ -166,7 +163,7 @@ local function database_init()
    --settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
 end
 
-local function endpoints_config()
+local function endpoints_list()
    local endpoints = {}
    endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
    endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler}
@@ -205,14 +202,6 @@ local function endpoints_config()
    return endpoints
 end
 
-local function http_config(endpoints_list)
-   for i, item in pairs(endpoints_list) do
-      http_server:route({ path = item[1], file = item[2] }, item[4])
-      if (item[3] ~= nil) then
-         proto_menu[#proto_menu+1] = {href = item[1], name=item[3]}
-      end
-   end
-end
 
 local function events_action_config() -- перенести в events
    for name, item in pairs(scripts_events) do
@@ -254,12 +243,13 @@ logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initial
 ts_storage.init()
 logger.add_entry(logger.INFO, "Main system", "Time Series storage initialized")
 
-http_config(endpoints_config())
 logger.add_entry(logger.INFO, "Main system", "Events configured")
 events_action_config()
+http_system.init_server()
+http_system.init_client()
+proto_menu = http_system.enpoints_menu_config(endpoints_list())
 
 scripts_drivers.start()
 logger.add_entry(logger.INFO, "Main system", "Drivers started")
 
 logger.add_entry(logger.INFO, "Main system", "System started")
-http_server:start()
