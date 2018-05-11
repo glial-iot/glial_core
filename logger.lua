@@ -12,7 +12,7 @@ local box = box
 local system = require 'system'
 
 function logger.init()
-   logger.storage = box.schema.space.create('logger_storage', {if_not_exists = true})
+   logger.storage = box.schema.space.create('logger_storage_2', {if_not_exists = true})
    logger.sequence = box.schema.sequence.create("logger_storage_sequence", {if_not_exists = true})
    logger.storage:create_index('key', {sequence="logger_storage_sequence", if_not_exists = true})
    logger.storage:create_index('level', {type = 'tree', unique = false, parts = {2, 'string'}, if_not_exists = true })
@@ -52,6 +52,21 @@ function logger.return_all_entry(req)
    return req:render{ json = data_object }
 end
 
+function logger.delete_logs()
+   for _, tuple in logger.storage.index.key:pairs() do
+      logger.storage:delete(tuple[1])
+   end
+   logger.sequence:reset()
+end
+
+function logger.actions(req)
+   local params = req:param()
+   if (params["action"] == "delete_logs") then
+      logger.delete_logs()
+   end
+   return req:render{ json = { result = true } }
+end
+
 function logger.tarantool_pipe_log_handler(req)
    local body = req:read({delimiter = nil, chunk = 1000}, 10)
    local _, _, type, message = string.find(body, ".+%[.+%].+(.)>(.+)$")
@@ -71,4 +86,5 @@ function logger.tarantool_pipe_log_handler(req)
 
    return { status = 200 }
 end
+
 return logger
