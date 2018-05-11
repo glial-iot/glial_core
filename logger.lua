@@ -47,7 +47,7 @@ function logger.return_all_entry(req)
             data_object[i].entry = entry
             data_object[i].date = date
       end
-      if (params["limit"] ~= nil and params["limit"] <= i) then break end
+      if (params["limit"] ~= nil and tonumber(params["limit"]) <= i) then break end
    end
    return req:render{ json = data_object }
 end
