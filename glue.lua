@@ -18,8 +18,6 @@ local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
 
-io.stdout:setvbuf("no")
-
 local function http_server_data_tsstorage_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
