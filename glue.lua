@@ -7,7 +7,6 @@ local log = require 'log'
 local box = box
 
 local proto_menu = {}
-local git_version
 
 local http_system = require 'http_system'
 local scripts_drivers = require 'scripts_drivers'
@@ -79,7 +78,7 @@ local function http_server_html_handler(req)
          menu[i].class="active"
       end
    end
-   return req:render{ menu = menu, git_version = git_version }
+   return req:render{ menu = menu, git_version = system.git_version() }
 end
 
 local function box_config()
@@ -92,11 +91,6 @@ local function database_init()
    --settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
 end
 
-local function git_version_get()
-   local handle = io.popen("git describe --dirty --always --tags")
-   git_version = handle:read("*a")
-   handle:close()
-end
 
 
 local function endpoints_list()
@@ -142,11 +136,10 @@ local function endpoints_list()
 end
 
 box_config()
-git_version_get()
 
 logger.init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
-logger.add_entry(logger.INFO, "Main system", "GLUE System, "..git_version)
+logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version())
 
 --database_init()
 bus.init()
