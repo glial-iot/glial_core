@@ -6,6 +6,8 @@ local system = require 'system'
 local log = require 'log'
 local logger = require 'logger'
 local inspect = require 'inspect'
+local fio = require 'fio'
+
 
 scripts_drivers.map12h_driver = {}
 scripts_drivers.map12h_driver.active = true
@@ -189,11 +191,9 @@ scripts_drivers.fake_off_driver.active = false
 scripts_drivers.fake_off_driver.name = "fake_off_driver"
 
 
-
-
 function scripts_drivers.start()
    for name, driver_object in pairs(scripts_drivers) do
-      if (name ~= "start") then
+      if (name ~= "start" and name ~= "data" ) then
          if (driver_object.active == true) then
             local status, err_msg = pcall(driver_object.driver_function)
             if (status == true) then
@@ -206,6 +206,21 @@ function scripts_drivers.start()
          end
       end
    end
+end
+
+
+
+function scripts_drivers.data(req)
+   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
+   local data_object
+   if (type_item == "get") then
+      local scripts_drivers_handle = fio.open("./scripts_drivers.lua")
+      local scripts_drivers_data = scripts_drivers_handle:read()
+      scripts_drivers_handle:close()
+      return { body = scripts_drivers_data }
+   end
+
+
 end
 
 return scripts_drivers

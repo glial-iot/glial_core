@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+
+    <title>Nokia IMPACT</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+    <link href="local_settings.css" rel="stylesheet">
+
+
+    <style type="text/css" media="screen">
+        #editor {
+            zoom: 1.25;
+            height: 800px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+        <a class="navbar-brand col-sm-3 col-md-3 mr-0" href="#"><img src="Nokia_logo_white.svg" class="logo" style="height: 18px;margin-left: 10px;margin-bottom: 4px;margin-right: 15px;" alt="Nokia Logo">IMPACT GLUE</a>
+        <a style="color:#6aa0da;padding-right:20px;">
+            <%= git_version %>
+        </a>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-1 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        % for i,v in pairs(menu) do
+                        <li class="nav-item">
+                            <a class="nav-link<%= " "..(v.class or " ") %>" href="<%= v.href or " /# " %>">
+                                <span data-feather="file"></span>
+                                <%= v.name or "No name" %>
+                            </a>
+                        </li>
+                        % end
+                    </ul>
+                </div>
+            </nav>
+
+
+
+            <div class="ml-sm-auto col-lg-11 pt-3">
+                <pre id="editor">
+                        function logger.init()
+                           logger.storage = box.schema.space.create('logger_storage_2', {if_not_exists = true})
+                           logger.sequence = box.schema.sequence.create("logger_storage_sequence", {if_not_exists = true})
+                           logger.storage:create_index('key', {sequence="logger_storage_sequence", if_not_exists = true})
+                           logger.storage:create_index('level', {type = 'tree', unique = false, parts = {2, 'string'}, if_not_exists = true })
+                           logger.storage:create_index('source', {type = 'tree', unique = false, parts = {3, 'string'}, if_not_exists = true })
+                        end
+                     </pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="jquery-slim.min.js"></script>
+    <script src="popper.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+
+    <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/crimson_editor");
+        editor.session.setMode("ace/mode/lua");
+        editor.session.setUseWrapMode(true);
+        editor.session.setWrapLimitRange(null);
+        editor.setShowPrintMargin(false);
+        editor.setFontSize(10);
+
+
+
+
+
+        var xhr_tmr = new XMLHttpRequest();
+        var old_values = {};
+
+        function update_field_callback() {
+            if (xhr_tmr.readyState == 4 && xhr_tmr.status == 200) {
+                editor.setValue(xhr_tmr.responseText);;
+                editor.selection.clearSelection();
+            }
+        }
+
+
+        xhr_tmr.onreadystatechange = update_field_callback
+        xhr_tmr.open('POST', 'drivers_edit_data?item=get', true);
+        xhr_tmr.send()
+    </script>
+
+
+</body>
+
+</html>
