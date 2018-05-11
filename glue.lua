@@ -20,71 +20,6 @@ local logger = require "logger"
 
 io.stdout:setvbuf("no")
 
-local function http_server_data_handler(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local return_object
-   local data_object, i = {}, 0
-   local table = system.reverse_table(ts_storage.object.index.serial_number:select({type_item}, {iterator = 'REQ'}))
-   for _, tuple in pairs(table) do
-      local serialNumber = tuple[5]
-      i = i + 1
-      data_object[i] = {}
-      data_object[i].date = os.date("%Y-%m-%d, %H:%M:%S", tuple[3])
-      data_object[i][serialNumber] = tuple[4]
-      if (type_limit ~= nil and type_limit <= i) then break end
-   end
-   return_object = req:render{ json = data_object }
-   return return_object
-end
-
-
-local function http_server_data_temperature_handler(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local return_object
-   local data_object, i = {}, 0
-   local table = system.reverse_table(ts_storage.object.index.primary:select(nil, {iterator = 'REQ'}))
-   for _, tuple in pairs(table) do
-      local serialNumber = tuple[5]
-      local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[3])
-      if (type_item == "local") then
-         if (serialNumber == "28-000008e7f176" or serialNumber == "28-000008e538e6") then
-            i = i + 1
-            data_object[i] = {}
-            data_object[i].date = date
-            data_object[i][serialNumber] = tonumber(tuple[4])
-         end
-      end
-      if (type_limit ~= nil and type_limit <= i) then break end
-   end
-   return_object = req:render{ json = data_object }
-   return return_object
-end
-
-
-local function http_server_data_power_handler(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local return_object
-   local data_object, i = {}, 0
-   local raw_table = ts_storage.object.index.primary:select(nil, {iterator = 'REQ'})
-   local table = system.reverse_table(raw_table)
-   for _, tuple in pairs(table) do
-      local serialNumber = tuple[5]
-      local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[3])
-      if (type_item == "I") then
-         if (serialNumber == "Ch 1 Irms L1" or serialNumber == "Ch 1 Irms L2" or serialNumber == "Ch 1 Irms L3") then
-            i = i + 1
-            data_object[i] = {}
-            data_object[i].date = date
-            data_object[i][serialNumber] = tonumber(tuple[4])
-         end
-         if (type_limit ~= nil and type_limit <= i) then break end
-      end
-   end
-   return_object = req:render{ json = data_object }
-   return return_object
-end
-
-
 local function http_server_data_tsstorage_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
@@ -173,19 +108,13 @@ local function endpoints_list()
    local endpoints = {}
    endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
    endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/data", nil, nil, http_server_data_handler}
-
    endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/temperature-data", nil, nil, http_server_data_temperature_handler}
-
    endpoints[#endpoints+1] = {"/power", "power.html", "Power", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/power-data", nil, nil, http_server_data_power_handler}
-
    endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_server_html_handler}
-
    endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_server_html_handler}
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+
    endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler}
    endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_server_html_handler}
 
