@@ -52,4 +52,23 @@ function logger.return_all_entry(req)
    return req:render{ json = data_object }
 end
 
+function logger.tarantool_pipe_log_handler(req)
+   local body = req:read({delimiter = nil, chunk = 1000}, 10)
+   local _, _, type, message = string.find(body, ".+%[.+%].+(.)>(.+)$")
+   if (type ~= nil and message ~= nil and string.find(message, "(Empty input string)") == nil) then
+      if (type == "W") then
+         type = logger.WARNING
+      elseif (type == "E") then
+         type = logger.ERROR
+      elseif (type == "C") then
+         type = logger.INFO
+      else
+         message = "("..type..")"..message
+         type = logger.INFO
+      end
+      logger.add_entry(type, "Tarantool logs adapter", message)
+   end
+
+   return { status = 200 }
+end
 return logger
