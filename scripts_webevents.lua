@@ -27,8 +27,9 @@ scripts_webevents.mqtt_events.event_function = function(req) --обернуть 
       end
 
       local result, emessage
-      local conn = net_box.connect(config_local.MQTT_WIRENBOARD_HOST..":"..config_local.MQTT_WIRENBOARD_PORT, {wait_connected = false})
-      if (conn:ping() == true) then
+      local conn = net_box.connect(config_local.MQTT_WIRENBOARD_HOST..":"..config_local.MQTT_WIRENBOARD_PORT)
+      if (conn.state == "connecting") then
+         conn:close()
          local mqtt_object = mqtt_local.new(config_local.MQTT_WIRENBOARD_ID.."_action_driver", true)
          mqtt_object:connect({host=config_local.MQTT_WIRENBOARD_HOST,port=config_local.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt_local.LOG_ALL})
          if (params["action"] == "on_light_1") then

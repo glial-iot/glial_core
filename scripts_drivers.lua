@@ -25,13 +25,13 @@ scripts_drivers.map12h_driver.driver_function = function()
       end
    end
 
-   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT)
    if (conn.state == "connecting") then
       conn:close()
       local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_map12h_driver", true)
       local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
       if (mqtt_status ~= true) then
-         print ("MQTT(map12h_driver) error: "..(mqtt_err or "unknown error"))
+         error('MQTT error '..(mqtt_err or "unknown error"))
       else
          mqtt_object:on_message(map12h_driver_mqtt_callback)
 
@@ -78,13 +78,13 @@ scripts_drivers.vaisala_driver.driver_function = function()
       end
    end
 
-   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT)
    if (conn.state == "connecting") then
       conn:close()
       local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_vaisala_driver", true)
       local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
       if (mqtt_status ~= true) then
-         print ("MQTT(vaisala_driver) error: "..(mqtt_err or "unknown error"))
+         error('MQTT error '..(mqtt_err or "unknown error"))
       else
          mqtt_object:on_message(driver_mqtt_callback)
          mqtt_object:subscribe('/devices/vaisala/data', 0)
@@ -109,13 +109,13 @@ scripts_drivers.mercury_driver.driver_function = function()
       end
    end
 
-   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT)
    if (conn.state == "connecting") then
       conn:close()
       local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_mercury_driver", true)
       local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
       if (mqtt_status ~= true) then
-         print ("MQTT(mercury_driver) error: "..(mqtt_err or "unknown error"))
+         error('MQTT error '..(mqtt_err or "unknown error"))
       else
          mqtt_object:on_message(driver_mqtt_callback)
          mqtt_object:subscribe('/devices/mercury200.02_34892924/controls/+', 0)
@@ -140,13 +140,13 @@ scripts_drivers.wirenboard_driver.driver_function = function()
       end
    end
 
-   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT, {wait_connected = false})
+   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT)
    if (conn.state == "connecting") then
       conn:close()
       local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_wirenboard_driver", true)
       local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
       if (mqtt_status ~= true) then
-         print ("MQTT(wirenboard_driver) error: "..(mqtt_err or "unknown error"))
+         error('MQTT error '..(mqtt_err or "unknown error"))
       else
          mqtt_object:on_message(driver_mqtt_callback)
          mqtt_object:subscribe('/devices/wb-w1/controls/+', 0)
