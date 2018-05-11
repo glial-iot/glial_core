@@ -225,6 +225,8 @@ git_version_get()
 
 logger.init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
+logger.add_entry(logger.INFO, "Main system", "GLUE System, "..git_version)
+
 
 --database_init()
 bus.init()
