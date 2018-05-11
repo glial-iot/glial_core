@@ -20,8 +20,9 @@ function logger.init()
 end
 
 function logger.add_entry(level, source, entry)
+   local trace = debug.traceback()
    local timestamp = os.time()
-   logger.storage:insert{nil, level, (source or ""), entry, timestamp}
+   logger.storage:insert{nil, level, (source or ""), entry, timestamp, trace}
 end
 
 function logger.return_all_entry(req)
