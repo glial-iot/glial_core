@@ -20,8 +20,7 @@ scripts_webevents.mqtt_events.event_function = function(req) --обернуть 
    if (params["action"] ~= nil) then
 
       if (params["action"] == "tarantool_stop") then
-         logger.add_entry(logger.INFO, "tarantool_stop", 'test entry')
-         --os.exit()
+         os.exit()
       elseif (params["action"] == "wipe_storage") then
          os.execute("rm -rf ./db/*")
          os.exit()
