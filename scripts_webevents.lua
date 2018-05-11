@@ -50,10 +50,14 @@ scripts_webevents.mqtt_events.event_function = function(req) --обернуть 
             result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
          end
       else
-         logger.add_entry(logger.INFO, scripts_webevents.mqtt_events.name, 'Connect to host '..config_local.MQTT_WIRENBOARD_HOST.." failed")
+         logger.add_entry(logger.ERROR, scripts_webevents.mqtt_events.name, 'Connect to host '..config_local.MQTT_WIRENBOARD_HOST..' failed')
+         result = false
+         emessage = 'Connect to host '..config_local.MQTT_WIRENBOARD_HOST..' failed'
       end
-      --log.info("Action: "..tostring(result).."/"..(emessage or "nil"))
-      return req:render{ json = { result = result } }
+      if (result ~= true) then
+         logger.add_entry(logger.ERROR, scripts_webevents.mqtt_events.name, 'Send MQTT message to host '..config_local.MQTT_WIRENBOARD_HOST..' failed: '..(emessage or "no emessage"))
+      end
+      return req:render{ json = { result = result, msg = emessage } }
    end
 end
 
