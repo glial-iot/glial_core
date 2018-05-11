@@ -7,11 +7,12 @@ local log = require 'log'
 local box = box
 
 local proto_menu = {}
+local git_version
 
 local http_system = require 'http_system'
 
 local scripts_drivers = require 'scripts_drivers'
-local scripts_events = require 'scripts_events'
+local scripts_webevents = require 'scripts_webevents'
 local ts_storage = require 'ts_storage'
 local bus = require 'bus'
 local system = require "system"
@@ -149,7 +150,7 @@ local function http_server_html_handler(req)
          menu[i].class="active"
       end
    end
-   return req:render{ menu = menu }
+   return req:render{ menu = menu, git_version = git_version }
 end
 
 local function box_config()
@@ -162,23 +163,17 @@ local function database_init()
    --settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
 end
 
+local function git_version_get()
+   local handle = io.popen("git describe --dirty --always --tags")
+   git_version = handle:read("*a")
+   handle:close()
+end
+
 local function endpoints_list()
    local endpoints = {}
    endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
    endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler}
    endpoints[#endpoints+1] = {"/data", nil, nil, http_server_data_handler}
-
-   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/logger-data", nil, nil, logger.return_all_entry}
-   endpoints[#endpoints+1] = {"/logger-ext", nil, nil, logger.tarantool_pipe_log_handler}
-   endpoints[#endpoints+1] = {"/logger-action", nil, nil, logger.actions}
-
-
-   endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
-
-   endpoints[#endpoints+1] = {"/tsstorage", "tsstorage.html", "TS Storage", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/tsstorage-data", nil, nil, http_server_data_tsstorage_handler}
 
    endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_server_html_handler}
    endpoints[#endpoints+1] = {"/temperature-data", nil, nil, http_server_data_temperature_handler}
@@ -189,14 +184,32 @@ local function endpoints_list()
    endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_server_html_handler}
 
    endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler}
 
+   endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+   endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler}
    endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_server_html_handler}
 
+   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/logger-data", nil, nil, logger.return_all_entry}
+   endpoints[#endpoints+1] = {"/logger-ext", nil, nil, logger.tarantool_pipe_log_handler}
+   endpoints[#endpoints+1] = {"/logger-action", nil, nil, logger.actions}
+
+   endpoints[#endpoints+1] = {"/drivers_edit", "drivers_edit.html", "Drivers", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/drivers_edit_data", nil, nil, scripts_drivers.data}
+
+   endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
+
+   endpoints[#endpoints+1] = {"/tsstorage", "tsstorage.html", "TS Storage", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/tsstorage-data", nil, nil, http_server_data_tsstorage_handler}
+
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+
    endpoints[#endpoints+1] = {"http://192.168.1.111/", nil, "⨠ WirenBoard", nil}
    endpoints[#endpoints+1] = {"http://192.168.1.45:9000/", nil, "⨠ Portainer", nil}
+
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+
    endpoints[#endpoints+1] = {"http://a.linergo.ru/login.xhtml", nil, "⨠ Linergo", nil}
    endpoints[#endpoints+1] = {"http://gascloud.ru/", nil, "⨠ GasCloud", nil}
    endpoints[#endpoints+1] = {"http://unilight.su/", nil, "⨠ Unilight", nil}
@@ -208,6 +221,7 @@ end
 
 
 box_config()
+git_version_get()
 
 logger.init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
@@ -224,8 +238,8 @@ http_system.init_client()
 proto_menu = http_system.enpoints_menu_config(endpoints_list())
 logger.add_entry(logger.INFO, "Main system", "Http subsystem initialized")
 
-logger.add_entry(logger.INFO, "Main system", "Configuring events...")
-scripts_events.init()
+logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
+scripts_webevents.init()
 
 logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
 scripts_drivers.start()
