@@ -157,6 +157,6 @@ logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
 scripts_webevents.init()
 
 logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
-scripts_drivers.start()
+scripts_drivers.init()
 
 logger.add_entry(logger.INFO, "Main system", "System started")
