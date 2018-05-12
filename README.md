@@ -4,5 +4,5 @@
 1. Install http: ```sudo tarantoolctl rocks install http```
 1. Install mqtt: ```sudo tarantoolctl rocks install mqtt```
 1. Create DB dir: ```mkdir db```
-1. Start: ```./smart_sity_local.lua```
+1. Start: ```./glue.lua```
 1. Open: [http://localhost:8080/](http://localhost:8080/)
