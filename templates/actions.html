@@ -51,15 +51,50 @@
 
             <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-3 px-4">
 
-                <form>
-                    <div class="row input-group">
-                        <div class="col-md-11 mb-1">
-                            <button type="button" action-button="wipe_storage" class="btn btn-success btn-action"><i class="fas fa-exclamation-triangle"></i>  Wipe storage and stop</button>
-                            <button type="button" action-button="tarantool_stop" class="btn btn-success btn-action"><i class="far fa-stop-circle"></i>  Tarantool stop</button>
+                <div class="card-deck mb-2 col-md-2">
+                    <div class="card mb-1 box-shadow text-center">
+                        <div class="card-body pt-4 px-4">
+                            <button type="button" action-button="off_light_1" class="btn btn-success btn-action"><i class="fas fa-lightbulb"></i>  Off light 1</button>
+                        </div>
+                        <div class="card-body pt-1 px-4">
+                            <button type="button" action-button="on_light_1" class="btn btn-success btn-action"><i class="far fa-lightbulb"></i>  On light 1</button>
                         </div>
                     </div>
+                </div>
 
-                </form>
+                <div class="card-deck mb-2 col-md-2">
+                    <div class="card mb-1 box-shadow text-center">
+                        <div class="card-body pt-4 px-4">
+                            <button type="button" action-button="on_light_2" class="btn btn-success btn-action"><i class="far fa-lightbulb"></i>  On light 2</button>
+                        </div>
+                        <div class="card-body pt-1 px-4">
+                            <button type="button" action-button="off_light_2" class="btn btn-success btn-action"><i class="fas fa-lightbulb"></i>  Off light 2</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-deck mb-2 col-md-2">
+                    <div class="card mb-1 box-shadow text-center">
+                        <div class="card-body pt-4 px-4">
+                            <button type="button" action-button="on_ac" class="btn btn-success btn-action"><i class="fas fa-power-off"></i>  On AC</button>
+                        </div>
+                        <div class="card-body pt-1 px-4">
+                            <button type="button" action-button="off_ac" class="btn btn-success btn-action"><i class="fas fa-power-off"></i>  Off AC</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="card-deck mb-2 col-md-2">
+                    <div class="card mb-1 box-shadow text-center">
+                        <div class="card-body pt-4 px-4">
+                            <button type="button" action-button="on_fan" class="btn btn-success btn-action"><i class="fas fa-power-off"></i>  On fan</button>
+                        </div>
+                        <div class="card-body pt-1 px-4">
+                            <button type="button" action-button="off_fan" class="btn btn-success btn-action"><i class="fas fa-power-off"></i>  Off fan</button>
+                        </div>
+                    </div>
+                </div>
 
             </main>
         </div>
