@@ -1,7 +1,7 @@
 #!/usr/bin/env tarantool
 
 local system = {}
-local git_version
+local git_version, _
 
 function system.reverse_table(t)
    local reversedTable = {}
@@ -19,8 +19,9 @@ end
 function system.git_version()
    if (git_version == nil) then
       local handle = io.popen("git describe --dirty --always --tags")
-      git_version = handle:read("*a")
+      _, _, git_version = string.find(handle:read("*a"), "(%S+)%s*$")
       handle:close()
+      git_version = git_version or "Version git error"
       return git_version
    else
       return git_version

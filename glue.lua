@@ -139,7 +139,7 @@ box_config()
 
 logger.init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
-logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version())
+logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
 
 --database_init()
 bus.init()
