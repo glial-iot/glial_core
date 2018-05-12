@@ -24,7 +24,7 @@ function http_system.enpoints_menu_config(endpoints_list)
    for i, item in pairs(endpoints_list) do
       http_system.server:route({ path = item[1], file = item[2] }, item[4])
       if (item[3] ~= nil) then
-         proto_menu[#proto_menu+1] = {href = item[1], name=item[3]}
+         proto_menu[#proto_menu+1] = {href = item[1], name=item[3], icon=item[5]}
       end
    end
    return proto_menu

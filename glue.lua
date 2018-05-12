@@ -74,6 +74,7 @@ local function http_server_html_handler(req)
       menu[i] = {}
       menu[i].href=item.href
       menu[i].name=item.name
+      menu[i].icon=item.icon
       if (item.href == req.path) then
          menu[i].class="active"
       end
@@ -96,42 +97,41 @@ end
 local function endpoints_list()
    local endpoints = {}
    endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
-   endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/power", "power.html", "Power", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_server_html_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/power", "power.html", "Power", http_server_html_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_server_html_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_server_html_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/actions", "actions.html", "Actions", http_server_html_handler, "fas fa-sliders-h"}
+
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 
-   endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler}
-   endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler, "fas fa-cogs"}
+   endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_server_html_handler, "fas fa-chart-area"}
 
-   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_server_html_handler, "fas fa-stream"}
    endpoints[#endpoints+1] = {"/logger-data", nil, nil, logger.return_all_entry}
    endpoints[#endpoints+1] = {"/logger-ext", nil, nil, logger.tarantool_pipe_log_handler}
    endpoints[#endpoints+1] = {"/logger-action", nil, nil, logger.actions}
 
-   endpoints[#endpoints+1] = {"/drivers_edit", "drivers_edit.html", "Drivers", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/drivers_edit", "drivers_edit.html", "Drivers", http_server_html_handler, "fas fa-edit"}
    endpoints[#endpoints+1] = {"/drivers_edit_data", nil, nil, scripts_drivers.data}
 
-   endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler, "fas fa-database"}
    endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
 
-   endpoints[#endpoints+1] = {"/tsstorage", "tsstorage.html", "TS Storage", http_server_html_handler}
+   endpoints[#endpoints+1] = {"/tsstorage", "tsstorage.html", "TS Storage", http_server_html_handler, "fas fa-database"}
    endpoints[#endpoints+1] = {"/tsstorage-data", nil, nil, http_server_data_tsstorage_handler}
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 
-   endpoints[#endpoints+1] = {"http://192.168.1.111/", nil, "⨠ WirenBoard", nil}
-   endpoints[#endpoints+1] = {"http://192.168.1.45:9000/", nil, "⨠ Portainer", nil}
-
-   endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
-
-   endpoints[#endpoints+1] = {"http://a.linergo.ru/login.xhtml", nil, "⨠ Linergo", nil}
-   endpoints[#endpoints+1] = {"http://gascloud.ru/", nil, "⨠ GasCloud", nil}
-   endpoints[#endpoints+1] = {"http://unilight.su/", nil, "⨠ Unilight", nil}
-   endpoints[#endpoints+1] = {"https://www.m2mconnect.ru/Account/Login", nil, "⨠ M2M Connect", nil}
+   endpoints[#endpoints+1] = {"http://192.168.1.111/", nil, "WirenBoard", nil, "fas fa-arrow-circle-right"}
+   endpoints[#endpoints+1] = {"http://192.168.1.45:9000/", nil, "Portainer", nil, "fas fa-arrow-circle-right"}
+   endpoints[#endpoints+1] = {"http://a.linergo.ru/login.xhtml", nil, 'Linergo', nil, "fas fa-external-link-alt"}
+   endpoints[#endpoints+1] = {"http://gascloud.ru/", nil, "GasCloud", nil, "fas fa-external-link-alt"}
+   endpoints[#endpoints+1] = {"http://unilight.su/", nil, "Unilight", nil, "fas fa-external-link-alt"}
+   endpoints[#endpoints+1] = {"https://www.m2mconnect.ru/Account/Login", nil, "M2M Connect", nil, "fas fa-external-link-alt"}
    return endpoints
 end
 

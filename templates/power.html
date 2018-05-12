@@ -12,6 +12,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="bootstrap.min.css" rel="stylesheet">
+    <link href="fontawesome/fontawesome-all.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="dashboard.css" rel="stylesheet">
@@ -22,6 +23,7 @@
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
         <a class="navbar-brand col-sm-3 col-md-3 mr-0" href="#"><img src="Nokia_logo_white.svg" class="logo" style="height: 18px;margin-left: 10px;margin-bottom: 4px;margin-right: 15px;" alt="Nokia Logo">IMPACT GLUE</a>
         <a style="color:#6aa0da;padding-right:20px;">
+            <i class="fab fa-github"></i>
             <%= git_version %>
         </a>
     </nav>
@@ -33,14 +35,17 @@
                     <ul class="nav flex-column">
                         % for i,v in pairs(menu) do
                         <li class="nav-item">
-                            <a class="nav-link<%= " "..(v.class or " ") %>" href="<%= v.href or " /# " %>">
-                                <span data-feather="file"></span>
-                                <%= v.name or "No name" %>
-                            </a>
+                            <a class="nav-link <%= (v.class or " ")%>" href="<%= v.href or '#' %>">
+                                      <i class="<%= (v.icon or "") %>"></i>
+                                      <%= (v.name or "No name") %>
+                                  </a>
                         </li>
                         % end
                     </ul>
                 </div>
+                <footer class="text-muted text-center text-small">
+                    <p class="mb-1">Nokia EE IoT Laboratory &copy; 2018</p>
+                </footer>
             </nav>
 
             <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-3 px-4">
