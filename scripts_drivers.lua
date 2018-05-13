@@ -47,34 +47,4 @@ function scripts_drivers.init()
 end
 
 
-
-function scripts_drivers.data(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local result, data_object = nil, {}
-   if (type_item == "get") then
-      local fh = fio.open("./scripts_drivers.lua")
-      local scripts_drivers_data = fh:read()
-      fh:close()
-      return { body = scripts_drivers_data }
-   elseif (type_item == "set") then
-      local fh = fio.open("./scripts_drivers.lua", {"O_RDWR", "O_CREAT", "O_SYNC"})
-      result = fh:write(req.post_params.file)
-      if (result == false) then
-          logger.add_entry(logger.ERROR, "Drivers subsystem", 'Drivers file not save')
-      end
-      fh:close()
-      return req:render{ json = { result = result} }
-   elseif (type_item == "get_list") then
-      for i, item in pairs(fio.listdir(drivers_directory)) do
-         data_object[i] = {}
-         data_object[i].name = item
-         data_object[i].active = "none"
-         data_object[i].edit = "none"
-      end
-      return req:render{ json = data_object  }
-   end
-
-
-end
-
 return scripts_drivers

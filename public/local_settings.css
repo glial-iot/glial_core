@@ -5,3 +5,11 @@ body {
 .nav-link {
     padding: .3rem 0.5rem;
 }
+
+.table td {
+    vertical-align: middle
+}
+
+.bus_colored {
+    background: rgb(155, 204, 255);
+}

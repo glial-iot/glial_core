@@ -64,11 +64,12 @@
 
         <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-2 px-1">
             <div class="col-md-11 mb-1">
-                <button type="button" action-button="save_drivers" class="btn btn-success btn-action"><i class="fas fa-save"></i> Save file</button>
+                <button type="button" id="goto_list" class="btn btn-success btn-action"><i class="fas fa-bars"></i> Return to list</button>
+                <button type="button" id="save_file" class="btn btn-success btn-info"><i class="fas fa-save"></i> Save file</button>
             </div>
         </main>
 
-        <div class="ml-sm-auto col-lg-11 pt-1">
+        <div class="ml-sm-auto col-lg-11 pt-1 border">
             <pre id="editor"></pre>
         </div>
 
@@ -103,13 +104,13 @@
         }); */
 
         editor.commands.addCommand({
-            name: 'myCommand',
+            name: 'Save file',
             bindKey: {
                 win: 'Ctrl-S',
                 mac: 'Command-S'
             },
             exec: function(editor) {
-                alert('ctrl-s');
+                save_file();
             }
         });
 
@@ -123,12 +124,15 @@
             }
         }
         xhr_file_field.onreadystatechange = update_field_callback
-        xhr_file_field.open('POST', 'drivers_edit_data?item=get', true);
+        var url = new URL(window.location.href);
+        xhr_file_field.open('POST', 'webedit?item=get&address=' + url.searchParams.get("address"), true);
         xhr_file_field.send()
 
 
-        /* https://craig.is/killing/mice
-         */
+
+
+
+
         var button_xhr = new XMLHttpRequest();
         var last_button_object;
 
@@ -139,23 +143,27 @@
                     if (json_data.result == true)
                         last_button_object.removeClass("btn-warning").removeClass("btn-danger").addClass("btn-success");
                     else
-                        last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
+                        last_button_object.removeClass("btn-warning").removeClass("btn-info").addClass("btn-danger");
                 } else {
-                    last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
+                    last_button_object.removeClass("btn-warning").removeClass("btn-info").addClass("btn-danger");
                 }
             }
         }
 
-        function send_action() {
-            button_xhr.open('POST', 'drivers_edit_data?item=set', true);
+        function save_file() {
+            button_xhr.open('POST', 'webedit?item=save&address=' + url.searchParams.get("address"), true);
             button_xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             var file = "file=" + encodeURIComponent(editor.getValue())
             button_xhr.send(file)
             last_button_object = $(this)
-            $(this).removeClass("btn-success").removeClass("btn-danger").addClass("btn-warning");
+            $(this).removeClass("btn-info").removeClass("btn-danger").addClass("btn-warning");
         }
 
-        $('.btn-action').on('click', send_action);
+
+        $('#goto_list').on('click', function(event) {
+            location.href = '/webedit_list';
+        });
+        $('#save_file').on('click', save_file);
         button_xhr.onreadystatechange = action_result
     </script>
 

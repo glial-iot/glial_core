@@ -15,6 +15,7 @@ local ts_storage = require 'ts_storage'
 local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
+local webedit = require "webedit"
 
 local function http_server_data_tsstorage_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
@@ -115,8 +116,9 @@ local function endpoints_list()
    endpoints[#endpoints+1] = {"/logger-ext", nil, nil, logger.tarantool_pipe_log_handler}
    endpoints[#endpoints+1] = {"/logger-action", nil, nil, logger.actions}
 
-   endpoints[#endpoints+1] = {"/drivers_list", "drivers_list.html", "Drivers", http_server_html_handler, "fas fa-edit"}
-   endpoints[#endpoints+1] = {"/drivers_edit_data", nil, nil, scripts_drivers.data}
+   endpoints[#endpoints+1] = {"/webedit_list", "webedit_list.html", "Scripts", http_server_html_handler, "fas fa-edit"}
+   endpoints[#endpoints+1] = {"/webedit_edit", "webedit_edit.html", nil, http_server_html_handler, nil}
+   endpoints[#endpoints+1] = {"/webedit", nil, nil, webedit.main}
 
    endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler, "fas fa-database"}
    endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
