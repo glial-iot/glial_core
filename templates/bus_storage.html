@@ -86,15 +86,14 @@
                 if (json_data.none_data != "true") {
                     //console.log(json_data)
                     clear_table("table_values_bus_storage")
-                    add_row_table("table_values_bus_storage", "head", ["topic", "timestamp", "value"])
+                    add_row_table("table_values_bus_storage", "head", ["Topic", "Time", "Value"], undefined, [60, 30, 10])
                     for (let index = 0; index < json_data.length; index++) {
                         if (old_values[json_data[index].topic] == json_data[index].value) {
-                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value], false)
+                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value])
                         } else {
-                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value], true)
+                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value], "bus_colored")
                         }
                         old_values[json_data[index].topic] = json_data[index].value
-                            //console.log(old_values)
                     }
                 }
             }

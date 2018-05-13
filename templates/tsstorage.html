@@ -89,9 +89,9 @@
                 if (json_data.none_data != "true") {
                     //console.log(json_data)
                     clear_table("ts_values")
-                    add_row_table("ts_values", "head", ["resourcePath", "serialNumber", "subscriptionId", "timestamp", "value"])
+                    add_row_table("ts_values", "head", ["resourcePath", "serialNumber", "timestamp", "value"], undefined, [30, 30, 30, 10])
                     for (let index = 0; index < json_data.length; index++) {
-                        add_row_table("ts_values", "body", [json_data[index].resourcePath, json_data[index].serialNumber, json_data[index].subscriptionId, json_data[index].timestamp, json_data[index].value])
+                        add_row_table("ts_values", "body", [json_data[index].resourcePath, json_data[index].serialNumber, json_data[index].timestamp, json_data[index].value])
                     }
                 }
             }
