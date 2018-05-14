@@ -10,7 +10,7 @@ driver.driver_function = function()
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
       local _, _, local_topic, item = string.find(topic, "(/devices/mercury200.+/controls/)(.+)$")
       if (local_topic ~= nil and payload ~= nil) then
-         bus.update_value_average("/mercury200/"..item, tonumber(payload), 10)
+         bus.update_value("/mercury200/"..item, tonumber(payload))
       end
    end
 
