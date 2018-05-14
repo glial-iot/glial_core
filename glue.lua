@@ -25,7 +25,7 @@ local function http_server_data_tsstorage_handler(req)
    for _, tuple in ts_storage.object.index.primary:pairs(nil, { iterator = box.index.REQ}) do
       i = i + 1
       data_object[i] = {}
-      data_object[i].timestamp = tuple[3]
+      data_object[i].timestamp = os.date("%H:%M:%S", tuple[3]).." ("..tuple[3]..")"
       data_object[i].subscriptionId = "none"
       data_object[i].serialNumber = tuple[5]
       data_object[i].resourcePath = tuple[2]
@@ -51,7 +51,7 @@ local function http_server_data_bus_storage_handler(req)
       i = i + 1
       data_object[i] = {}
       data_object[i].topic = tuple[1]
-      data_object[i].timestamp = tuple[2]
+      data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
       data_object[i].value = tuple[3]
       if (type_limit ~= nil and type_limit <= i) then break end
    end
