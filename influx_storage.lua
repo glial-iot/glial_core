@@ -81,7 +81,7 @@ end
 
 function influx_storage.update_value(db, topic, value)
    local data = string.format('%s value=%s', topic, tonumber(value) or 0)
-   local url = string.format('http://localhost:8086/write?db=%s', db)
+   local url = string.format('http://influxdb:8086/write?db=%s', db)
    local r = http_client:post(url, data, {timeout = 1})
    return r.body
 end
