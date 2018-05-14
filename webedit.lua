@@ -26,10 +26,14 @@ function webedit.main(req)
       return req:render{ json = { result = result} }
    elseif (param_item == "get_list") then
       local data_object = {}
-      for i, item in pairs(fio.listdir(param_adress)) do
-         data_object[i] = {}
-         data_object[i].name = item
-         data_object[i].address = param_adress.."/"..item
+      local i = 1
+      for _, item in pairs(fio.listdir(param_adress)) do
+         if (string.find(item, ".+%.lua") ~= nil) then
+            data_object[i] = {}
+            data_object[i].name = item
+            data_object[i].address = param_adress.."/"..item
+            i = i + 1
+         end
       end
       return req:render{ json = data_object  }
    end

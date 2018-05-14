@@ -15,11 +15,13 @@ function scripts_drivers.init()
    end
 
    for i, item in pairs(fio.listdir(drivers_directory)) do
-      local current_func, error_msg = loadfile(drivers_directory.."/"..item)
-      if (current_func == nil) then
-         logger.add_entry(logger.ERROR, "Drivers subsystem", 'Driver not load: "'..error_msg..'"')
-      else
-         scripts_drivers_functions[i] = current_func()
+      if (string.find(item, ".+%.lua") ~= nil) then
+         local current_func, error_msg = loadfile(drivers_directory.."/"..item)
+         if (current_func == nil) then
+            logger.add_entry(logger.ERROR, "Drivers subsystem", 'Driver not load: "'..error_msg..'"')
+         else
+            scripts_drivers_functions[i] = current_func()
+         end
       end
    end
 

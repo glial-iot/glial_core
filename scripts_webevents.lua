@@ -17,11 +17,13 @@ function scripts_webevents.init()
    end
 
    for i, item in pairs(fio.listdir(webevents_directory)) do
-      local current_func, error_msg = loadfile(webevents_directory.."/"..item)
-      if (current_func == nil) then
-         logger.add_entry(logger.ERROR, "Web-events subsystem", 'Web-event not load: "'..error_msg..'"')
-      else
-         scripts_webevents_functions[i] = current_func()
+      if (string.find(item, ".+%.lua") ~= nil) then
+         local current_func, error_msg = loadfile(webevents_directory.."/"..item)
+         if (current_func == nil) then
+            logger.add_entry(logger.ERROR, "Web-events subsystem", 'Web-event not load: "'..error_msg..'"')
+         else
+            scripts_webevents_functions[i] = current_func()
+         end
       end
    end
 
