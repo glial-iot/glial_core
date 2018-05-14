@@ -37,3 +37,29 @@ function add_row_table(table_name, type, table_data, custom_class, table_custom_
 function clear_table(table_name) {
     document.getElementById(table_name).innerHTML = "";
 }
+
+
+function render_scripts_table(table_name, address) {
+    var xhr_scripts_list = new XMLHttpRequest();
+
+    function update_scripts_list_callback() {
+        if (xhr_scripts_list.readyState == 4 && xhr_scripts_list.status == 200) {
+            var json_data = JSON.parse(xhr_scripts_list.responseText);
+            if (json_data.none_data != "true") {
+                //console.log(json_data)
+                add_row_table(table_name, "head", ["Filename", /* "active", */ ""], undefined, [80, /* 30, */ 10])
+                for (let index = 0; index < json_data.length; index++) {
+                    var button_html = '<button type="button" address="' + json_data[index].address + '" class="btn btn-block btn-sm btn-info button_edit_sub_class"><i class="fas fa-edit"></i> Edit</button>'
+                    add_row_table(table_name, "body", [json_data[index].name, /* json_data[index].active, */ button_html])
+                }
+                $('.button_edit_sub_class').on('click', function(event) {
+                    location.href = '/webedit_edit?address=' + $(this).attr('address')
+                });
+            }
+        }
+    }
+
+    xhr_scripts_list.onreadystatechange = update_scripts_list_callback
+    xhr_scripts_list.open('POST', 'webedit?item=get_list&address=' + address, true);
+    xhr_scripts_list.send()
+}

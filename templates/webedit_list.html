@@ -56,15 +56,27 @@
                 </footer>
             </nav>
 
+
+
             <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-3 px-4">
-                <h2 class="text-center">Drivers</h2>
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover table-striped table-bordered" id="driver_list_table"></table>
-                </div>
-                <br>
-                <h2 class="text-center">Web-events</h2>
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover table-striped table-bordered" id="webevents_list_table"></table>
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                        <a class="nav-item nav-link active" id="nav-driver-tab" data-toggle="tab" href="#nav-driver" role="tab" aria-controls="nav-driver" aria-selected="true">Drivers</a>
+                        <a class="nav-item nav-link" id="nav-webevents-tab" data-toggle="tab" href="#nav-webevents" role="tab" aria-controls="nav-webevents" aria-selected="false">Web-events</a>
+                    </div>
+                </nav>
+
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-driver" role="tabpanel" aria-labelledby="nav-driver-tab">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped table-bordered" id="driver_list_table"></table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="nav-webevents" role="tabpanel" aria-labelledby="nav-webevents-tab">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped table-bordered" id="webevents_list_table"></table>
+                        </div>
+                    </div>
                 </div>
 
             </main>
@@ -81,56 +93,8 @@
 
 
     <script>
-        var xhr_driver_list = new XMLHttpRequest();
-
-        function update_drivers_list_callback() {
-            if (xhr_driver_list.readyState == 4 && xhr_driver_list.status == 200) {
-                var json_data = JSON.parse(xhr_driver_list.responseText);
-                if (json_data.none_data != "true") {
-                    //console.log(json_data)
-                    clear_table("driver_list_table")
-                    add_row_table("driver_list_table", "head", ["Filename", /* "active", */ ""], undefined, [80, /* 30, */ 10])
-                    for (let index = 0; index < json_data.length; index++) {
-                        var button_html = '<button type="button" address="' + json_data[index].address + '" class="btn btn-block btn-sm btn-info button_edit_sub_class"><i class="fas fa-edit"></i> Edit</button>'
-                        add_row_table("driver_list_table", "body", [json_data[index].name, /* json_data[index].active, */ button_html])
-                    }
-                    $('.button_edit_sub_class').on('click', function(event) {
-                        location.href = '/webedit_edit?address=' + $(this).attr('address')
-                    });
-                }
-            }
-        }
-
-        xhr_driver_list.onreadystatechange = update_drivers_list_callback
-        xhr_driver_list.open('POST', 'webedit?item=get_list&address=drivers', true);
-        xhr_driver_list.send()
-
-
-
-
-        var xhr_webevents_list = new XMLHttpRequest();
-
-        function update_webevents_list_callback() {
-            if (xhr_webevents_list.readyState == 4 && xhr_webevents_list.status == 200) {
-                var json_data = JSON.parse(xhr_webevents_list.responseText);
-                if (json_data.none_data != "true") {
-                    //console.log(json_data)
-                    clear_table("webevents_list_table")
-                    add_row_table("webevents_list_table", "head", ["Filename", /* "active", */ ""], undefined, [80, /* 30, */ 10])
-                    for (let index = 0; index < json_data.length; index++) {
-                        var button_html = '<button type="button" address="' + json_data[index].address + '" class="btn btn-block btn-sm btn-info button_edit_sub_class"><i class="fas fa-edit"></i> Edit</button>'
-                        add_row_table("webevents_list_table", "body", [json_data[index].name, /* json_data[index].active, */ button_html])
-                    }
-                    $('.button_edit_sub_class').on('click', function(event) {
-                        location.href = '/webedit_edit?address=' + $(this).attr('address')
-                    });
-                }
-            }
-        }
-
-        xhr_webevents_list.onreadystatechange = update_webevents_list_callback
-        xhr_webevents_list.open('POST', 'webedit?item=get_list&address=webevents', true);
-        xhr_webevents_list.send()
+        render_scripts_table("driver_list_table", "drivers")
+        render_scripts_table("webevents_list_table", "webevents")
     </script>
 
 
