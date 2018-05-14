@@ -6,8 +6,8 @@ event.event_function = function(req)
 
    local mqtt_local = require 'mqtt'
    local logger = require 'logger'
-   local config_local = require 'config'
-   local net_box = require 'net.box'
+   local config = require 'config'
+   local socket = require 'socket'
    local params = req:param()
 
    if (params["action"] ~= nil) then
@@ -21,11 +21,11 @@ event.event_function = function(req)
       end
 
       local result, emessage
-      local conn = net_box.connect(config_local.MQTT_WIRENBOARD_HOST..":"..config_local.MQTT_WIRENBOARD_PORT)
-      if (conn.state == "connecting") then
+      local conn = socket.tcp_connect(config.MQTT_WIRENBOARD_HOST, config.MQTT_WIRENBOARD_PORT, 2)
+      if (conn ~= nil) then
          conn:close()
-         local mqtt_object = mqtt_local.new(config_local.MQTT_WIRENBOARD_ID.."_action_driver", true)
-         mqtt_object:connect({host=config_local.MQTT_WIRENBOARD_HOST,port=config_local.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt_local.LOG_ALL})
+         local mqtt_object = mqtt_local.new(config.MQTT_WIRENBOARD_ID.."_action_driver", true)
+         mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt_local.LOG_ALL})
          if (params["action"] == "on_light_1") then
             result, emessage = mqtt_object:publish("/devices/noolite_tx_0x290/controls/state/on", "1", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
          elseif (params["action"] == "off_light_1") then
@@ -44,12 +44,12 @@ event.event_function = function(req)
             result, emessage = mqtt_object:publish("/devices/wb-mr6c_105/controls/K5/on", "0", mqtt_local.QOS_1, mqtt_local.NON_RETAIN)
          end
       else
-         logger.add_entry(logger.ERROR, event.name, 'Connect to host '..config_local.MQTT_WIRENBOARD_HOST..' failed')
+         logger.add_entry(logger.ERROR, event.name, 'Connect to host '..config.MQTT_WIRENBOARD_HOST..' failed')
          result = false
-         emessage = 'Connect to host '..config_local.MQTT_WIRENBOARD_HOST..' failed'
+         emessage = 'Connect to host '..config.MQTT_WIRENBOARD_HOST..' failed'
       end
       if (result ~= true) then
-         logger.add_entry(logger.ERROR, event.name, 'Send MQTT message to host '..config_local.MQTT_WIRENBOARD_HOST..' failed: '..(emessage or "no emessage"))
+         logger.add_entry(logger.ERROR, event.name, 'Send MQTT message to host '..config.MQTT_WIRENBOARD_HOST..' failed: '..(emessage or "no emessage"))
       end
       return req:render{ json = { result = result, msg = emessage } }
    end
