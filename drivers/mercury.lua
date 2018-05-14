@@ -4,7 +4,7 @@ driver.active = true
 driver.driver_function = function()
    local mqtt = require 'mqtt'
    local config = require 'config'
-   local net_box = require 'net.box'
+   local socket = require 'socket'
    local bus = require 'bus'
 
    local function driver_mqtt_callback(message_id, topic, payload, gos, retain)
@@ -14,8 +14,8 @@ driver.driver_function = function()
       end
    end
 
-   local conn = net_box.connect(config.MQTT_WIRENBOARD_HOST..":"..config.MQTT_WIRENBOARD_PORT)
-   if (conn.state == "connecting") then
+   local conn = socket.tcp_connect(config.MQTT_WIRENBOARD_HOST, config.MQTT_WIRENBOARD_PORT, 2)
+   if (conn ~= nil) then
       conn:close()
       local mqtt_object = mqtt.new(config.MQTT_WIRENBOARD_ID.."_"..driver.name, true)
       local mqtt_status, mqtt_err = mqtt_object:connect({host=config.MQTT_WIRENBOARD_HOST,port=config.MQTT_WIRENBOARD_PORT,keepalive=60,log_mask=mqtt.LOG_ALL})
