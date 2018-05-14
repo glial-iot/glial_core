@@ -1,6 +1,8 @@
 #!/usr/bin/env tarantool
 
 local log = require 'log'
+local inspect = require 'inspect'
+
 local logger = require 'logger'
 
 local bus = {}
@@ -10,7 +12,11 @@ local system = require 'system'
 
 local fiber = require 'fiber'
 local ts_storage = require 'ts_storage'
+local influx_storage = require "influx_storage"
 
+
+bus.rps_i = 0
+bus.rps_o = 0
 bus.max_key_value = 0
 local average_data = {}
 
@@ -31,15 +37,28 @@ end
 function bus.fifo_storage_worker()
    while true do
       local key, topic, timestamp, value = bus.get_delete_value()
+      print("get fifo value:", key, topic, timestamp, value)
       if (key ~= nil) then
          bus.bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
-         local _, _, new_topic, name = string.find(topic, "(/.+/)(.+)$")
-         if (topic ~= nil and name ~= nil) then
-            ts_storage.update_value(topic, value, name)
-         end
+         bus.rps_o = bus.rps_o + 1
+         local answer = influx_storage.handler("glue", topic, value)
+         if (answer ~= nil) then print(answer) end
+         fiber.yield()
       else
-         fiber.sleep(0.01)
+         fiber.sleep(0.1)
       end
+   end
+end
+
+function bus.bus_rps_stat_worker()
+   while true do
+      bus.update_value("/glue/rps_i", bus.rps_i)
+      bus.update_value("/glue/rps_o", bus.rps_o)
+      bus.rps_i = 0
+      bus.rps_o = 0
+      fiber.sleep(1)
+
+      --print(inspect(fiber.info()))
    end
 end
 
@@ -52,13 +71,15 @@ function bus.init()
    bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
    bus.bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
 
-   fiber.create(bus.fifo_storage_worker)
+   bus.fifo_storage_worker_fiber = fiber.create(bus.fifo_storage_worker)
+   bus.bus_rps_stat_worker_fiber = fiber.create(bus.bus_rps_stat_worker)
 end
 
 function bus.update_value(topic, value)
    local timestamp = os.time()
    local new_value  = bus.events_handler(topic, value)
    bus.fifo_storage:insert{nil, topic, timestamp, (new_value or value)}
+   bus.rps_i = bus.rps_i + 1
 end
 
 function bus.update_value_average(topic, value, period)
@@ -100,7 +121,6 @@ function bus.get_delete_value()
       topic = table[1][2]
       timestamp = table[1][3]
       value = table[1][4]
-      --print("fifo_storage_worker:", key, topic, timestamp, value)
       bus.fifo_storage:delete(key)
       if (key > bus.max_key_value) then bus.max_key_value = key end
       return key, topic, timestamp, value
