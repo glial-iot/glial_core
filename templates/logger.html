@@ -74,6 +74,7 @@
     <script src="jquery-slim.min.js"></script>
     <script src="popper.min.js"></script>
     <script src="bootstrap.min.js"></script>
+    <script src="system.js"></script>
 
     <script src="amcharts/amcharts.js"></script>
     <script src="amcharts/serial.js"></script>
@@ -116,43 +117,6 @@
 
 
 
-
-
-
-
-        HTMLTableRowElement.prototype.insertCell = (function(oldInsertCell) {
-            return function(index) {
-                if (this.parentElement.tagName.toUpperCase() == "THEAD") {
-                    if (index < -1 || index > this.cells.length) {} else {
-                        let th = document.createElement("TH");
-                        if (arguments.length == 0 || index == -1 || index == this.cells.length)
-                            return this.appendChild(th);
-                        else
-                            return this.insertBefore(th, this.children[index]);
-                    }
-                }
-                return oldInsertCell.apply(this, arguments);
-            }
-        })(HTMLTableRowElement.prototype.insertCell);
-
-        function add_row_table(table_name, type, table_data) {
-            var table_current_row;
-            if (type == "head")
-                table_current_row = document.getElementById(table_name).createTHead().insertRow(-1);
-            else {
-                if (document.getElementById(table_name).tBodies.length == 0)
-                    table_current_row = document.getElementById(table_name).createTBody().insertRow(-1);
-                else
-                    table_current_row = document.getElementById(table_name).tBodies[0].insertRow(-1);
-            }
-
-            for (var j = 0; j < table_data.length; j++)
-                table_current_row.insertCell(-1).innerHTML = table_data[j];
-        }
-
-        function clear_table(table_name) {
-            document.getElementById(table_name).innerHTML = "";
-        }
 
         var xhr_tmr = new XMLHttpRequest();
 
