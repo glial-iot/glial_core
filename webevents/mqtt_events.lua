@@ -18,6 +18,8 @@ event.event_function = function(req)
       elseif (params["action"] == "wipe_storage") then
          os.execute("rm -rf ./db/*")
          os.exit()
+      elseif (params["action"] == "update") then
+         os.execute("git pull")
       end
 
       local result, emessage
