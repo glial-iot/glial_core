@@ -86,7 +86,7 @@
                 if (json_data.none_data != "true") {
                     //console.log(json_data)
                     clear_table("table_values_bus_storage")
-                    add_row_table("table_values_bus_storage", "head", ["Topic", "Time", "Value"], undefined, [60, 30, 10])
+                    add_row_table("table_values_bus_storage", "head", ["Topic", "Update time", "Value"], undefined, [60, 30, 10])
                     for (let index = 0; index < json_data.length; index++) {
                         if (old_values[json_data[index].topic] == json_data[index].value) {
                             add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, json_data[index].value])
