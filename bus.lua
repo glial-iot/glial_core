@@ -17,7 +17,9 @@ local influx_storage = require "influx_storage"
 
 bus.rps_i = 0
 bus.rps_o = 0
-bus.max_key_value = 0
+bus.max_seq_value = 0
+bus.avg_seq_value = 0
+bus.current_key = 0
 local average_data = {}
 
 function bus.events_handler(topic, value)
@@ -57,8 +59,6 @@ function bus.bus_rps_stat_worker()
       bus.rps_i = 0
       bus.rps_o = 0
       fiber.sleep(1)
-
-      --print(inspect(fiber.info()))
    end
 end
 
@@ -122,9 +122,11 @@ function bus.get_delete_value()
       timestamp = table[1][3]
       value = table[1][4]
       bus.fifo_storage:delete(key)
-      if (key > bus.max_key_value) then bus.max_key_value = key end
+      if (key > bus.max_seq_value) then bus.max_seq_value = key end
+      bus.current_key = key
       return key, topic, timestamp, value
    else
+      if (bus.current_key > 1) then bus.avg_seq_value = bus.current_key end
       bus.fifo_sequence:reset()
    end
 end

@@ -6,13 +6,15 @@ local box = box
 local ts_list = {}
 
 
-ts_list["/tarantool/arena_used_ratio"] = "/tarantool/arena_used_ratio"
-ts_list["/tarantool/arena_size"] = "/tarantool/arena_size"
-ts_list["/tarantool/arena_used"] = "/tarantool/arena_used"
-ts_list["/tarantool/quota_used_ratio"] = "/tarantool/quota_used_ratio"
-ts_list["/tarantool/max_bus_key"] = "/tarantool/max_bus_key"
-ts_list["/glue/rps_i"] = "/glue/rps_i"
-ts_list["/glue/rps_o"] = "/glue/rps_o"
+ts_list["/glue/tarantool_arena_used_ratio"] = true
+ts_list["/glue/tarantool_arena_size"] = true
+ts_list["/glue/tarantool_arena_used"] = true
+ts_list["/glue/tarantool_quota_used_ratio"] = true
+ts_list["/glue/max_seq_value"] = true
+ts_list["/glue/rps_i"] = true
+ts_list["/glue/rps_o"] = true
+ts_list["/glue/avg_seq_value"] = true
+
 
 ts_list["/wb-map12h/Ch 1 P L1"] = "/wb-map12h/Ch_1_P_L1"
 ts_list["/wb-map12h/Ch 1 P L2"] = "/wb-map12h/Ch_1_P_L2"
@@ -75,7 +77,11 @@ end
 
 function influx_storage.handler(db, topic, value)
    if (ts_list[topic] ~= nil) then
-      influx_storage.update_value(db, ts_list[topic], value)
+      if (ts_list[topic] == true) then
+         influx_storage.update_value(db, topic, value)
+      else
+         influx_storage.update_value(db, ts_list[topic], value)
+      end
    end
 end
 
