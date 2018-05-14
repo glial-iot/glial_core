@@ -9,7 +9,7 @@ local drivers_directory = "drivers"
 
 function scripts_drivers.init()
 
-   if (fio.path.is_dir(drivers_directory) ~= true) then
+   if (fio.path ~= nil and fio.path.is_dir(drivers_directory) ~= true) then
       logger.add_entry(logger.ERROR, "Drivers subsystem", 'Drivers directory '..drivers_directory..' not exist')
       return
    end

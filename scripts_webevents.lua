@@ -11,7 +11,7 @@ local webevents_directory = "webevents"
 
 function scripts_webevents.init()
 
-   if (fio.path.is_dir(webevents_directory) ~= true) then
+   if (fio.path ~= nil and fio.path.is_dir(webevents_directory) ~= true) then
       logger.add_entry(logger.ERROR, "Web-events subsystem", 'Web-event directory not exist')
       return
    end
