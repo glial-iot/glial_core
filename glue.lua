@@ -17,30 +17,6 @@ local system = require "system"
 local logger = require "logger"
 local webedit = require "webedit"
 
-local function http_server_data_tsstorage_handler(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local return_object
-   local data_object, i = {}, 0
-
-   for _, tuple in ts_storage.object.index.primary:pairs(nil, { iterator = box.index.REQ}) do
-      i = i + 1
-      data_object[i] = {}
-      data_object[i].timestamp = os.date("%H:%M:%S", tuple[3]).." ("..tuple[3]..")"
-      data_object[i].subscriptionId = "none"
-      data_object[i].serialNumber = tuple[5]
-      data_object[i].resourcePath = tuple[2]
-      data_object[i].value = tuple[4]
-      if (type_limit ~= nil and type_limit <= i) then break end
-   end
-
-   if (i > 0) then
-      return_object = req:render{ json =  data_object  }
-   else
-      return_object = req:render{ json = { none_data = "true" } }
-   end
-
-   return return_object
-end
 
 local function http_server_data_bus_storage_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
@@ -123,8 +99,6 @@ local function endpoints_list()
    endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler, "fas fa-database"}
    endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
 
-   endpoints[#endpoints+1] = {"/tsstorage", "tsstorage.html", "TS Storage", http_server_html_handler, "fas fa-database"}
-   endpoints[#endpoints+1] = {"/tsstorage-data", nil, nil, http_server_data_tsstorage_handler}
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 
