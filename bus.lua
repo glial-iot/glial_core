@@ -132,5 +132,29 @@ function bus.get_delete_value()
 end
 
 
+function bus.http_handler(req)
+   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
+   local return_object
+   local data_object, i = {}, 0
+
+   for _, tuple in bus.bus_storage.index.topic:pairs() do
+      i = i + 1
+      data_object[i] = {}
+      data_object[i].topic = tuple[1]
+      data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+      data_object[i].value = tuple[3]
+      if (type_limit ~= nil and type_limit <= i) then break end
+   end
+
+   if (i > 0) then
+      return_object = req:render{ json =  data_object  }
+   else
+      return_object = req:render{ json = { none_data = "true" } }
+   end
+
+   return return_object
+end
+
+
 
 return bus

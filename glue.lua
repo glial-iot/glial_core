@@ -6,8 +6,6 @@ local impact = require 'impact'
 local log = require 'log'
 local box = box
 
-local proto_menu = {}
-
 local http_system = require 'http_system'
 local scripts_drivers = require 'scripts_drivers'
 local scripts_webevents = require 'scripts_webevents'
@@ -17,46 +15,8 @@ local system = require "system"
 local logger = require "logger"
 local webedit = require "webedit"
 
-
-local function http_server_data_bus_storage_handler(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
-   local return_object
-   local data_object, i = {}, 0
-
-   for _, tuple in bus.bus_storage.index.topic:pairs() do
-      i = i + 1
-      data_object[i] = {}
-      data_object[i].topic = tuple[1]
-      data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
-      data_object[i].value = tuple[3]
-      if (type_limit ~= nil and type_limit <= i) then break end
-   end
-
-   if (i > 0) then
-      return_object = req:render{ json =  data_object  }
-   else
-      return_object = req:render{ json = { none_data = "true" } }
-   end
-
-   return return_object
-end
-
 local function http_server_root_handler(req)
    return req:redirect_to('/dashboard')
-end
-
-local function http_server_html_handler(req)
-   local menu = {}
-   for i, item in pairs(proto_menu) do
-      menu[i] = {}
-      menu[i].href=item.href
-      menu[i].name=item.name
-      menu[i].icon=item.icon
-      if (item.href == req.path) then
-         menu[i].class="active"
-      end
-   end
-   return req:render{ menu = menu, git_version = system.git_version() }
 end
 
 local function box_config()
@@ -74,31 +34,30 @@ end
 local function endpoints_list()
    local endpoints = {}
    endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
-   endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_server_html_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_server_html_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/power", "power.html", "Power", http_server_html_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_server_html_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_server_html_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/actions", "actions.html", "Actions", http_server_html_handler, "fas fa-sliders-h"}
+   endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/power", "power.html", "Power", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/actions", "actions.html", "Actions", http_system.page_handler, "fas fa-sliders-h"}
 
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 
-   endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_server_html_handler, "fas fa-cogs"}
-   endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_server_html_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_system.page_handler, "fas fa-cogs"}
+   endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_system.page_handler, "fas fa-chart-area"}
 
-   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_server_html_handler, "fas fa-stream"}
+   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_system.page_handler, "fas fa-stream"}
    endpoints[#endpoints+1] = {"/logger-data", nil, nil, logger.return_all_entry}
    endpoints[#endpoints+1] = {"/logger-ext", nil, nil, logger.tarantool_pipe_log_handler}
    endpoints[#endpoints+1] = {"/logger-action", nil, nil, logger.actions}
 
-   endpoints[#endpoints+1] = {"/webedit_list", "webedit_list.html", "Scripts", http_server_html_handler, "fas fa-edit"}
-   endpoints[#endpoints+1] = {"/webedit_edit", "webedit_edit.html", nil, http_server_html_handler, nil}
+   endpoints[#endpoints+1] = {"/webedit_list", "webedit_list.html", "Scripts", http_system.page_handler, "fas fa-edit"}
+   endpoints[#endpoints+1] = {"/webedit_edit", "webedit_edit.html", nil, http_system.page_handler, nil}
    endpoints[#endpoints+1] = {"/webedit", nil, nil, webedit.main}
 
-   endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_server_html_handler, "fas fa-database"}
-   endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, http_server_data_bus_storage_handler}
-
+   endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_system.page_handler, "fas fa-database"}
+   endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, bus.http_handler}
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 

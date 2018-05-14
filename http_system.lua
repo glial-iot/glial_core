@@ -8,6 +8,7 @@ local config = require 'config'
 
 local http_system = {}
 local box = box
+http_system.proto_menu = {}
 
 
 function http_system.init_server()
@@ -20,14 +21,26 @@ function http_system.init_client()
 end
 
 function http_system.enpoints_menu_config(endpoints_list)
-   local proto_menu = {}
    for i, item in pairs(endpoints_list) do
       http_system.server:route({ path = item[1], file = item[2] }, item[4])
       if (item[3] ~= nil) then
-         proto_menu[#proto_menu+1] = {href = item[1], name=item[3], icon=item[5]}
+         http_system.proto_menu[#http_system.proto_menu+1] = {href = item[1], name=item[3], icon=item[5]}
       end
    end
-   return proto_menu
+end
+
+function http_system.page_handler(req)
+   local menu = {}
+   for i, item in pairs(http_system.proto_menu) do
+      menu[i] = {}
+      menu[i].href=item.href
+      menu[i].name=item.name
+      menu[i].icon=item.icon
+      if (item.href == req.path) then
+         menu[i].class="active"
+      end
+   end
+   return req:render{ menu = menu, git_version = system.git_version() }
 end
 
 
