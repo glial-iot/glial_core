@@ -37,12 +37,12 @@ end
 function bus.fifo_storage_worker()
    while true do
       local key, topic, timestamp, value = bus.get_delete_value()
-      print("get fifo value:", key, topic, timestamp, value)
+      --print("get fifo value:", key, topic, timestamp, value)
       if (key ~= nil) then
          bus.bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
          bus.rps_o = bus.rps_o + 1
          local answer = influx_storage.handler("glue", topic, value)
-         if (answer ~= nil) then print(answer) end
+         if (answer ~= nil) then logger.add_entry(logger.ERROR, "Influx updater", 'Influx answer: '..answer) end
          fiber.yield()
       else
          fiber.sleep(0.1)
