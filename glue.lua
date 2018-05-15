@@ -2,7 +2,6 @@
 local inspect = require 'inspect'
 local json = require 'json'
 local fiber = require 'fiber'
-local impact = require 'impact'
 local log = require 'log'
 local box = box
 
