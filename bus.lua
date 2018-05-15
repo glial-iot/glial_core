@@ -22,6 +22,20 @@ bus.avg_seq_value = 0
 bus.current_key = 0
 local average_data = {}
 
+
+function bus.init()
+   bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true})
+   bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
+   bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
+
+   bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
+   bus.bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
+
+   bus.fifo_storage_worker_fiber = fiber.create(bus.fifo_storage_worker)
+   bus.bus_rps_stat_worker_fiber = fiber.create(bus.bus_rps_stat_worker)
+end
+
+
 function bus.events_handler(topic, value)
    for name, item in pairs(scripts_events) do
       if (item ~= nil and type(item) == "table" and item.topic ~= nil and item.topic == topic) then
@@ -60,19 +74,6 @@ function bus.bus_rps_stat_worker()
       bus.rps_o = 0
       fiber.sleep(1)
    end
-end
-
-
-function bus.init()
-   bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true})
-   bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
-   bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
-
-   bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, temporary = true})
-   bus.bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
-
-   bus.fifo_storage_worker_fiber = fiber.create(bus.fifo_storage_worker)
-   bus.bus_rps_stat_worker_fiber = fiber.create(bus.bus_rps_stat_worker)
 end
 
 function bus.update_value(topic, value)
