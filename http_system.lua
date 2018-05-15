@@ -29,6 +29,11 @@ function http_system.enpoints_menu_config(endpoints_list)
    end
 end
 
+function http_system.endpoint_config(path, handler)
+   http_system.server:route({ path = path }, handler)
+end
+
+
 function http_system.page_handler(req)
    local _, _, host = string.find(req.headers.host, "(.+):8080")
    local menu = {}
