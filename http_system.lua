@@ -30,6 +30,7 @@ function http_system.enpoints_menu_config(endpoints_list)
 end
 
 function http_system.page_handler(req)
+   local _, _, host = string.find(req.headers.host, "(.+):8080")
    local menu = {}
    for i, item in pairs(http_system.proto_menu) do
       menu[i] = {}
