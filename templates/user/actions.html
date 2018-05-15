@@ -113,34 +113,11 @@
     <script src="system-js/jquery-slim.min.js"></script>
     <script src="system-js/popper.min.js"></script>
     <script src="system-js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/action_button.js"></script>
 
     <script>
-        var button_xhr = new XMLHttpRequest();
-        var last_button_object;
-
-        function action_result() {
-            if (button_xhr.readyState == 4) {
-                if (button_xhr.status == 200) {
-                    var json_data = JSON.parse(button_xhr.responseText);
-                    if (json_data.result == true)
-                        last_button_object.removeClass("btn-warning").removeClass("btn-danger").addClass("btn-success");
-                    else
-                        last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
-                } else {
-                    last_button_object.removeClass("btn-warning").removeClass("btn-success").addClass("btn-danger");
-                }
-            }
-        }
-
-        function send_action() {
-            button_xhr.open('POST', 'action?action=' + $(this).attr('action-button'), true);
-            button_xhr.send()
-            last_button_object = $(this)
-            $(this).removeClass("btn-success").removeClass("btn-danger").addClass("btn-warning");
-        }
-
-        $('.btn-action').on('click', send_action);
-        button_xhr.onreadystatechange = action_result
+        button_action_init("mqtt_events", "btn-action");
     </script>
 
 
