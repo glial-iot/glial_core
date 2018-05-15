@@ -1,15 +1,14 @@
 #!/usr/bin/env tarantool
 local log = require 'log'
 local inspect = require 'inspect'
+local system = require 'system'
+local box = box
 
 local logger = {}
 logger.INFO = "INFO"
 logger.WARNING = "WARNING"
 logger.ERROR = "ERROR"
 logger.USER = "USER"
-local box = box
-
-local system = require 'system'
 
 function logger.init()
    logger.storage = box.schema.space.create('logger_storage_2', {if_not_exists = true})

@@ -5,9 +5,9 @@ local logger = require 'logger'
 local scripts_events = require 'scripts_events'
 local system = require 'system'
 local config = require 'config'
+local box = box
 
 local http_system = {}
-local box = box
 http_system.proto_menu = {}
 
 
