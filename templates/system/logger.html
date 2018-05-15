@@ -100,7 +100,7 @@
         }
 
         function send_action() {
-            button_xhr.open('POST', 'logger-action?action=' + $(this).attr('action-button'), true);
+            button_xhr.open('POST', 'system_logger_action?action=' + $(this).attr('action-button'), true);
             button_xhr.send()
             last_button_object = $(this)
             $(this).removeClass("btn-success").removeClass("btn-danger").addClass("btn-warning");
@@ -138,7 +138,7 @@
         }
 
         function timer_update_field() {
-            xhr_tmr.open('POST', 'logger-data?item=all&limit=100', true);
+            xhr_tmr.open('POST', 'system_logger_data?item=all&limit=100', true);
             xhr_tmr.send()
         }
 

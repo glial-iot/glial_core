@@ -16,7 +16,7 @@ local logger = require "logger"
 local webedit = require "webedit"
 
 local function http_server_root_handler(req)
-   return req:redirect_to('/dashboard')
+   return req:redirect_to('/user_dashboard')
 end
 
 local function box_config()
@@ -24,40 +24,24 @@ local function box_config()
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
-local function database_init()
-   --settings = box.schema.space.create('settings', {if_not_exists = true, engine = 'vinyl'})
-   --settings:create_index('key', { parts = {1, 'string'}, if_not_exists = true })
-end
-
-
-
 local function endpoints_list()
    local endpoints = {}
-   endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
-   endpoints[#endpoints+1] = {"/dashboard", "dashboard.html", "Dashboard", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/temperature", "temperature.html", "Temperature", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/power", "power.html", "Power", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/vaisala", "vaisala.html", "Vaisala", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/water", "water.html", "Water", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/actions", "actions.html", "Actions", http_system.page_handler, "fas fa-sliders-h"}
-
+   endpoints[#endpoints+1] = {"/system_control", "system/control.html", "Control", http_system.page_handler, "fas fa-cogs"}
+   endpoints[#endpoints+1] = {"/system_tarantool", "system/tarantool.html", "Tarantool", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/system_logger", "system/logger.html", "Logs", http_system.page_handler, "fas fa-stream"}
+   endpoints[#endpoints+1] = {"/system_webedit_list", "system/webedit_list.html", "Scripts", http_system.page_handler, "fas fa-edit"}
+   endpoints[#endpoints+1] = {"/system_webedit_edit", "system/webedit_edit.html", nil, http_system.page_handler, nil}
+   endpoints[#endpoints+1] = {"/system_bus_storage", "system/bus_storage.html", "Bus storage", http_system.page_handler, "fas fa-database"}
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 
-   endpoints[#endpoints+1] = {"/control", "control.html", "Control", http_system.page_handler, "fas fa-cogs"}
-   endpoints[#endpoints+1] = {"/tarantool", "tarantool.html", "Tarantool", http_system.page_handler, "fas fa-chart-area"}
-
-   endpoints[#endpoints+1] = {"/logger", "logger.html", "Logs", http_system.page_handler, "fas fa-stream"}
-   endpoints[#endpoints+1] = {"/logger-data", nil, nil, logger.return_all_entry}
-   endpoints[#endpoints+1] = {"/logger-ext", nil, nil, logger.tarantool_pipe_log_handler}
-   endpoints[#endpoints+1] = {"/logger-action", nil, nil, logger.actions}
-
-   endpoints[#endpoints+1] = {"/webedit_list", "webedit_list.html", "Scripts", http_system.page_handler, "fas fa-edit"}
-   endpoints[#endpoints+1] = {"/webedit_edit", "webedit_edit.html", nil, http_system.page_handler, nil}
-   endpoints[#endpoints+1] = {"/webedit", nil, nil, webedit.main}
-
-   endpoints[#endpoints+1] = {"/bus_storage", "bus_storage.html", "Bus storage", http_system.page_handler, "fas fa-database"}
-   endpoints[#endpoints+1] = {"/bus_storage-data", nil, nil, bus.http_handler}
+   endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
+   endpoints[#endpoints+1] = {"/user_dashboard", "user/dashboard.html", "Dashboard", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/user_temperature", "user/temperature.html", "Temperature", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/user_power", "user/power.html", "Power", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/user_vaisala", "user/vaisala.html", "Vaisala", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/user_water", "user/water.html", "Water", http_system.page_handler, "fas fa-chart-area"}
+   endpoints[#endpoints+1] = {"/user_actions", "user/actions.html", "Actions", http_system.page_handler, "fas fa-sliders-h"}
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 
@@ -70,22 +54,33 @@ local function endpoints_list()
    return endpoints
 end
 
+local function http_data_endpoints_init()
+   http_system.endpoint_config("/system_logger_data", logger.return_all_entry)
+   http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
+   http_system.endpoint_config("/system_logger_action", logger.actions)
+   http_system.endpoint_config("/system_webedit_data", webedit.http_handler)
+   http_system.endpoint_config("/system_bus_data", bus.http_handler)
+end
+
 box_config()
+
 
 logger.init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
 logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
 
---database_init()
 bus.init()
 logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
 
 ts_storage.init()
 logger.add_entry(logger.INFO, "Main system", "Time Series storage initialized")
 
+webedit.init()
+
 http_system.init_server()
 http_system.init_client()
-proto_menu = http_system.enpoints_menu_config(endpoints_list())
+http_system.enpoints_menu_config(endpoints_list())
+http_data_endpoints_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
 logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")

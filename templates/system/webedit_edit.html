@@ -83,12 +83,17 @@
     <script src="jquery-slim.min.js"></script>
     <script src="popper.min.js"></script>
     <script src="bootstrap.min.js"></script>
+    <script src="system.js"></script>
+
 
     <script src="ace/ace.js"></script>
     <!--     <script src="ace/ext-language_tools.js"></script> -->
 
     <script>
         /*         ace.require("ace/ext/language_tools");  */
+
+
+
 
         var editor = ace.edit("editor");
         editor.setTheme("ace/theme/crimson_editor");
@@ -119,13 +124,13 @@
 
         function update_field_callback() {
             if (xhr_file_field.readyState == 4 && xhr_file_field.status == 200) {
-                editor.setValue(xhr_file_field.responseText);
+                editor.setValue(Base64.decode(xhr_file_field.responseText));
                 editor.selection.clearSelection();
             }
         }
         xhr_file_field.onreadystatechange = update_field_callback
         var url = new URL(window.location.href);
-        xhr_file_field.open('POST', 'webedit?item=get&address=' + url.searchParams.get("address"), true);
+        xhr_file_field.open('POST', 'system_webedit_data?item=get&address=' + url.searchParams.get("address"), true);
         xhr_file_field.send()
 
 
@@ -151,17 +156,22 @@
         }
 
         function save_file() {
-            button_xhr.open('POST', 'webedit?item=save&address=' + url.searchParams.get("address"), true);
+            button_xhr.open('POST', 'system_webedit_data?item=save&address=' + url.searchParams.get("address"), true);
             button_xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            var file = "file=" + encodeURIComponent(editor.getValue())
-            button_xhr.send(file)
+
+            var blob = "file=" + Base64.encode(editor.getValue());
+            /*             var blob = new Blob([editor.getValue()], {
+                            type: 'text/plain'
+                        }); */
+
+            button_xhr.send(blob)
             last_button_object = $(this)
             $(this).removeClass("btn-info").removeClass("btn-danger").addClass("btn-warning");
         }
 
 
         $('#goto_list').on('click', function(event) {
-            location.href = '/webedit_list';
+            location.href = '/system_webedit_list';
         });
         $('#save_file').on('click', save_file);
         button_xhr.onreadystatechange = action_result

@@ -40,7 +40,7 @@ function http_system.page_handler(req)
          menu[i].class="active"
       end
    end
-   return req:render{ menu = menu, git_version = system.git_version() }
+   return req:render{ menu = menu, git_version = system.git_version(), host = host }
 end
 
 
