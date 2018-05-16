@@ -63,6 +63,7 @@
                             <button type="button" action-button="wipe_storage" class="btn btn-success btn-action"><i class="fas fa-exclamation-triangle"></i>  Wipe storage and stop</button>
                             <button type="button" action-button="tarantool_stop" class="btn btn-success btn-action"><i class="far fa-stop-circle"></i>  Tarantool stop</button>
                             <button type="button" action-button="update" class="btn btn-success btn-action"><i class="fas fa-cloud-download-alt"></i>  GLUE update</button>
+                            <button type="button" id="edit_menu_button" class="btn btn-success"><i class="fas fa-cloud-download-alt"></i>  Edit user menu</button>
                         </div>
                     </div>
 
@@ -83,6 +84,12 @@
 
     <script>
         button_action_init("system_actions", "btn-action");
+
+
+        function edit_menu_action(event) {
+            location.href = '/system_webedit_edit?address=menu/user_menu.lua';
+        }
+        $('#edit_menu_button').on('click', edit_menu_action);
     </script>
 
 

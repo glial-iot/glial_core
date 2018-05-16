@@ -20,11 +20,14 @@ function http_system.init_client()
    http_system.client = require('http.client')
 end
 
-function http_system.enpoints_menu_config(endpoints_list)
-   for i, item in pairs(endpoints_list) do
-      http_system.server:route({ path = item[1], file = item[2] }, item[4])
-      if (item[3] ~= nil) then
-         http_system.proto_menu[#http_system.proto_menu+1] = {href = item[1], name=item[3], icon=item[5]}
+function http_system.enpoints_menu_config(menu_list)
+   if menu_list == nil then
+      return
+   end
+   for i, item in pairs(menu_list) do
+      http_system.server:route({ path = item.href, file = item.file }, item.handler)
+      if (item.name ~= nil) then
+         http_system.proto_menu[#http_system.proto_menu+1] = {href = item.href, name=item.name, icon=item.icon}
       end
    end
 end
@@ -33,8 +36,7 @@ function http_system.endpoint_config(path, handler)
    http_system.server:route({ path = path }, handler)
 end
 
-
-function http_system.page_handler(req)
+function http_system.generic_page_handler(req)
    local _, _, host = string.find(req.headers.host, "(.+):8080")
    local menu = {}
    for i, item in pairs(http_system.proto_menu) do

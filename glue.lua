@@ -23,38 +23,79 @@ local function box_config()
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
-local function endpoints_list()
-   local endpoints = {}
-   endpoints[#endpoints+1] = {"/system_control", "system/control.html", "Control", http_system.page_handler, "fas fa-cogs"}
-   endpoints[#endpoints+1] = {"/system_tarantool", "system/tarantool.html", "Tarantool", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/system_logger", "system/logger.html", "Logs", http_system.page_handler, "fas fa-stream"}
-   endpoints[#endpoints+1] = {"/system_webedit_list", "system/webedit_list.html", "Scripts", http_system.page_handler, "fas fa-edit"}
-   endpoints[#endpoints+1] = {"/system_webedit_edit", "system/webedit_edit.html", nil, http_system.page_handler, nil}
-   endpoints[#endpoints+1] = {"/system_bus_storage", "system/bus_storage.html", "Bus storage", http_system.page_handler, "fas fa-database"}
+local function system_menu_list()
+   local m = {}
 
-   endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+   m[#m+1] = {
+      href = "/system_bus_storage",
+      file = "system/bus_storage.html",
+      name = "Bus storage",
+      handler = http_system.generic_page_handler,
+      icon = "fas fa-database"
+   }
 
-   endpoints[#endpoints+1] = {"/", nil, nil, http_server_root_handler}
-   endpoints[#endpoints+1] = {"/user_dashboard", "user/dashboard.html", "Dashboard", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/user_temperature", "user/temperature.html", "Temperature", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/user_power", "user/power.html", "Power", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/user_vaisala", "user/vaisala.html", "Vaisala", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/user_water", "user/water.html", "Water", http_system.page_handler, "fas fa-chart-area"}
-   endpoints[#endpoints+1] = {"/user_actions", "user/actions.html", "Actions", http_system.page_handler, "fas fa-sliders-h"}
-   endpoints[#endpoints+1] = {"/user_iframe", "user/iframe.html", nil, http_system.page_handler, "fas fa-database"}
+   m[#m+1] = {
+      href = "/system_logger",
+      file = "system/logger.html",
+      name = "Logs",
+      handler = http_system.generic_page_handler,
+      icon = "fas fa-stream"
+   }
 
-   endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
+   m[#m+1] = {
+      href = "/system_webedit_list",
+      file = "system/webedit_list.html",
+      name = "Scripts",
+      handler = http_system.generic_page_handler,
+      icon = "fas fa-edit"
+   }
 
-   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://192.168.1.111/", nil, "WirenBoard", nil, "fas fa-arrow-circle-right"}
-   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://192.168.1.45:9000/", nil, "Portainer", nil, "fas fa-arrow-circle-right"}
-   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://a.linergo.ru/login.xhtml", nil, 'Linergo', nil, "fas fa-arrow-circle-right"}
-   endpoints[#endpoints+1] = {"http://gascloud.ru/", nil, "GasCloud", nil, "fas fa-arrow-circle-right"}
-   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://unilight.su/", nil, "Unilight", nil, "fas fa-arrow-circle-right"}
-   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=https://www.m2mconnect.ru/Account/Login", nil, "M2M Connect", nil, "fas fa-arrow-circle-right"}
-   return endpoints
+   m[#m+1] = {
+      href = "/system_control",
+      file = "system/control.html",
+      name = "Control",
+      handler = http_system.generic_page_handler,
+      icon = "fas fa-cogs"
+   }
+
+   m[#m+1] = {
+      href = "/system_tarantool",
+      file = "system/tarantool.html",
+      name = "Tarantool",
+      handler = http_system.generic_page_handler,
+      icon = "fas fa-chart-area"
+   }
+
+   m[#m+1] = {
+      href = "/system_webedit_edit",
+      file = "system/webedit_edit.html",
+      name = nil,
+      handler = http_system.generic_page_handler,
+      icon = nil
+   }
+
+   m[#m+1] = {
+      href = "/#",
+      file = nil,
+      name = "———————",
+      handler = nil
+   }
+   return m
+end
+
+local function user_menu_file_init()
+   local user_menu
+   local current_func, error_msg = loadfile("menu".."/".."user_menu.lua")
+   if (current_func == nil) then
+      logger.add_entry(logger.ERROR, "User menu subsystem", 'Menu not load: "'..error_msg..'"')
+   else
+      user_menu = current_func() or {}
+   end
+   return user_menu
 end
 
 local function http_data_endpoints_init()
+   http_system.endpoint_config("/", http_server_root_handler)
    http_system.endpoint_config("/system_logger_data", logger.return_all_entry)
    http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
    http_system.endpoint_config("/system_logger_action", logger.actions)
@@ -79,7 +120,8 @@ webedit.init()
 
 http_system.init_server()
 http_system.init_client()
-http_system.enpoints_menu_config(endpoints_list())
+http_system.enpoints_menu_config(system_menu_list())
+http_system.enpoints_menu_config(user_menu_file_init())
 http_data_endpoints_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
