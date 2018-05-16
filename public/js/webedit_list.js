@@ -6,7 +6,7 @@ function edit_button_action(event) {
 
 function new_button_action() {
     var xhr_new_action = new XMLHttpRequest();
-    xhr_new_action.open('POST', 'system_webedit_data?item=new&address=' + $('#new_file_form')["0"].value, true);
+    xhr_new_action.open('POST', 'system_webedit_data?item=new&address=' + $('#new_filedir_form')["0"].value + $('#new_filename_form')["0"].value, true);
     xhr_new_action.send()
 }
 

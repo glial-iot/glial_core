@@ -62,9 +62,10 @@
 
                 <nav>
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                        <a class="nav-item nav-link active" id="nav-driver-tab" data-toggle="tab" href="#nav-driver" role="tab" aria-controls="nav-driver" aria-selected="true">Drivers</a>
-                        <a class="nav-item nav-link" id="nav-webevents-tab" data-toggle="tab" href="#nav-webevents" role="tab" aria-controls="nav-webevents" aria-selected="false">Web-events</a>
-                        <a class="nav-item nav-link" id="nav-events-tab" data-toggle="tab" href="#nav-events" role="tab" aria-controls="nav-events" aria-selected="false">Events</a>
+                        <a class="nav-item nav-link active" id="nav-driver-tab" data-toggle="tab" href="#nav-driver" role="tab" aria-controls="nav-driver" aria-selected="true">Driver scripts</a>
+                        <a class="nav-item nav-link" id="nav-webevents-tab" data-toggle="tab" href="#nav-webevents" role="tab" aria-controls="nav-webevents" aria-selected="false">Web-events scripts</a>
+                        <a class="nav-item nav-link" id="nav-events-tab" data-toggle="tab" href="#nav-events" role="tab" aria-controls="nav-events" aria-selected="false">Events scripts</a>
+                        <a class="nav-item nav-link" id="nav-timers_scripts-tab" data-toggle="tab" href="#nav-timers_scripts" role="tab" aria-controls="nav-timers_scripts" aria-selected="false">Timers scripts</a>
                     </div>
                 </nav>
 
@@ -86,9 +87,21 @@
                             <table class="table table-sm table-hover table-striped table-bordered" id="events_list_table"></table>
                         </div>
                     </div>
+                    <div class="tab-pane fade" id="nav-timers_scripts" role="tabpanel" aria-labelledby="nav-timers_scripts-tab">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped table-bordered" id="timers_scripts_list_table"></table>
+                        </div>
+                    </div>
 
-                    <input class="form-control form-control-sm col-md-4  my-1" id="new_file_form" type="text" placeholder="drivers/name_driver.lua">
-                    <button type="button" id="new_file" class=" btn btn-success btn-action btn-sm button_new_sub_class my-1"><i class="far fa-file"></i> New file</button>
+                    <form class="form-inline">
+                        <select class="form-control form-control-sm  mb-2 mr-sm-2" id="new_filedir_form">
+                           <option>drivers/</option>
+                           <option>webevents/</option>
+                           <option>events/</option>
+                        </select>
+                        <input class="form-control mb-2 mr-sm-2" id="new_filename_form" type="text" placeholder="name_script.lua">
+                        <button type="button" id="new_file" class="btn btn-success button_new_sub_class mb-2 mr-sm-2"><i class="far fa-file"></i> Create</button>
+                    </form>
 
                 </div>
 
