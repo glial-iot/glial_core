@@ -50,7 +50,7 @@ function render_scripts_table(table_name, address, callback) {
                 add_row_table(table_name, "head", ["Filename", /* "active", */ "", ""], undefined, [70, /* 30, */ 10, 10])
                 for (let index = 0; index < json_data.length; index++) {
                     var button_edit_html = '<button type="button" address="' + json_data[index].address + '" class="btn btn-block btn-sm btn-info button_edit_sub_class"><i class="fas fa-edit"></i> Edit</button>'
-                    var button_delete_html = '<button type="button" address="' + json_data[index].address + '" class="btn btn-block btn-sm btn-warning button_delete_sub_class"><i class="fas fa-edit"></i> Delete</button>'
+                    var button_delete_html = '<button type="button" address="' + json_data[index].address + '" class="btn btn-block btn-sm btn-warning button_delete_sub_class"><i class="fas fa-edit"></i> Move to trash</button>'
                     add_row_table(table_name, "body", [json_data[index].name, /* json_data[index].active, */ button_edit_html, button_delete_html])
                 }
                 if (callback != undefined)
