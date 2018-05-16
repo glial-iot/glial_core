@@ -12,7 +12,7 @@ event.event_function = function(req)
 
    local function wait_and_exit()
       logger.add_entry(logger.INFO, "Action events", 'System stopped')
-      fiber:sleep(2)
+      fiber.sleep(2)
       os.exit()
    end
 
