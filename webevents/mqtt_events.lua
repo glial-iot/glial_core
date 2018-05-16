@@ -1,5 +1,5 @@
 local event = {}
-event.endpoint = "/action"
+event.endpoint = "/mqtt_events"
 event.name = "mqtt_events"
 event.active = true
 event.event_function = function(req)
@@ -11,16 +11,6 @@ event.event_function = function(req)
    local params = req:param()
 
    if (params["action"] ~= nil) then
-
-      if (params["action"] == "tarantool_stop") then
-         logger.add_entry(logger.INFO, "Action events", 'System stop on web control page')
-         os.exit()
-      elseif (params["action"] == "wipe_storage") then
-         os.execute("rm -rf ./db/*")
-         os.exit()
-      elseif (params["action"] == "update") then
-         os.execute("git pull")
-      end
 
       local result, emessage
       local conn = socket.tcp_connect(config.MQTT_WIRENBOARD_HOST, config.MQTT_WIRENBOARD_PORT, 2)
