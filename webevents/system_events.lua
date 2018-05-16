@@ -17,7 +17,7 @@ event.event_function = function(req)
          os.execute("rm -rf ./db/*")
          os.exit()
       elseif (params["action"] == "update") then
-         local handle = io.popen("git pull https://github.com/vvzvlad/tarantool_iot_scada.git 2>&1")
+         local handle = io.popen("git pull 2>&1")
          emessage = handle:read("*a")
          handle:close()
          result = true
