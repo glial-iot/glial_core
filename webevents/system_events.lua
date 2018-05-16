@@ -19,7 +19,7 @@ event.event_function = function(req)
    if (params["action"] ~= nil) then
 
       if (params["action"] == "tarantool_stop") then
-         logger.add_entry(logger.INFO, "Action events", 'System stop on web control page')
+         logger.add_entry(logger.INFO, "Action events", 'System get command stop on web control page')
          fiber.create(wait_and_exit)
          result = true
       elseif (params["action"] == "wipe_storage") then
@@ -32,7 +32,7 @@ event.event_function = function(req)
          emessage = handle:read("*a")
          handle:close()
          local new_version = system.git_version(true)
-         logger.add_entry(logger.INFO, "Action events", 'System update: '..(old_version or "").." -> "..(new_version or ""))
+         logger.add_entry(logger.INFO, "Action events", 'System update: '..(old_version or "").." -> "..(new_version or "").." and will be stopped")
          result = true
          fiber.create(wait_and_exit)
       end
