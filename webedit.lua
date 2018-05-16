@@ -11,42 +11,80 @@ function webedit.init()
 end
 
 
+function webedit.get_file(adress)
+   local file = open(adress, "rb")
+   local file_data = file:read("*a")
+   file:close()
+   return file_data
+end
+
+
+function webedit.save_file(param_adress, file_data)
+   local result = true
+   local file = open(param_adress, "w+")
+   local status = file:write(file_data)
+   if (status == nil) then
+       logger.add_entry(logger.ERROR, "Webedit subsystem", 'File '..param_adress..' not save')
+       result = false
+   end
+   file:close()
+   return result
+end
+
+function webedit.delete_file(address)
+   return fio.rename(address, address..".delete")
+end
+
+function webedit.new_file(address)
+   local result
+   local fh = fio.open(address, {'O_CREAT'})
+   fh:close()
+
+   fio.chmod(address, tonumber('0755', 8))
+
+   local file = open(address, "w+")
+   file:write("\n")
+   file:close()
+   if (fh ~= nil) then result = true end
+   return result
+end
+
+function webedit.get_list(address)
+   local data_object = {}
+   local i = 1
+   for _, item in pairs(fio.listdir(address)) do
+      if (string.find(item, ".+%.lua$") ~= nil) then
+         data_object[i] = {}
+         data_object[i].name = item
+         data_object[i].address = address.."/"..item
+         i = i + 1
+      end
+   end
+   return data_object
+end
+
 function webedit.http_handler(req)
    local param_item = req:param("item")
    local param_adress = req:param("address")
 
    if (param_item == "get") then
-      --local fh = fio.open(param_adress)
-      --local file_data = fh:read()
-      local file = open(param_adress, "rb")
-      local file_data = file:read "*a"
-      file:close()
-      file_data = digest.base64_encode(file_data)
-      --fh:close()
-      return { body = file_data }
+      return { body = webedit.get_file(param_adress) }
+
    elseif (param_item == "save") then
-      local result
-      local fh = fio.open(param_adress, {"O_RDWR", "O_CREAT", "O_SYNC"})
-      local file_data = digest.base64_decode(req.post_params.file)
-      print(file_data)
-      result = fh:write(file_data)
-      if (result == false) then
-          logger.add_entry(logger.ERROR, "Webedit subsystem", 'File '..param_adress..' not save')
-      end
-      fh:close()
-      return req:render{ json = { result = result} }
+      local body = req:read({delimiter = nil, chunk = 100000}, 10)
+--[[       print(inspect(req))
+      print(req.cached_data)
+      return req:render{ json = { result = true  } } ]]
+      return req:render{ json = { result = webedit.save_file(param_adress, req.cached_data)} }
+
+   elseif (param_item == "delete") then
+      return req:render{ json = { result = webedit.delete_file(param_adress)} }
+
+   elseif (param_item == "new") then
+      return req:render{ json = { result = webedit.new_file(param_adress) } }
+
    elseif (param_item == "get_list") then
-      local data_object = {}
-      local i = 1
-      for _, item in pairs(fio.listdir(param_adress)) do
-         if (string.find(item, ".+%.lua") ~= nil) then
-            data_object[i] = {}
-            data_object[i].name = item
-            data_object[i].address = param_adress.."/"..item
-            i = i + 1
-         end
-      end
-      return req:render{ json = data_object  }
+      return req:render{ json = webedit.get_list(param_adress)  }
    end
 
 end
