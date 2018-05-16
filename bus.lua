@@ -142,7 +142,7 @@ function bus.http_handler(req)
       i = i + 1
       data_object[i] = {}
       data_object[i].topic = tuple[1]
-      data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+      data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2]).." ("..(os.time() - tuple[2]).." sec ago)"
       data_object[i].value = tuple[3]
       if (type_limit ~= nil and type_limit <= i) then break end
    end
