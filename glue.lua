@@ -41,15 +41,16 @@ local function endpoints_list()
    endpoints[#endpoints+1] = {"/user_vaisala", "user/vaisala.html", "Vaisala", http_system.page_handler, "fas fa-chart-area"}
    endpoints[#endpoints+1] = {"/user_water", "user/water.html", "Water", http_system.page_handler, "fas fa-chart-area"}
    endpoints[#endpoints+1] = {"/user_actions", "user/actions.html", "Actions", http_system.page_handler, "fas fa-sliders-h"}
+   endpoints[#endpoints+1] = {"/user_iframe", "user/iframe.html", nil, http_system.page_handler, "fas fa-database"}
 
    endpoints[#endpoints+1] = {"/#", nil, "———————", nil}
 
-   endpoints[#endpoints+1] = {"http://192.168.1.111/", nil, "WirenBoard", nil, "fas fa-arrow-circle-right"}
-   endpoints[#endpoints+1] = {"http://192.168.1.45:9000/", nil, "Portainer", nil, "fas fa-arrow-circle-right"}
-   endpoints[#endpoints+1] = {"http://a.linergo.ru/login.xhtml", nil, 'Linergo', nil, "fas fa-external-link-alt"}
-   endpoints[#endpoints+1] = {"http://gascloud.ru/", nil, "GasCloud", nil, "fas fa-external-link-alt"}
-   endpoints[#endpoints+1] = {"http://unilight.su/", nil, "Unilight", nil, "fas fa-external-link-alt"}
-   endpoints[#endpoints+1] = {"https://www.m2mconnect.ru/Account/Login", nil, "M2M Connect", nil, "fas fa-external-link-alt"}
+   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://192.168.1.111/", nil, "WirenBoard", nil, "fas fa-arrow-circle-right"}
+   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://192.168.1.45:9000/", nil, "Portainer", nil, "fas fa-arrow-circle-right"}
+   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://a.linergo.ru/login.xhtml", nil, 'Linergo', nil, "fas fa-arrow-circle-right"}
+   endpoints[#endpoints+1] = {"http://gascloud.ru/", nil, "GasCloud", nil, "fas fa-arrow-circle-right"}
+   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=http://unilight.su/", nil, "Unilight", nil, "fas fa-arrow-circle-right"}
+   endpoints[#endpoints+1] = {"http://localhost:8080/user_iframe?address=https://www.m2mconnect.ru/Account/Login", nil, "M2M Connect", nil, "fas fa-arrow-circle-right"}
    return endpoints
 end
 
