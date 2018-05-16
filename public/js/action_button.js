@@ -11,6 +11,8 @@ function action_result() {
                 button_color(action_last_button_object, "success")
             else
                 button_color(action_last_button_object, "danger")
+            if (json_data.msg != undefined)
+                console.log(json_data.msg)
         } else
             button_color(action_last_button_object, "danger")
     }
