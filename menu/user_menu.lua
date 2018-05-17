@@ -68,7 +68,7 @@ m[#m+1] = {
 
 
 m[#m+1] = {
-   href = "http://localhost:8080/user_iframe?address=http://192.168.1.111/",
+   href = "user_iframe?address=http://192.168.1.111/",
    file = nil,
    name = "WirenBoard",
    handler = nil,
@@ -76,7 +76,7 @@ m[#m+1] = {
 }
 
 m[#m+1] = {
-   href = "http://localhost:8080/user_iframe?address=http://192.168.1.45:9000/",
+   href = "user_iframe?address=http://192.168.1.45:9000/",
    file = nil,
    name = "Portainer",
    handler = nil,
@@ -84,7 +84,7 @@ m[#m+1] = {
 }
 
 m[#m+1] = {
-   href = "http://localhost:8080/user_iframe?address=http://a.linergo.ru/login.xhtml",
+   href = "user_iframe?address=http://a.linergo.ru/login.xhtml",
    file = nil,
    name = 'Linergo',
    handler = nil,
@@ -100,7 +100,7 @@ m[#m+1] = {
 }
 
 m[#m+1] = {
-   href = "http://localhost:8080/user_iframe?address=http://unilight.su/",
+   href = "user_iframe?address=http://unilight.su/",
    file = nil,
    name = "Unilight",
    handler = nil,
@@ -108,7 +108,7 @@ m[#m+1] = {
 }
 
 m[#m+1] = {
-   href = "http://localhost:8080/user_iframe?address=https://www.m2mconnect.ru/Account/Login",
+   href = "user_iframe?address=https://www.m2mconnect.ru/Account/Login",
    file = nil,
    name = "M2M Connect",
    handler = nil,
