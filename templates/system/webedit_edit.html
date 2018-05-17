@@ -64,7 +64,7 @@
 
         <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-2 px-1">
             <div class="col-md-11 mb-1">
-                <button type="button" id="goto_list" class="btn btn-success btn-action"><i class="fas fa-bars"></i> Return to list</button>
+                <button type="button" id="goto_list" class="btn btn-success"><i class="fas fa-arrow-left"></i> Return</button>
                 <button type="button" id="save_file" class="btn btn-info"><i class="fas fa-save"></i> Save file</button>
                 <button type="button" id="reload" class="btn btn-warning"><i class="fas fa-sync-alt"></i> Reload</button>
             </div>
@@ -186,10 +186,10 @@
         $('#save_file').on('click', save_file);
 
         $('#goto_list').on('click', function(event) {
-            location.href = '/system_webedit_list';
+            history.back();
         });
         $('#reload').on('click', function(event) {
-            location.href = location.href;;
+            location.href = location.href;
         });
     </script>
 
