@@ -83,37 +83,6 @@ function bus.update_value(topic, value)
    bus.rps_i = bus.rps_i + 1
 end
 
-function bus.update_value_average(topic, value, period)
-   local timestamp = os.time()
-   value = bus.events_handler(topic, value) or value
-   if (average_data[topic] == nil) then average_data[topic] = {} end
-   if (average_data[topic].data == nil) then average_data[topic].data = {} end
-   if (average_data[topic].timestamp == nil) then average_data[topic].timestamp = timestamp + period end
-
-   if (average_data[topic].timestamp < timestamp) then
-      local summ_value, average_value = 0
-      for i, local_value in pairs(average_data[topic].data) do
-         summ_value = summ_value + local_value
-      end
-      local all_count = #average_data[topic].data
-      if (tonumber(all_count) == 0) then
-         average_value = system.round(value, 3)
-      else
-         average_value = system.round((summ_value / all_count), 3)
-         timestamp = math.floor((average_data[topic].timestamp + timestamp)/2)
-      end
-
-      bus.fifo_storage:insert{nil, topic, timestamp, average_value}
-      --print("average(topic "..topic..") calc: "..average_value)
-      average_data[topic].timestamp = timestamp + period
-      average_data[topic].data = nil
-      average_data[topic].data = {}
-   else
-      average_data[topic].data[#average_data[topic].data+1] = value
-      --print("average(topic "..topic..") add: "..value)
-   end
-end
-
 function bus.get_delete_value()
    local table = bus.fifo_storage.index.primary:select(nil, {iterator = 'EQ', limit = 1})
    local key, topic, timestamp, value
