@@ -57,9 +57,23 @@
 
             <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-2 px-1">
 
-                <div class="col-md-2 px-1">
-                    <button type="button" action-button="delete_logs" class="btn btn-success btn-action"><i class="fas fa-trash-alt"></i>  Clear logs</button>
+                <div class="row col-md-12 px-1 pb-0 mx-1 d-flex justify-content-between">
+                    <div class="mx-2">
+                        <button type="button" action-button="delete_logs" class="btn btn-success btn-action"><i class="fas fa-trash-alt"></i>  Clear logs</button>
+                    </div>
+                    <div class="mx-2">
+                        <nav>
+                            <ul class="pagination">
+                                <li class="page-item logs_filter_subclass page-info" filter="ERROR"><a class="page-link" href="#">Error</a></li>
+                                <li class="page-item logs_filter_subclass" filter="WARNING"><a class="page-link" href="#">Warning</a></li>
+                                <li class="page-item logs_filter_subclass" filter="INFO"><a class="page-link" href="#">Info</a></li>
+                                <li class="page-item logs_filter_subclass" filter="USER"><a class="page-link" href="#">User</a></li>
+                                <li class="page-item logs_filter_subclass active" filter="ALL"><a class="page-link" href="#">All</a></li>
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
+
                 <div class="table-responsive pt-2">
                     <table class="table table-striped table-sm" id="logs_table"></table>
                 </div>
@@ -90,6 +104,8 @@
 
 
         var xhr_tmr = new XMLHttpRequest();
+        var filter = "ALL"
+
 
         function update_field_callback() {
             if (xhr_tmr.readyState == 4 && xhr_tmr.status == 200) {
@@ -97,7 +113,7 @@
                 if (json_data.none_data != "true") {
                     //console.log(json_data)
                     clear_table("logs_table")
-                    add_row_table("logs_table", "head", ["key", "date", "level", "entry", "source"])
+                    add_row_table("logs_table", "head", ["key", "date", "level", "entry", "source"], undefined, [4, 19, 5, 57, 15])
                     for (let index = 0; index < json_data.length; index++) {
                         add_row_table("logs_table", "body", [json_data[index].key, json_data[index].date, json_data[index].level, json_data[index].entry, json_data[index].source])
                     }
@@ -109,12 +125,27 @@
         }
 
         function timer_update_field() {
-            xhr_tmr.open('POST', 'system_logger_data?item=all&limit=100', true);
+            xhr_tmr.open('POST', 'system_logger_data?item=' + filter + '&limit=100', true);
             xhr_tmr.send()
         }
 
         xhr_tmr.onreadystatechange = update_field_callback
         timer_update_field()
+
+
+
+
+
+
+        function change_logs_filter() {
+            let current_filter_button = $(this)
+            filter = current_filter_button.attr('filter')
+            $(".logs_filter_subclass").removeClass("active")
+            current_filter_button.addClass("active")
+            timer_update_field()
+        }
+
+        $(".logs_filter_subclass").on('click', change_logs_filter);
     </script>
 
 

@@ -35,19 +35,20 @@ function logger.return_all_entry(req)
       local level = tuple[2]
       local source = tuple[3]
       local entry = tuple[4]
-      local date = os.date("%Y-%m-%d, %H:%M:%S", tuple[5])
+      local epoch = tuple[5]
+      local date = os.date("%Y-%m-%d, %H:%M:%S", epoch)
 
-
-      if (params["item"] == "all") then
-            i = i + 1
-            data_object[i] = {}
-            data_object[i].key = key
-            data_object[i].level = level
-            data_object[i].source = source
-            data_object[i].entry = entry
-            data_object[i].date = date
+      if (params["item"] == "ALL" or params["item"] == level) then
+         i = i + 1
+         data_object[i] = {}
+         data_object[i].key = key
+         data_object[i].level = level
+         data_object[i].source = source
+         data_object[i].entry = entry
+         local diff_time = os.time() - epoch
+         data_object[i].date = date.." ("..(diff_time).." sec ago)"
+         if (params["limit"] ~= nil and tonumber(params["limit"]) <= i) then break end
       end
-      if (params["limit"] ~= nil and tonumber(params["limit"]) <= i) then break end
    end
    return req:render{ json = data_object }
 end
