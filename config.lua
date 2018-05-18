@@ -1,4 +1,6 @@
 #!/usr/bin/env tarantool
+local system = require 'system'
+
 
 local config = {}
 config.MQTT_IMPACT_HOST = "impact.iot.nokia.com"
@@ -10,7 +12,7 @@ config.MQTT_IMPACT_TOKEN = "trqspu69qcz7"
 
 config.MQTT_WIRENBOARD_HOST = "192.168.1.111"
 config.MQTT_WIRENBOARD_PORT = 1883
-config.MQTT_WIRENBOARD_ID = "tarantool_client"
+config.MQTT_WIRENBOARD_ID = "glue_"..system.random_string()
 
 config.HTTP_PORT = 8080
 

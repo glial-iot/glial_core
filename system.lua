@@ -16,6 +16,13 @@ function system.round(value, rounds)
    return tonumber(string.format("%."..(tostring(rounds or 2)).."f", value))
 end
 
+function system.random_string()
+   local digest = require 'digest'
+   local rand = digest.urandom(10)
+   local rand_crc232 = digest.crc32(tostring(rand))
+   return rand_crc232
+end
+
 function system.git_version(new_flag)
    if (git_version == nil or new_flag == true) then
       local handle = io.popen("git describe --dirty --always --tags")
