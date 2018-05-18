@@ -100,7 +100,8 @@ local function http_data_endpoints_init()
    http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
    http_system.endpoint_config("/system_logger_action", logger.actions)
    http_system.endpoint_config("/system_webedit_data", webedit.http_handler)
-   http_system.endpoint_config("/system_bus_data", bus.http_handler)
+   http_system.endpoint_config("/system_bus_data", bus.http_data_handler)
+   http_system.endpoint_config("/system_bus_action", bus.action_data_handler)
 end
 
 box_config()
