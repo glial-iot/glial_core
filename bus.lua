@@ -84,9 +84,11 @@ end
 
 function bus_local.add_value_to_fifo_buffer(topic, value)
    local timestamp = os.time()
-   local new_value  = bus_local.events_handler(topic, value)
-   bus.fifo_storage:insert{nil, topic, timestamp, (new_value or value)}
-   bus.rps_i = bus.rps_i + 1
+   if (topic ~= nil and value ~= nil) then
+      local new_value  = bus_local.events_handler(topic, value)
+      bus.fifo_storage:insert{nil, topic, timestamp, (new_value or value)}
+      bus.rps_i = bus.rps_i + 1
+   end
 end
 
 function bus_local.fifo_get_delete_value()
