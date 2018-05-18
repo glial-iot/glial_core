@@ -28,9 +28,7 @@ event.event_function = function(req)
          result = true
       elseif (params["action"] == "update") then
          local old_version = system.git_version(true)
-         local handle = io.popen("git pull 2>&1")
-         emessage = handle:read("*a")
-         handle:close()
+         emessage = system.os_command("git pull 2>&1")
          local new_version = system.git_version(true)
          logger.add_entry(logger.INFO, "Action events", 'System update: '..(old_version or "").." -> "..(new_version or "").." and will be stopped")
          result = true

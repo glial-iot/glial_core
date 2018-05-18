@@ -23,11 +23,17 @@ function system.random_string()
    return rand_crc232
 end
 
+function system.os_command(command)
+   local handle = io.popen(command)
+   local return_value = handle:read("*a")
+   handle:close()
+   return return_value
+end
+
+
 function system.git_version(new_flag)
    if (git_version == nil or new_flag == true) then
-      local handle = io.popen("git describe --dirty --always --tags")
-      _, _, git_version = string.find(handle:read("*a"), "(%S+)%s*$")
-      handle:close()
+      _, _, git_version = string.find(system.os_command("git describe --dirty --always --tags"), "(%S+)%s*$")
       git_version = git_version or "Version git error"
       return git_version
    else
