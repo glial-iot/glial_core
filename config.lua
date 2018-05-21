@@ -26,7 +26,9 @@ config.EVENT_SCRIPTS_DIR = config.USER_DIR.."/".."events_scripts"
 config.WEBEVENT_SCRIPTS_DIR = config.USER_DIR.."/".."webevents_scripts"
 config.SYSTEM_WEBEVENT_SCRIPTS_DIR = config.SYSTEM_DIR.."/".."webevents_scripts"
 config.DRIVERS_DIR = config.USER_DIR.."/".."drivers"
-config.USER_HTML_DIR = "templates".."/".."user"
+config.USER_HTML_DIR = "../"..config.USER_DIR.."/html"
 config.USER_MENU_DIR = config.USER_DIR.."/".."menu"
+config.SYSTEM_HTML_DIR = "system"
+
 
 return config

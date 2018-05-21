@@ -25,7 +25,7 @@ local function system_menu_list()
 
    m[#m+1] = {
       href = "/system_bus_storage",
-      file = "system/bus_storage.html",
+      file = "bus_storage.html",
       name = "Bus storage",
       handler = http_system.generic_page_handler,
       icon = "fas fa-database"
@@ -33,7 +33,7 @@ local function system_menu_list()
 
    m[#m+1] = {
       href = "/system_logger",
-      file = "system/logger.html",
+      file = "logger.html",
       name = "Logs",
       handler = http_system.generic_page_handler,
       icon = "fas fa-stream"
@@ -41,7 +41,7 @@ local function system_menu_list()
 
    m[#m+1] = {
       href = "/system_webedit_list",
-      file = "system/webedit_list.html",
+      file = "webedit_list.html",
       name = "Edit",
       handler = http_system.generic_page_handler,
       icon = "fas fa-edit"
@@ -49,7 +49,7 @@ local function system_menu_list()
 
    m[#m+1] = {
       href = "/system_control",
-      file = "system/control.html",
+      file = "control.html",
       name = "Control",
       handler = http_system.generic_page_handler,
       icon = "fas fa-cogs"
@@ -57,7 +57,7 @@ local function system_menu_list()
 
    m[#m+1] = {
       href = "/system_tarantool",
-      file = "system/tarantool.html",
+      file = "tarantool.html",
       name = "Tarantool",
       handler = http_system.generic_page_handler,
       icon = "fas fa-chart-area"
@@ -65,7 +65,7 @@ local function system_menu_list()
 
    m[#m+1] = {
       href = "/system_webedit_edit",
-      file = "system/webedit_edit.html",
+      file = "webedit_edit.html",
       name = nil,
       handler = http_system.generic_page_handler,
       icon = nil
@@ -116,8 +116,8 @@ webedit.init()
 
 http_system.init_server()
 http_system.init_client()
-http_system.enpoints_menu_config(system_menu_list())
-http_system.enpoints_menu_config(user_menu_file_init())
+http_system.enpoints_menu_config(system_menu_list(), config.SYSTEM_HTML_DIR)
+http_system.enpoints_menu_config(user_menu_file_init(), config.USER_HTML_DIR)
 http_system.json_menu_v2 = http_system.enpoints_menu_for_json_generate_v2(system_menu_list())
 http_data_endpoints_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")

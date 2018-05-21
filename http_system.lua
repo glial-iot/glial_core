@@ -21,12 +21,16 @@ function http_system.init_client()
    http_system.client = require('http.client')
 end
 
-function http_system.enpoints_menu_config(menu_list)
+function http_system.enpoints_menu_config(menu_list, prefix)
    if menu_list == nil then
       return
    end
    for i, item in pairs(menu_list) do
-      http_system.server:route({ path = item.href, file = item.file }, item.handler)
+      local file_path
+      if (item.file ~= nil) then
+         file_path = prefix.."/"..item.file
+      end
+      http_system.server:route({ path = item.href, file = file_path }, item.handler)
       if (item.name ~= nil) then
          http_system.proto_menu[#http_system.proto_menu+1] = {href = item.href, name=item.name, icon=item.icon}
       end
