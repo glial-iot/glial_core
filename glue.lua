@@ -84,7 +84,7 @@ local function user_menu_file_init()
    local user_menu
    local current_func, error_msg = loadfile(config.USER_MENU_DIR.."/".."user_menu.lua")
    if (current_func == nil) then
-      logger.add_entry(logger.ERROR, "User menu subsystem", 'Menu not load: "'..error_msg..'"')
+      logger.add_entry(logger.INFO, "User menu subsystem", 'User menu not load: "'..error_msg..'", menu not generated')
    else
       user_menu = current_func() or {}
    end
