@@ -1,5 +1,6 @@
 *.xlog
 *.snap
-/.rocks/.rocks
+/.rocks/*
+.rocks/*
 *.vylog
 /db
