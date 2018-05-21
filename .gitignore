@@ -4,3 +4,9 @@
 .rocks/*
 *.vylog
 /db
+/user/drivers/*
+/user/events_scripts/*
+/user/menu/*
+/user/timer_scripts/*
+/user/webevents_scripts/*
+/templates/user/*
