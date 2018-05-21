@@ -1,8 +1,5 @@
 #!/usr/bin/env tarantool
 local inspect = require 'libs/inspect'
-local json = require 'json'
-local fiber = require 'fiber'
-local log = require 'log'
 local box = box
 
 local http_system = require 'http_system'
