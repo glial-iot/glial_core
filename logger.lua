@@ -54,9 +54,7 @@ function logger.return_all_entry(req)
 end
 
 function logger.delete_logs()
-   for _, tuple in logger.storage.index.key:pairs() do
-      logger.storage:delete(tuple[1])
-   end
+   logger.storage:truncate()
    logger.sequence:reset()
 end
 

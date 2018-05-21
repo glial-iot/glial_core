@@ -125,10 +125,7 @@ end
 function bus_private.delete_topics(topic)
    if (topic ~= nil) then
       if (topic == "*") then
-         for _, tuple in bus.bus_storage.index.topic:pairs() do
-            local current_topic = tuple[1]
-            bus.bus_storage.index.topic:delete(current_topic)
-         end
+         bus.bus_storage:truncate()
       else
          bus.bus_storage.index.topic:delete(topic)
       end
