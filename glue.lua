@@ -8,7 +8,6 @@ local box = box
 local http_system = require 'http_system'
 local scripts_drivers = require 'scripts_drivers'
 local scripts_webevents = require 'scripts_webevents'
-local ts_storage = require 'ts_storage'
 local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
@@ -114,9 +113,6 @@ logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version
 
 bus.init()
 logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
-
-ts_storage.init()
-logger.add_entry(logger.INFO, "Main system", "Time Series storage initialized")
 
 webedit.init()
 
