@@ -20,15 +20,15 @@ function new_button_action() {
         filetype = ".lua"
     }
     if (script_type == "new_webevent") {
-        filedir = "user/webevents"
+        filedir = "user/webevents_scripts"
         filetype = ".lua"
     }
     if (script_type == "new_event") {
-        filedir = "user/events"
+        filedir = "user/events_scripts"
         filetype = ".lua"
     }
-    if (script_type == "new_timer_event") {
-        filedir = "user/timerevents"
+    if (script_type == "new_timer_script") {
+        filedir = "user/timer_scripts"
         filetype = ".lua"
     }
     if (script_type == "new_user_html") {
