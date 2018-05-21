@@ -121,9 +121,10 @@ http_data_endpoints_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
 logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
-scripts_webevents.init()
+scripts_webevents.init(config.WEBEVENT_SCRIPTS_DIR)
+scripts_webevents.init(config.SYSTEM_WEBEVENT_SCRIPTS_DIR)
 
 logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
-scripts_drivers.init()
+scripts_drivers.init(config.DRIVERS_DIR)
 
 logger.add_entry(logger.INFO, "Main system", "System started")

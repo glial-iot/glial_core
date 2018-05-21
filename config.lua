@@ -20,9 +20,11 @@ config.IMPACT_URL = "https://impact.iot.nokia.com"
 
 
 config.USER_DIR = "user"
+config.SYSTEM_DIR = "system_scripts"
 config.TIMER_SCRIPTS_DIR = config.USER_DIR.."/".."timer_scripts"
 config.EVENT_SCRIPTS_DIR = config.USER_DIR.."/".."events_scripts"
 config.WEBEVENT_SCRIPTS_DIR = config.USER_DIR.."/".."webevents_scripts"
+config.SYSTEM_WEBEVENT_SCRIPTS_DIR = config.SYSTEM_DIR.."/".."webevents_scripts"
 config.DRIVERS_DIR = config.USER_DIR.."/".."drivers"
 config.USER_HTML_DIR = "templates".."/".."user"
 config.USER_MENU_DIR = config.USER_DIR.."/".."menu"

@@ -1,29 +1,27 @@
 #!/usr/bin/env tarantool
-local fio = require 'fio'
 local logger = require 'logger'
 local inspect = require 'libs/inspect'
 local http_system = require 'http_system'
-local config = require 'config'
-
+local system = require 'system'
 
 local scripts_webevents = {}
 local scripts_webevents_functions = {}
 
-function scripts_webevents.init()
+function scripts_webevents.init(path)
+   local error_msg, result
 
-   if (fio.path ~= nil and fio.path.is_dir(config.WEBEVENT_SCRIPTS_DIR) ~= true) then
-      logger.add_entry(logger.ERROR, "Web-events subsystem", 'Web-event directory not exist')
+   result = system.dir_check(path)
+   if (result ~= true) then
+      logger.add_entry(logger.ERROR, "Web-events subsystem", 'Web-event directory "'..path..'" not exist')
       return
    end
 
-   for i, item in pairs(fio.listdir(config.WEBEVENT_SCRIPTS_DIR)) do
-      if (string.find(item, ".+%.lua") ~= nil) then
-         local current_func, error_msg = loadfile(config.WEBEVENT_SCRIPTS_DIR.."/"..item)
-         if (current_func == nil) then
-            logger.add_entry(logger.ERROR, "Web-events subsystem", 'Web-event not load: "'..error_msg..'"')
-         else
-            scripts_webevents_functions[i] = current_func()
-         end
+   local files =  system.get_files_in_dir(path, ".+%.lua")
+
+   for i, filename in pairs(files) do
+      result, error_msg = system.script_file_load(filename, scripts_webevents_functions)
+      if (result ~= true) then
+         logger.add_entry(logger.ERROR, "Web-events subsystem", 'Web-event not load: "'..error_msg..'"')
       end
    end
 

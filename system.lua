@@ -1,4 +1,5 @@
 #!/usr/bin/env tarantool
+local fio = require 'fio'
 
 local system = {}
 local git_version, _
@@ -41,6 +42,38 @@ function system.git_version(new_flag)
    end
 end
 
+function system.dir_check(dir_path)
+   dir_path = dir_path or ""
+   if (fio.path.exists(dir_path) ~= true) then
+      fio.mktree(dir_path)
+   end
+   if (fio.path.is_dir(dir_path) ~= true) then
+      return false
+   end
+   return true
+end
+
+function system.get_files_in_dir(path, mask)
+   local files = {}
+   local i = 1
+   for _, item in pairs(fio.listdir(path)) do
+      if (string.find(item, mask) ~= nil) then
+         files[i] = path.."/"..item
+         i = i + 1
+      end
+   end
+   return files
+end
+
+function system.script_file_load(path, scripts_functions)
+   local current_func, error_msg = loadfile(path)
+   if (current_func == nil) then
+      return false, error_msg
+   else
+      scripts_functions[#scripts_functions+1] = current_func()
+      return true
+   end
+end
 
 
 

@@ -4,12 +4,12 @@ local logger = require 'logger'
 local inspect = require 'libs/inspect'
 local fio = require 'fio'
 local digest = require 'digest'
+local system = require 'system'
 
 local open = io.open
 
 function webedit.init()
 end
-
 
 function webedit.get_file(adress)
    local file = open(adress, "rb")
@@ -17,7 +17,6 @@ function webedit.get_file(adress)
    file:close()
    return file_data
 end
-
 
 function webedit.save_file(param_adress, file_data)
    local result = true
@@ -52,6 +51,9 @@ end
 function webedit.get_list(address)
    local data_object = {}
    local i = 1
+   if (system.dir_check(address) == false) then
+      return data_object
+   end
    for _, item in pairs(fio.listdir(address)) do
       if (string.find(item, ".+%.lua$") ~= nil or string.find(item, ".+%.html$") ~= nil) then
          data_object[i] = {}
@@ -71,10 +73,6 @@ function webedit.http_handler(req)
       return { body = webedit.get_file(param_adress) }
 
    elseif (param_item == "save") then
-      local body = req:read({delimiter = nil, chunk = 100000}, 10)
---[[       print(inspect(req))
-      print(req.cached_data)
-      return req:render{ json = { result = true  } } ]]
       return req:render{ json = { result = webedit.save_file(param_adress, req.cached_data)} }
 
    elseif (param_item == "delete") then
