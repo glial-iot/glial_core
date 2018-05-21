@@ -16,19 +16,19 @@ function new_button_action() {
     let filetype
     let xhr_new_action = new XMLHttpRequest();
     if (script_type == "new_driver") {
-        filedir = "drivers"
+        filedir = "user/drivers"
         filetype = ".lua"
     }
     if (script_type == "new_webevent") {
-        filedir = "webevents"
+        filedir = "user/webevents"
         filetype = ".lua"
     }
     if (script_type == "new_event") {
-        filedir = "events"
+        filedir = "user/events"
         filetype = ".lua"
     }
     if (script_type == "new_timer_event") {
-        filedir = "timerevents"
+        filedir = "user/timerevents"
         filetype = ".lua"
     }
     if (script_type == "new_user_html") {

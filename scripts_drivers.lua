@@ -2,21 +2,20 @@
 local scripts_drivers = {}
 local scripts_drivers_functions = {}
 local logger = require 'logger'
-local inspect = require 'inspect'
+local inspect = require 'libs/inspect'
 local fio = require 'fio'
-
-local drivers_directory = "drivers"
+local config = require 'config'
 
 function scripts_drivers.init()
 
-   if (fio.path ~= nil and fio.path.is_dir(drivers_directory) ~= true) then
-      logger.add_entry(logger.ERROR, "Drivers subsystem", 'Drivers directory '..drivers_directory..' not exist')
+   if (fio.path ~= nil and fio.path.is_dir(config.DRIVERS_DIR) ~= true) then
+      logger.add_entry(logger.ERROR, "Drivers subsystem", 'Drivers directory '..config.DRIVERS_DIR..' not exist')
       return
    end
 
-   for i, item in pairs(fio.listdir(drivers_directory)) do
+   for i, item in pairs(fio.listdir(config.DRIVERS_DIR)) do
       if (string.find(item, ".+%.lua") ~= nil) then
-         local current_func, error_msg = loadfile(drivers_directory.."/"..item)
+         local current_func, error_msg = loadfile(config.DRIVERS_DIR.."/"..item)
          if (current_func == nil) then
             logger.add_entry(logger.ERROR, "Drivers subsystem", 'Driver not load: "'..error_msg..'"')
          else

@@ -3,7 +3,7 @@ local log = require 'log'
 local ts_storage = require 'ts_storage'
 local logger = require 'logger'
 local system = require "system"
-local inspect = require 'inspect'
+local inspect = require 'libs/inspect'
 
 local scripts_events = {}
 

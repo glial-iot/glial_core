@@ -1,5 +1,5 @@
 #!/usr/bin/env tarantool
-local inspect = require 'inspect'
+local inspect = require 'libs/inspect'
 local json = require 'json'
 local fiber = require 'fiber'
 local log = require 'log'
@@ -13,6 +13,7 @@ local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
 local webedit = require "webedit"
+local config = require 'config'
 
 local function http_server_root_handler(req)
    return req:redirect_to('/user_dashboard')
@@ -85,7 +86,7 @@ end
 
 local function user_menu_file_init()
    local user_menu
-   local current_func, error_msg = loadfile("menu".."/".."user_menu.lua")
+   local current_func, error_msg = loadfile(config.USER_MENU_DIR.."/".."user_menu.lua")
    if (current_func == nil) then
       logger.add_entry(logger.ERROR, "User menu subsystem", 'Menu not load: "'..error_msg..'"')
    else

@@ -1,7 +1,7 @@
 #!/usr/bin/env tarantool
 local webedit = {}
 local logger = require 'logger'
-local inspect = require 'inspect'
+local inspect = require 'libs/inspect'
 local fio = require 'fio'
 local digest = require 'digest'
 

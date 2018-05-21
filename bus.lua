@@ -1,7 +1,7 @@
 #!/usr/bin/env tarantool
 
 local log = require 'log'
-local inspect = require 'inspect'
+local inspect = require 'libs/inspect'
 
 local logger = require 'logger'
 
@@ -13,7 +13,7 @@ local system = require 'system'
 
 local fiber = require 'fiber'
 local ts_storage = require 'ts_storage'
-local influx_storage = require "influx_storage"
+local influx_storage = require "tsdb_drivers/influx_storage"
 
 
 bus.rps_i = 0

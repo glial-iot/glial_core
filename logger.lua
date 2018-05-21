@@ -1,6 +1,6 @@
 #!/usr/bin/env tarantool
 local log = require 'log'
-local inspect = require 'inspect'
+local inspect = require 'libs/inspect'
 local system = require 'system'
 local box = box
 
