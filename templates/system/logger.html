@@ -113,7 +113,7 @@
                 if (json_data.none_data != "true") {
                     //console.log(json_data)
                     clear_table("logs_table")
-                    add_row_table("logs_table", "head", ["key", "date", "level", "entry", "source"], undefined, [4, 19, 5, 57, 15])
+                    add_row_table("logs_table", "head", ["№", "Time", "Level", "Record", "Source"], undefined, [4, 19, 5, 57, 15])
                     for (let index = 0; index < json_data.length; index++) {
                         add_row_table("logs_table", "body", [json_data[index].key, json_data[index].date, json_data[index].level, json_data[index].entry, json_data[index].source])
                     }
