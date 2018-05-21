@@ -12,7 +12,6 @@ local scripts_events = require 'scripts_events'
 local system = require 'system'
 
 local fiber = require 'fiber'
-local ts_storage = require 'ts_storage'
 local influx_storage = require "tsdb_drivers/influx_storage"
 
 
