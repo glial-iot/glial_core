@@ -47,6 +47,16 @@ function bus_private.get_tsdb_save_attribute(topic)
    return false
 end
 
+function bus_private.tsdb_attr_check_and_save(topic, value)
+   local tsdb_save = bus_private.get_tsdb_save_attribute(topic)
+   if (tsdb_save == true) then
+         local answer = influx_storage.update_value("glue", topic, value)
+         if (answer ~= nil) then
+             logger.add_entry(logger.ERROR, "Influx adapter", 'Influx answer: '..answer)
+         end
+   end
+end
+
 
 function bus_private.fifo_storage_worker()
    while true do
@@ -55,15 +65,7 @@ function bus_private.fifo_storage_worker()
       if (key ~= nil) then
          bus.bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
          bus.rps_o = bus.rps_o + 1
-
-         local tsdb_save = bus_private.get_tsdb_save_attribute(topic)
-         if (tsdb_save == true) then
-               local answer = influx_storage.update_value("glue", topic, value)
-               if (answer ~= nil) then
-                   logger.add_entry(logger.ERROR, "Influx adapter", 'Influx answer: '..answer)
-               end
-         end
-
+         bus_private.tsdb_attr_check_and_save(topic, value)
          fiber.yield()
       else
          fiber.sleep(0.1)
