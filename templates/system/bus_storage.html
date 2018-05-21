@@ -40,15 +40,21 @@
         <div class="row">
             <nav class="col-md-1 d-none d-md-block bg-light sidebar">
                 <div class="sidebar-sticky">
-                    <ul class="nav flex-column">
-                        % for i,v in pairs(menu) do
-                        <li class="nav-item">
-                            <a class="nav-link <%= (v.class or " ")%>" href="<%= v.href or '#' %>">
-                                      <i class="<%= (v.icon or "") %>"></i>
-                                      <%= (v.name or "No name") %>
-                                  </a>
-                        </li>
-                        % end
+                       <ul class="nav flex-column">
+                  
+                        
+                        <div id="dynamenu">
+
+    <li class="nav-item" v-for="menuitem in menuitems">
+
+    <a class="nav-link" v-bind:href="menuitem.navlink" > 
+        {{menuitem.navname}}
+    </a>
+    </li>
+ 
+</div>
+            
+                        
                     </ul>
                 </div>
                 <footer class="text-muted text-center text-small">
