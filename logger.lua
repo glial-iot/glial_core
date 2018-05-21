@@ -46,7 +46,8 @@ function logger.return_all_entry(req)
          data_object[i].source = source
          data_object[i].entry = entry
          local diff_time = os.time() - epoch
-         data_object[i].date = date.." ("..(diff_time).." sec ago)"
+         diff_time = system.format_seconds(diff_time)
+         data_object[i].date = date.." ("..(diff_time).." ago)"
          if (params["limit"] ~= nil and tonumber(params["limit"]) <= i) then break end
       end
    end

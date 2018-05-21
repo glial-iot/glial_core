@@ -184,14 +184,16 @@ function bus.http_data_handler(req)
    local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
    local return_object
    local data_object, i = {}, 0
+   local current_time = os.time()
    --Database struct: 1(topic), 2(timestamp), 3(value), 4(tsdb_save)
    for _, tuple in bus.bus_storage.index.topic:pairs() do
       i = i + 1
       data_object[i] = {}
       data_object[i].topic = tuple[1]
-      local diff_time = os.time() - tuple[2]
-      if (diff_time > 1) then
-         data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2]).." ("..(diff_time).." sec ago)"
+      local diff_time_raw = current_time - tuple[2]
+      local diff_time_text = system.format_seconds(diff_time_raw)
+      if (diff_time_raw > 1) then
+         data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2]).." ("..(diff_time_text).." ago)"
       else
          data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
       end

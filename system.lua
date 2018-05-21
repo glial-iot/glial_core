@@ -42,4 +42,40 @@ function system.git_version(new_flag)
 end
 
 
+
+
+function system.format_seconds(elapsed_seconds)
+   local remainder, weeks, days, hours, minutes, seconds
+   local weeksTxt, daysTxt, hoursTxt, minutesTxt, secondsTxt
+
+   weeks = math.floor(elapsed_seconds / 604800)
+   remainder = elapsed_seconds % 604800
+   days = math.floor(remainder / 86400)
+   remainder = remainder % 86400
+   hours = math.floor(remainder / 3600)
+   remainder = remainder % 3600
+   minutes = math.floor(remainder / 60)
+   seconds = remainder % 60
+
+   if weeks == 1 then weeksTxt = 'week' else weeksTxt = 'weeks' end
+   if days == 1 then daysTxt = 'day' else daysTxt = 'days' end
+   if hours == 1 then hoursTxt = 'hour' else hoursTxt = 'hours' end
+   if minutes == 1 then minutesTxt = 'minute' else minutesTxt = 'minutes' end
+   if seconds == 1 then secondsTxt = 'second' else secondsTxt = 'seconds' end
+
+   if elapsed_seconds >= 604800 then
+      return weeks..' '..weeksTxt
+   elseif elapsed_seconds >= 86400 then
+      return days..' '..daysTxt..', '..hours..' '..hoursTxt
+   elseif elapsed_seconds >= 3600 then
+      return hours..' '..hoursTxt..', '..minutes..' '..minutesTxt
+   elseif elapsed_seconds >= 60 then
+      return minutes..' '..minutesTxt
+   else
+      return seconds..' '..secondsTxt
+   end
+
+end
+
+
 return system
