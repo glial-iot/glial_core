@@ -99,6 +99,7 @@ local function http_data_endpoints_init()
    http_system.endpoint_config("/system_webedit_data", webedit.http_handler)
    http_system.endpoint_config("/system_bus_data", bus.http_data_handler)
    http_system.endpoint_config("/system_bus_action", bus.action_data_handler)
+   http_system.endpoint_config("/system_menu_data", http_system.menu_json_handler)
 end
 
 box_config()
@@ -117,6 +118,7 @@ http_system.init_server()
 http_system.init_client()
 http_system.enpoints_menu_config(system_menu_list())
 http_system.enpoints_menu_config(user_menu_file_init())
+http_system.json_menu_v2 = http_system.enpoints_menu_for_json_generate_v2(system_menu_list())
 http_data_endpoints_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
