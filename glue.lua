@@ -45,7 +45,7 @@ local function system_menu_list()
    m[#m+1] = {
       href = "/system_webedit_list",
       file = "system/webedit_list.html",
-      name = "Scripts",
+      name = "Edit",
       handler = http_system.generic_page_handler,
       icon = "fas fa-edit"
    }

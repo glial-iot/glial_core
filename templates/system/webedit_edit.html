@@ -133,7 +133,6 @@
         function editor_init() {
             editor = ace.edit("editor");
             editor.setTheme("ace/theme/crimson_editor");
-            editor.session.setMode("ace/mode/lua");
             editor.session.setUseWrapMode(true);
             editor.session.setWrapLimitRange(null);
             editor.setShowPrintMargin(false);
@@ -162,6 +161,18 @@
                         const text = e.srcElement.result;
                         editor.setValue(text);
                         editor.selection.clearSelection();
+
+                        let address = current_url.searchParams.get("address")
+                        let result_html = address.search(/html/);
+                        let result_lua = address.search(/lua/);
+
+                        if (result_html == -1 && result_lua > 0)
+                            editor.session.setMode("ace/mode/lua");
+
+                        if (result_lua == -1 && result_html > 0)
+                            editor.session.setMode("ace/mode/html");
+
+
                     });
 
                     reader.readAsText(blob);

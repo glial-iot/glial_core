@@ -66,6 +66,7 @@
                         <a class="nav-item nav-link" id="nav-webevents-tab" data-toggle="tab" href="#nav-webevents" role="tab" aria-controls="nav-webevents" aria-selected="false">Web-events scripts</a>
                         <a class="nav-item nav-link" id="nav-events-tab" data-toggle="tab" href="#nav-events" role="tab" aria-controls="nav-events" aria-selected="false">Events scripts</a>
                         <a class="nav-item nav-link" id="nav-timers_scripts-tab" data-toggle="tab" href="#nav-timers_scripts" role="tab" aria-controls="nav-timers_scripts" aria-selected="false">Timers scripts</a>
+                        <a class="nav-item nav-link" id="nav-user_html-tab" data-toggle="tab" href="#nav-user_html" role="tab" aria-controls="nav-user_html" aria-selected="false">User HTML</a>
                     </div>
                 </nav>
 
@@ -74,34 +75,47 @@
                         <div class="table-responsive">
                             <table class="table table-sm table-hover table-striped table-bordered" id="driver_list_table"></table>
                         </div>
-
+                        <form class="form-inline">
+                            <input class="form-control mb-2 mr-sm-2" id="new_driver_form" type="text" placeholder="driver_name">
+                            <button type="button" id="new_driver" filename-id="new_driver_form" class="btn btn-success button_new_sub_class mb-2 mr-sm-2"><i class="far fa-file"></i> Create driver script</button>
+                        </form>
                     </div>
                     <div class="tab-pane fade" id="nav-webevents" role="tabpanel" aria-labelledby="nav-webevents-tab">
                         <div class="table-responsive">
                             <table class="table table-sm table-hover table-striped table-bordered" id="webevents_list_table"></table>
                         </div>
-
+                        <form class="form-inline">
+                            <input class="form-control mb-2 mr-sm-2" id="new_webevent_form" type="text" placeholder="webevent_name">
+                            <button type="button" id="new_webevent" filename-id="new_webevent_form" class="btn btn-success button_new_sub_class mb-2 mr-sm-2"><i class="far fa-file"></i> Create web-event script</button>
+                        </form>
                     </div>
                     <div class="tab-pane fade" id="nav-events" role="tabpanel" aria-labelledby="nav-events-tab">
                         <div class="table-responsive">
                             <table class="table table-sm table-hover table-striped table-bordered" id="events_list_table"></table>
                         </div>
+                        <form class="form-inline">
+                            <input class="form-control mb-2 mr-sm-2" id="new_event_form" type="text" placeholder="event_name">
+                            <button type="button" id="new_event" filename-id="new_event_form" class="btn btn-success button_new_sub_class mb-2 mr-sm-2"><i class="far fa-file"></i> Create event script</button>
+                        </form>
                     </div>
                     <div class="tab-pane fade" id="nav-timers_scripts" role="tabpanel" aria-labelledby="nav-timers_scripts-tab">
                         <div class="table-responsive">
                             <table class="table table-sm table-hover table-striped table-bordered" id="timers_scripts_list_table"></table>
                         </div>
+                        <form class="form-inline">
+                            <input class="form-control mb-2 mr-sm-2" id="new_timer_event_form" type="text" placeholder="timerevent_name">
+                            <button type="button" id="new_timer_event" filename-id="new_timer_event_form" class="btn btn-success button_new_sub_class mb-2 mr-sm-2"><i class="far fa-file"></i> Create timer event script</button>
+                        </form>
                     </div>
-
-                    <form class="form-inline">
-                        <select class="form-control form-control-sm  mb-2 mr-sm-2" id="new_filedir_form">
-                           <option>drivers/</option>
-                           <option>webevents/</option>
-                           <option>events/</option>
-                        </select>
-                        <input class="form-control mb-2 mr-sm-2" id="new_filename_form" type="text" placeholder="name_script.lua">
-                        <button type="button" id="new_file" class="btn btn-success button_new_sub_class mb-2 mr-sm-2"><i class="far fa-file"></i> Create</button>
-                    </form>
+                    <div class="tab-pane fade" id="nav-user_html" role="tabpanel" aria-labelledby="nav-user_html-tab">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped table-bordered" id="user_html_list_table"></table>
+                        </div>
+                        <form class="form-inline">
+                            <input class="form-control mb-2 mr-sm-2" id="new_user_html_form" type="text" placeholder="name_html_page">
+                            <button type="button" id="new_user_html" filename-id="new_user_html_form" class="btn btn-success button_new_sub_class mb-2 mr-sm-2"><i class="far fa-file"></i> Create user html page</button>
+                        </form>
+                    </div>
 
                 </div>
 
@@ -123,6 +137,7 @@
     <script>
         render_scripts_table("driver_list_table", "drivers");
         render_scripts_table("webevents_list_table", "webevents");
+        render_scripts_table("user_html_list_table", "templates/user");
         render_scripts_table("events_list_table", "events", bind_table_button_actions);
     </script>
 

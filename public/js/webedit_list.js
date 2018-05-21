@@ -5,15 +5,47 @@ function edit_button_action(event) {
 }
 
 function new_button_action() {
-    var xhr_new_action = new XMLHttpRequest();
-    xhr_new_action.open('POST', 'system_webedit_data?item=new&address=' + $('#new_filedir_form')["0"].value + $('#new_filename_form')["0"].value, true);
+    let this_button = $(this)
+    let script_type = this_button.attr('id')
+    let script_filename = $("#" + this_button.attr('filename-id'))["0"].value
+
+    if (script_type == undefined || script_filename == undefined)
+        return
+
+    let filedir
+    let filetype
+    let xhr_new_action = new XMLHttpRequest();
+    if (script_type == "new_driver") {
+        filedir = "drivers"
+        filetype = ".lua"
+    }
+    if (script_type == "new_webevent") {
+        filedir = "webevents"
+        filetype = ".lua"
+    }
+    if (script_type == "new_event") {
+        filedir = "events"
+        filetype = ".lua"
+    }
+    if (script_type == "new_timer_event") {
+        filedir = "timerevents"
+        filetype = ".lua"
+    }
+    if (script_type == "new_user_html") {
+        filedir = "templates/user"
+        filetype = ".html"
+    }
+
+    let address = 'system_webedit_data?item=new&address=' + filedir + "/" + script_filename + filetype
+    xhr_new_action.open('POST', address, true);
     xhr_new_action.send()
+    setTimeout(function(event) {
+        location.href = location.href
+    }, 500);
 }
 
 function delete_button_action(event) {
-    console.log("action")
     if (last_delete_address == $(this).attr('address')) {
-        console.log("light")
         var xhr_delete_action = new XMLHttpRequest();
         xhr_delete_action.open('POST', 'system_webedit_data?item=delete&address=' + $(this).attr('address'), true);
         xhr_delete_action.send()
@@ -23,7 +55,6 @@ function delete_button_action(event) {
         }, 500);
     } else {
         button_color($(this), "danger")
-        console.log("danger")
         last_delete_address = $(this).attr('address')
         setTimeout(function(event) {
             last_delete_address = "";
@@ -45,7 +76,6 @@ function render_scripts_table(table_name, address, callback) {
         if (xhr_scripts_list.readyState == 4 && xhr_scripts_list.status == 200) {
             var json_data = JSON.parse(xhr_scripts_list.responseText);
             if (json_data.none_data != "true") {
-                //console.log(json_data)
                 clear_table(table_name)
                 add_row_table(table_name, "head", ["Filename", /* "active", */ "", ""], undefined, [70, /* 30, */ 10, 10])
                 for (let index = 0; index < json_data.length; index++) {

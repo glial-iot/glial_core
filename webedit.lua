@@ -53,7 +53,7 @@ function webedit.get_list(address)
    local data_object = {}
    local i = 1
    for _, item in pairs(fio.listdir(address)) do
-      if (string.find(item, ".+%.lua$") ~= nil) then
+      if (string.find(item, ".+%.lua$") ~= nil or string.find(item, ".+%.html$") ~= nil) then
          data_object[i] = {}
          data_object[i].name = item
          data_object[i].address = address.."/"..item
