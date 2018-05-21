@@ -15,7 +15,7 @@ local webedit = require "webedit"
 local config = require 'config'
 
 local function http_server_root_handler(req)
-   return req:redirect_to('/user_dashboard')
+   return req:redirect_to('/system_bus_storage')
 end
 
 local function box_config()
