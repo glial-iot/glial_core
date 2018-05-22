@@ -30,6 +30,7 @@ function http_system.enpoints_menu_config(menu_list, prefix)
       if (item.file ~= nil) then
          file_path = prefix.."/"..item.file
       end
+      logger.add_entry(logger.INFO, "HTTP subsystem", 'HTTP server bind endpoint "'..item.endpoint..'" on prefix "'..prefix..'" and file "'..item.file..'"')
       http_system.server:route({ path = item.href, file = file_path }, item.handler)
       if (item.name ~= nil) then
          http_system.proto_menu[#http_system.proto_menu+1] = {href = item.href, name=item.name, icon=item.icon}
