@@ -28,7 +28,7 @@ end
 
 function logger.return_all_entry(req)
    local params = req:param()
-   local data_object, i = {}, 0
+   local data_object = {}
 
    local table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
 
@@ -41,16 +41,10 @@ function logger.return_all_entry(req)
       local date = os.date("%Y-%m-%d, %H:%M:%S", epoch)
 
       if (params["item"] == "ALL" or params["item"] == level) then
-         i = i + 1
-         data_object[i] = {}
-         data_object[i].key = key
-         data_object[i].level = level
-         data_object[i].source = source
-         data_object[i].entry = entry
          local diff_time = os.time() - epoch
-         diff_time = system.format_seconds(diff_time)
-         data_object[i].date = date.." ("..(diff_time).." ago)"
-         if (params["limit"] ~= nil and tonumber(params["limit"]) <= i) then break end
+         local diff_time_format_text = date.." ("..(system.format_seconds(diff_time)).." ago)"
+         table.insert(data_object, {key = key, level = level, source = source, entry = entry, date = diff_time_format_text})
+         if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
       end
    end
    return req:render{ json = data_object }
