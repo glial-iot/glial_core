@@ -16,7 +16,7 @@ local function http_server_root_handler(req)
 end
 
 local function box_config()
-   box.cfg { listen = 3313, log_level = 4, memtx_dir = "./db", vinyl_dir = "./db", wal_dir = "./db", log = "pipe: ./http_pipe_logger.lua" }
+   box.cfg { listen = 3313, log_level = 4, memtx_dir = config.dir.DATABASE_DIR, vinyl_dir = config.dir.DATABASE_DIR, wal_dir = config.dir.DATABASE_DIR, log = "pipe: ./http_pipe_logger.lua" }
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
@@ -82,7 +82,7 @@ end
 
 local function user_menu_file_init()
    local user_menu
-   local current_func, error_msg = loadfile(config.USER_MENU_DIR.."/".."user_menu.lua")
+   local current_func, error_msg = loadfile(config.dir.USER_MENU_DIR.."/".."user_menu.lua")
    if (current_func == nil) then
       logger.add_entry(logger.INFO, "User menu subsystem", 'User menu not load: "'..error_msg..'", menu not generated')
    else
@@ -102,12 +102,14 @@ local function http_data_endpoints_init()
    http_system.endpoint_config("/system_menu_data", http_system.menu_json_handler)
 end
 
+system.dir_check(config.dir.DATABASE_DIR)
 box_config()
-
 
 logger.init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
 logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
+
+system.system_dir_check()
 
 bus.init()
 logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
@@ -116,17 +118,17 @@ webedit.init()
 
 http_system.init_server()
 http_system.init_client()
-http_system.enpoints_menu_config(system_menu_list(), config.SYSTEM_HTML_DIR)
-http_system.enpoints_menu_config(user_menu_file_init(), config.USER_HTML_DIR)
+http_system.enpoints_menu_config(system_menu_list(), config.dir.SYSTEM_HTML_DIR)
+http_system.enpoints_menu_config(user_menu_file_init(), config.dir.USER_HTML_DIR)
 http_system.json_menu_v2 = http_system.enpoints_menu_for_json_generate_v2(system_menu_list())
 http_data_endpoints_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
 logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
-scripts_webevents.init(config.WEBEVENT_SCRIPTS_DIR)
-scripts_webevents.init(config.SYSTEM_WEBEVENT_SCRIPTS_DIR)
+scripts_webevents.init(config.dir.WEBEVENT_SCRIPTS_DIR)
+scripts_webevents.init(config.dir.SYSTEM_WEBEVENT_SCRIPTS_DIR)
 
 logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
-scripts_drivers.init(config.DRIVERS_DIR)
+scripts_drivers.init(config.dir.DRIVERS_DIR)
 
 logger.add_entry(logger.INFO, "Main system", "System started")

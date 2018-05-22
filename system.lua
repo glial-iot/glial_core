@@ -45,12 +45,26 @@ end
 function system.dir_check(dir_path)
    dir_path = dir_path or ""
    if (fio.path.exists(dir_path) ~= true) then
-      fio.mktree(dir_path)
+      return fio.mktree(dir_path)
    end
    if (fio.path.is_dir(dir_path) ~= true) then
-      return false
+      return false, dir_path.." is file"
    end
    return true
+end
+
+
+function system.system_dir_check()
+   local config = require 'config'
+   local logger = require 'logger'
+
+   for i, item in pairs(config.dir) do
+      local status, err = system.dir_check(item)
+      if (status == false) then
+         logger.add_entry(logger.INFO, "System", 'Directory '..item..' check or create failed: '..(err or "no error"))
+      end
+  end
+
 end
 
 function system.get_files_in_dir(path, mask)

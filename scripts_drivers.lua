@@ -9,12 +9,6 @@ local system = require 'system'
 function scripts_drivers.init(path)
    local error_msg, result
 
-   result = system.dir_check(path)
-   if (result ~= true) then
-      logger.add_entry(logger.ERROR, "Drivers subsystem", 'Drivers directory "'..path..'" not exist and not created')
-      return
-   end
-
    local files =  system.get_files_in_dir(path, ".+%.lua")
 
    for i, filename in pairs(files) do

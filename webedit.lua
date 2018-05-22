@@ -50,9 +50,6 @@ end
 function webedit.get_list(address)
    local data_object = {}
    local i = 1
-   if (system.dir_check(address) == false) then
-      return data_object
-   end
    for _, item in pairs(fio.listdir(address)) do
       if (string.find(item, ".+%.lua$") ~= nil or string.find(item, ".+%.html$") ~= nil) then
          data_object[i] = {}

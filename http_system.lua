@@ -28,7 +28,7 @@ function http_system.enpoints_menu_config(menu_list, prefix)
    for i, item in pairs(menu_list) do
       local file_path
       if (item.file ~= nil) then
-         file_path = prefix.."/"..item.file
+         file_path = "../"..prefix.."/"..item.file
       end
       if (item.file ~= nil) then
          logger.add_entry(logger.INFO, "HTTP subsystem", 'HTTP server bind endpoint "'..(item.href or "")..'" on prefix "'..(prefix or "")..'" and file "'..(item.file or "")..'"')
