@@ -30,8 +30,6 @@ function http_system.enpoints_menu_config(menu_list, prefix)
       local file_path
       if (item.file ~= nil) then
          file_path = "../"..prefix.."/"..item.file
-      end
-      if (item.file ~= nil) then
          logger.add_entry(logger.INFO, "HTTP subsystem", 'HTTP server bind endpoint "'..(item.href or "")..'" on prefix "'..(prefix or "")..'" and file "'..(item.file or "")..'"')
       end
       http_system.server:route({ path = item.href, file = file_path }, item.handler)

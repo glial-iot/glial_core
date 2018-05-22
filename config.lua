@@ -18,7 +18,7 @@ config.IMPACT_URL = "https://impact.iot.nokia.com"
 
 config.dir = {}
 config.dir.USER_DIR = "user"
-config.dir.TEMPLATES_DIR = "user"
+config.dir.TEMPLATES_DIR = "templates"
 config.dir.DATABASE_DIR = "db"
 config.dir.SYSTEM_DIR = "system_scripts"
 config.dir.TIMER_SCRIPTS_DIR = config.dir.USER_DIR.."/".."timer_scripts"
