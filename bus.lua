@@ -152,29 +152,29 @@ function bus.update_value(topic, value) -- external value name (incorrect)
 end
 
 function bus.action_data_handler(req)
-   local param_action, param_topic, param_value = req:param("action"), req:param("topic"), req:param("value")
+   local params = req:param()
 
-   if (param_action == "update_tsdb_attribute") then
-      if (param_value == "true") then
-         param_value = true
-      elseif (param_value == "false") then
-         param_value = false
+   if (params["action"] == "update_tsdb_attribute") then
+      if (params["value"] == "true") then
+         params["value"] = true
+      elseif (params["value"] == "false") then
+         params["value"] = false
       else
          return req:render{ json = { result = false } }
       end
-      bus_private.set_tsdb_save_attribute(param_topic, param_value)
+      bus_private.set_tsdb_save_attribute(params["topic"], params["value"])
 
-   elseif (param_action == "update_value") then
-      if (param_topic == nil or param_value == nil) then
+   elseif (params["action"] == "update_value") then
+      if (params["topic"] == nil or params["value"] == nil) then
          return req:render{ json = { result = false } }
       end
-      bus.update_value(param_topic, param_value)
+      bus.update_value(params["topic"], params["value"])
 
-   elseif (param_action == "delete_topics") then
-      if (param_topic == nil) then
+   elseif (params["action"] == "delete_topics") then
+      if (params["topic"] == nil) then
          return req:render{ json = { result = false } }
       end
-      bus_private.delete_topics(param_topic)
+      bus_private.delete_topics(params["topic"])
    end
 
    return req:render{ json = { result = true } }
