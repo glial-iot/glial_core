@@ -3,16 +3,11 @@ var dynamenu = new Vue({
     data: {
         menuitems: []
     },
-
     created() {
         fetch('/system_menu_data')
             .then(response => response.json())
             .then(json => {
-
                 this.menuitems = json;
-               
-            })
-
-
+               })
     }
 })
