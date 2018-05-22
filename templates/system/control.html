@@ -23,7 +23,7 @@
     <!-- Custom styles for this template -->
     <link href="system-css/dashboard.css" rel="stylesheet">
     <link href="local_settings.css" rel="stylesheet">
-    <script src="https://unpkg.com/vue"></script> <!-- Pluging  Vue  in -->
+    <script src="system-js/vue.min.js"></script> <!-- Pluging  Vue  in (has to be placed at the top of page otherwise it doesn't work>
 </head>
 
 <body>
@@ -42,7 +42,7 @@
                     <ul class="nav flex-column">
 
                         
-                      <!-- Beigining of dynamic menu via Vue js -->
+                      <!-- Beginning of dynamic menu via Vue js -->
                         <div id="dynamenu">
                             <li  v-for="menuitem in menuitems">
                                 <a  class="nav-link" v-bind:href="menuitem.href" > 
@@ -87,7 +87,7 @@
     <script src="system-js/bootstrap.min.js"></script>
     <script src="js/action_button.js"></script>
     <script src="js/main.js"></script>
-
+    <script src="js/menu.js"></script>
     <script>
         button_action_init("system_actions", "btn-action");
 
