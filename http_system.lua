@@ -39,26 +39,18 @@ function http_system.enpoints_menu_config(menu_list, prefix)
    end
 end
 
-function http_system.enpoints_menu_for_json_generate_v2(menu_list)
+function http_system.enpoints_menu_v2_for_json_generate(menu_list)
    if menu_list == nil then
       return
    end
-   local local_menu = {}
-   local i = 1
    for _, item in pairs(menu_list) do
-
-      if (item.name ~= nil and item.icon ~= nil and item.href ~= nil) then
-         local_menu[i] = {}
-         local_menu[i].href = item.href
-         local_menu[i].icon = item.icon
-         local_menu[i].name = item.name
-         i = i + 1
+      if (item.name ~= nil and item.href ~= nil) then
+         table.insert(http_system.json_menu_v2, {href = item.href, icon = item.icon, name = item.name})
       end
    end
-   return local_menu
 end
 
-function http_system.menu_json_handler(req)
+function http_system.menu_v2_json_handler(req)
    return req:render{ json = http_system.json_menu_v2 }
 end
 
@@ -66,7 +58,7 @@ function http_system.endpoint_config(path, handler)
    http_system.server:route({ path = path }, handler)
 end
 
-function http_system.generic_page_handler(req)
+function http_system.generic_page_handler(req) --DEPRECATED
    local _, _, host = string.find(req.headers.host, "(.+):8080")
    local menu = {}
    for i, item in pairs(http_system.proto_menu) do
