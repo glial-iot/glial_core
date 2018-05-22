@@ -1,13 +1,14 @@
 #!/usr/bin/env tarantool
+local http_system = {}
 
+local box = box
 local log = require 'log'
+
 local logger = require 'logger'
 local scripts_events = require 'scripts_events'
 local system = require 'system'
 local config = require 'config'
-local box = box
 
-local http_system = {}
 http_system.proto_menu = {}
 http_system.json_menu_v2 = {}
 

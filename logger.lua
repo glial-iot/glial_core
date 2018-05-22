@@ -1,10 +1,12 @@
 #!/usr/bin/env tarantool
+local logger = {}
+
 local log = require 'log'
 local inspect = require 'libs/inspect'
-local system = require 'system'
 local box = box
 
-local logger = {}
+local system = require 'system'
+
 logger.INFO = "INFO"
 logger.WARNING = "WARNING"
 logger.ERROR = "ERROR"

@@ -1,10 +1,12 @@
 #!/usr/bin/env tarantool
+local scripts_events = {}
+
+local inspect = require 'libs/inspect'
 local log = require 'log'
+
 local logger = require 'logger'
 local system = require "system"
-local inspect = require 'libs/inspect'
 
-local scripts_events = {}
 
 scripts_events.vaisala_event = {}
 scripts_events.vaisala_event.topic = "/vaisala/H2S"

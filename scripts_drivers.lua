@@ -1,10 +1,12 @@
 #!/usr/bin/env tarantool
 local scripts_drivers = {}
-local scripts_drivers_functions = {}
-local logger = require 'logger'
+
 local inspect = require 'libs/inspect'
+
+local logger = require 'logger'
 local system = require 'system'
 
+local scripts_drivers_functions = {}
 
 function scripts_drivers.init(path)
    local error_msg, result

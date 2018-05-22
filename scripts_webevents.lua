@@ -1,10 +1,12 @@
 #!/usr/bin/env tarantool
-local logger = require 'logger'
+local scripts_webevents = {}
+
 local inspect = require 'libs/inspect'
+
+local logger = require 'logger'
 local http_system = require 'http_system'
 local system = require 'system'
 
-local scripts_webevents = {}
 local scripts_webevents_functions = {}
 
 function scripts_webevents.init(path)

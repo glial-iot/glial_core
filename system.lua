@@ -1,7 +1,8 @@
 #!/usr/bin/env tarantool
+local system = {}
+
 local fio = require 'fio'
 
-local system = {}
 local git_version, _
 
 function system.reverse_table(t)
