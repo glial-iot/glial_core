@@ -2,7 +2,7 @@ let dynamenu = new Vue({
     el: '#dynamenu',
     data: {
         menuitems: [],
-        selected: location.pathname
+        current_href: location.pathname
     },
     created() {
         fetch('/system_menu_data')
