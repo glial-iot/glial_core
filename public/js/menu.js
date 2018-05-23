@@ -1,11 +1,11 @@
-var ucurrentpage = location.href;
-var upos = ucurrentpage.search("system_");
-var ulen = ucurrentpage.length;
+let ucurrentpage = location.href;
+let upos = ucurrentpage.search("system_");
+let ulen = ucurrentpage.length;
 
 ucurrentpage = ucurrentpage.slice(upos, ulen);
 ucurrentpage = '/' + ucurrentpage
 
-var dynamenu = new Vue({
+let dynamenu = new Vue({
     el: '#dynamenu',
     data: {
         menuitems: [],
