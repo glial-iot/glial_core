@@ -1,15 +1,8 @@
-let ucurrentpage = location.href;
-let upos = ucurrentpage.search("system_");
-let ulen = ucurrentpage.length;
-
-ucurrentpage = ucurrentpage.slice(upos, ulen);
-ucurrentpage = '/' + ucurrentpage
-
 let dynamenu = new Vue({
     el: '#dynamenu',
     data: {
         menuitems: [],
-        selected: ucurrentpage
+        selected: location.pathname
     },
     created() {
         fetch('/system_menu_data')
