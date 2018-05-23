@@ -51,9 +51,17 @@
                     <!-- Beginning of dynamic menu via Vue js -->
                         <div id="dynamenu">
                             <li  v-for="menuitem in menuitems">
-                                <a  class="nav-link" v-bind:href="menuitem.href" > 
-		                        <i v-bind:class="menuitem.icon"></i>
-                                {{menuitem.name}}
+                                 <a v-bind:href="menuitem.href" v-for="menuitem in menuitems"
+                                 class="nav-link active" v-if="selected === menuitem.href"
+                                 @click="selected = menuitem.href"  > 
+		                       <i v-bind:class="menuitem.icon"></i>
+		                       {{menuitem.name}}
+                                </a>
+                                <a v-bind:href="menuitem.href"v-for="menuitem in menuitems"
+				class="nav-link" v-if="selected != menuitem.href"
+                                @click="selected = menuitem.href"  > 
+                                      <i v-bind:class="menuitem.icon"></i>
+		                      {{menuitem.name}}
                                 </a>
                             </li>
                         </div>
