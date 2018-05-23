@@ -1,6 +1,6 @@
 var ucurrentpage = location.href;
 var upos = ucurrentpage.search("system_");
-var ulen= ucurrentpage.length;
+var ulen = ucurrentpage.length;
 
 ucurrentpage = ucurrentpage.slice(upos, ulen);
 ucurrentpage = '/' + ucurrentpage
@@ -16,6 +16,6 @@ var dynamenu = new Vue({
             .then(response => response.json())
             .then(json => {
                 this.menuitems = json;
-               })
+            })
     }
 })

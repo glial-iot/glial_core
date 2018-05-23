@@ -40,24 +40,16 @@
             <nav class="col-md-1 d-none d-md-block bg-light sidebar">
                 <div class="sidebar-sticky">
                     <ul class="nav flex-column">
-                      
                         <div id="dynamenu">
-                            <li  v-for="menuitem in menuitems">
-                                 <a v-bind:href="menuitem.href" v-for="menuitem in menuitems"
-                                 class="nav-link active" v-if="selected === menuitem.href"
-                                 @click="selected = menuitem.href"  > 
-		                       <i v-bind:class="menuitem.icon"></i>
-		                       {{menuitem.name}}
+                            <li v-for="menuitem in menuitems">
+                                <a v-bind:href="menuitem.href" v-for="menuitem in menuitems" class="nav-link active" v-if="selected === menuitem.href" @click="selected = menuitem.href">
+                                    <i v-bind:class="menuitem.icon"></i> {{menuitem.name}}
                                 </a>
-                                <a v-bind:href="menuitem.href"v-for="menuitem in menuitems"
-				class="nav-link" v-if="selected != menuitem.href"
-                                @click="selected = menuitem.href"  > 
-                                      <i v-bind:class="menuitem.icon"></i>
-		                      {{menuitem.name}}
+                                <a v-bind:href="menuitem.href" v-for="menuitem in menuitems" class="nav-link" v-if="selected != menuitem.href" @click="selected = menuitem.href">
+                                    <i v-bind:class="menuitem.icon"></i> {{menuitem.name}}
                                 </a>
                             </li>
                         </div>
-
                     </ul>
                 </div>
                 <footer class="text-muted text-center text-small">
