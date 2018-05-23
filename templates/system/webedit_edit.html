@@ -31,7 +31,7 @@
             height: 800px;
         }
     </style>
-    <script src="system-js/vue_2_5_16.min.js"></script> <!-- Pluging  Vue  in (has to be placed at the top of page otherwise it doesn't work>
+    <script src="system-js/vue_2_5_16.min.js"></script>
 </head>
 
 <body>
@@ -47,8 +47,6 @@
         <nav class="col-md-1 d-none d-md-block bg-light sidebar">
             <div class="sidebar-sticky">
                 <ul class="nav flex-column">
-
-                    <!-- Beginning of dynamic menu via Vue js -->
                         <div id="dynamenu">
                             <li  v-for="menuitem in menuitems">
                                  <a v-bind:href="menuitem.href" v-for="menuitem in menuitems"
@@ -66,8 +64,6 @@
                             </li>
                         </div>
 		                <script src="system-js/menu.js">  
-                     <!-- End of dynamic menu via Vue js -->
-                    
                 </ul>
             </div>
             <footer class="text-muted text-center text-small">

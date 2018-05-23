@@ -23,7 +23,7 @@
     <!-- Custom styles for this template -->
     <link href="system-css/dashboard.css" rel="stylesheet">
     <link href="local_settings.css" rel="stylesheet">
-    <script src="system-js/vue_2_5_16.min.js"></script> <!-- Pluging  Vue  in (has to be placed at the top of page otherwise it doesn't work>
+    <script src="system-js/vue_2_5_16.min.js"></script>
 </head>
 
 <body>
@@ -41,8 +41,6 @@
                 <div class="sidebar-sticky">
                     <ul class="nav flex-column">
 
-                        
-                      <!-- Beginning of dynamic menu via Vue js -->
                         <div id="dynamenu">
                             <li  v-for="menuitem in menuitems">
                                  <a v-bind:href="menuitem.href" v-for="menuitem in menuitems"
@@ -59,8 +57,6 @@
                                 </a>
                             </li>
                         </div>
-		      <!-- End of dynamic menu via Vue js -->
-                        
                     </ul>
                 </div>
                 <footer class="text-muted text-center text-small">

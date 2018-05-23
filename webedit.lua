@@ -51,36 +51,31 @@ end
 
 function webedit.get_list(address)
    local data_object = {}
-   local i = 1
    for _, item in pairs(fio.listdir(address)) do
       if (string.find(item, ".+%.lua$") ~= nil or string.find(item, ".+%.html$") ~= nil) then
-         data_object[i] = {}
-         data_object[i].name = item
-         data_object[i].address = address.."/"..item
-         i = i + 1
+         table.insert(data_object, {name = item, address = address.."/"..item})
       end
    end
    return data_object
 end
 
 function webedit.http_handler(req)
-   local param_item = req:param("item")
-   local param_adress = req:param("address")
+   local params = req:param()
 
-   if (param_item == "get") then
-      return { body = webedit.get_file(param_adress) }
+   if (params["item"] == "get") then
+      return { body = webedit.get_file(params["address"]) }
 
-   elseif (param_item == "save") then
-      return req:render{ json = { result = webedit.save_file(param_adress, req.cached_data)} }
+   elseif (params["item"] == "save") then
+      return req:render{ json = { result = webedit.save_file(params["address"], req.cached_data)} }
 
-   elseif (param_item == "delete") then
-      return req:render{ json = { result = webedit.delete_file(param_adress)} }
+   elseif (params["item"] == "delete") then
+      return req:render{ json = { result = webedit.delete_file(params["address"])} }
 
-   elseif (param_item == "new") then
-      return req:render{ json = { result = webedit.new_file(param_adress) } }
+   elseif (params["item"] == "new") then
+      return req:render{ json = { result = webedit.new_file(params["address"]) } }
 
-   elseif (param_item == "get_list") then
-      return req:render{ json = webedit.get_list(param_adress)  }
+   elseif (params["item"] == "get_list") then
+      return req:render{ json = webedit.get_list(params["address"])  }
    end
 
 end

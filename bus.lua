@@ -152,57 +152,58 @@ function bus.update_value(topic, value) -- external value name (incorrect)
 end
 
 function bus.action_data_handler(req)
-   local param_action, param_topic, param_value = req:param("action"), req:param("topic"), req:param("value")
+   local params = req:param()
 
-   if (param_action == "update_tsdb_attribute") then
-      if (param_value == "true") then
-         param_value = true
-      elseif (param_value == "false") then
-         param_value = false
+   if (params["action"] == "update_tsdb_attribute") then
+      if (params["value"] == "true") then
+         params["value"] = true
+      elseif (params["value"] == "false") then
+         params["value"] = false
       else
          return req:render{ json = { result = false } }
       end
-      bus_private.set_tsdb_save_attribute(param_topic, param_value)
+      bus_private.set_tsdb_save_attribute(params["topic"], params["value"])
 
-   elseif (param_action == "update_value") then
-      if (param_topic == nil or param_value == nil) then
+   elseif (params["action"] == "update_value") then
+      if (params["topic"] == nil or params["value"] == nil) then
          return req:render{ json = { result = false } }
       end
-      bus.update_value(param_topic, param_value)
+      bus.update_value(params["topic"], params["value"])
 
-   elseif (param_action == "delete_topics") then
-      if (param_topic == nil) then
+   elseif (params["action"] == "delete_topics") then
+      if (params["topic"] == nil) then
          return req:render{ json = { result = false } }
       end
-      bus_private.delete_topics(param_topic)
+      bus_private.delete_topics(params["topic"])
    end
 
    return req:render{ json = { result = true } }
 end
 
 function bus.http_data_handler(req)
-   local type_item, type_limit = req:param("item"), tonumber(req:param("limit"))
+   local params = req:param()
    local return_object
-   local data_object, i = {}, 0
+   local data_object = {}
    local current_time = os.time()
    --Database struct: 1(topic), 2(timestamp), 3(value), 4(tsdb_save)
    for _, tuple in bus.bus_storage.index.topic:pairs() do
-      i = i + 1
-      data_object[i] = {}
-      data_object[i].topic = tuple[1]
-      local diff_time_raw = current_time - tuple[2]
-      local diff_time_text = system.format_seconds(diff_time_raw)
-      if (diff_time_raw > 1) then
-         data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2]).." ("..(diff_time_text).." ago)"
+      local processed_timestamp
+      local topic = tuple[1]
+      local timestamp = tuple[2]
+      local value = tuple[3]
+      local tsdb_save = tuple[4]
+      local diff_time = current_time - timestamp
+      local diff_time_text = system.format_seconds(diff_time)
+      if (diff_time > 1) then
+         processed_timestamp = os.date("%Y-%m-%d, %H:%M:%S", timestamp).." ("..(diff_time_text).." ago)"
       else
-         data_object[i].timestamp = os.date("%Y-%m-%d, %H:%M:%S", tuple[2])
+         processed_timestamp = os.date("%Y-%m-%d, %H:%M:%S", timestamp)
       end
-      data_object[i].value = tuple[3]
-      data_object[i].tsdb_save = tuple[4] or false
-      if (type_limit ~= nil and type_limit <= i) then break end
+      table.insert(data_object, {topic = topic, timestamp = processed_timestamp, value = value, tsdb_save = (tsdb_save or false)})
+      if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
    end
 
-   if (i > 0) then
+   if (#data_object > 0) then
       return_object = req:render{ json =  data_object  }
    else
       return_object = req:render{ json = { none_data = "true" } }
