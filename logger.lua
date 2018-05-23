@@ -30,9 +30,9 @@ function logger.return_all_entry(req)
    local params = req:param()
    local data_object = {}
 
-   local table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
+   local local_table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
 
-   for _, tuple in pairs(table) do
+   for _, tuple in pairs(local_table) do
       local key = tuple[1]
       local level = tuple[2]
       local source = tuple[3]
