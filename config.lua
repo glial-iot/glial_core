@@ -29,6 +29,8 @@ config.dir.DRIVERS_DIR = config.dir.USER_DIR.."/".."drivers"
 config.dir.USER_HTML_DIR = config.dir.USER_DIR.."/".."html"
 config.dir.USER_MENU_DIR = config.dir.USER_DIR.."/".."menu"
 config.dir.SYSTEM_HTML_DIR = config.dir.TEMPLATES_DIR.."/".."system"
+config.dir.BACKUP_DIR = "backup"
 
+config.MAX_BACKUP_FILES = 20
 
 return config

@@ -10,6 +10,7 @@ local system = require "system"
 local logger = require "logger"
 local webedit = require "webedit"
 local config = require 'config'
+local backup_restore = require 'backup_restore'
 
 local function http_server_root_handler(req)
    return req:redirect_to('/system_bus_storage')
@@ -113,6 +114,9 @@ system.system_dir_check()
 
 bus.init()
 logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
+
+backup_restore.create_backup()
+backup_restore.remove_old_files()
 
 webedit.init()
 
