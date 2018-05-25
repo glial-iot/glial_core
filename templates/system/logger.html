@@ -42,9 +42,7 @@
                     <ul class="nav flex-column">
                         <div id="dynamenu">
                             <li v-for="menuitem in menuitems">
-                                <a v-bind:href="menuitem.href" class="nav-link" v-bind:class="{ active: current_href === menuitem.href }" @click="current_href = menuitem.href">
-                                    <i v-bind:class="menuitem.icon"></i> {{menuitem.name}}
-                                </a>
+                               <dynamenu-component :item="menuitem"></dynamenu-component>
                             </li>
                         </div>
                     </ul>
