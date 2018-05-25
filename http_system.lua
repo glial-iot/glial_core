@@ -14,7 +14,7 @@ http_system.json_menu_v2 = {}
 
 
 function http_system.init_server()
-   http_system.server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})
+   http_system.server = require('http.server').new(nil, config.HTTP_PANEL_PORT, {charset = "application/json"})
    http_system.server:start()
 end
 
