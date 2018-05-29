@@ -2,202 +2,135 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-    <link rel="manifest" href="favicon/site.webmanifest">
-    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="theme-color" content="#ffffff">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+	<link rel="manifest" href="favicon/site.webmanifest">
+	<link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
 
-    <title>IMPACT Glue</title>
+	<title>IMPACT Glue</title>
 
-    <!-- Bootstrap core CSS -->
-    <link href="system-css/bootstrap.min.css" rel="stylesheet">
-    <link href="fontawesome/fontawesome-all.css" rel="stylesheet">
+	<!-- Bootstrap core CSS -->
+	<link href="system-css/bootstrap.min.css" rel="stylesheet">
+	<link href="fontawesome/fontawesome-all.css" rel="stylesheet">
+
+	<!-- Vue core CSS -->
+	<script src="system-js/vue_2_5_16.min.js"></script>
+
+	<!-- Custom styles for this template -->
+	<link href="system-css/dashboard.css" rel="stylesheet">
+	<link href="local_settings.css" rel="stylesheet">
+
+	<!-- Custom styles for vue table -->
+	<link href="system-css/table.css" rel="stylesheet">
 
 
-    <!-- Custom styles for this template -->
-    <link href="system-css/dashboard.css" rel="stylesheet">
-    <link href="local_settings.css" rel="stylesheet">
-    <script src="system-js/vue_2_5_16.min.js"></script>
+
 </head>
 
 <body>
-    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-        <a class="navbar-brand col-sm-3 col-md-3 mr-0 develop-menu-subclass" style="color: #FFFFFF;"><img src="logo_nokia.svg" class="logo" style="height: 18px;margin-left: 10px;margin-bottom: 4px;margin-right: 15px;" alt="Nokia Logo">IMPACT GLUE</a>
-        <a style="color:#6aa0da;padding-right:20px;" href="https://github.com/vvzvlad/tarantool_iot_scada">
+	<nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+		<a class="navbar-brand col-sm-3 col-md-3 mr-0 develop-menu-subclass" style="color: #FFFFFF;"><img src="logo_nokia.svg" class="logo" style="height: 18px;margin-left: 10px;margin-bottom: 4px;margin-right: 15px;" alt="Nokia Logo">IMPACT GLUE</a>
+		<a style="color:#6aa0da;padding-right:20px;" href="https://github.com/vvzvlad/tarantool_iot_scada">
             <i class="fab fa-github"></i>
             <%= git_version %>
         </a>
-    </nav>
+	</nav>
 
-    <div class="container-fluid">
-        <div class="row">
-            <nav class="col-md-1 d-none d-md-block bg-light sidebar">
-                <div class="sidebar-sticky">
-                    <ul class="nav flex-column">
-                        <div id="dynamenu">
-                            <li v-for="menuitem in menuitems">
-                                <a v-bind:href="menuitem.href" class="nav-link" v-bind:class="{ active: current_href === menuitem.href }" @click="current_href = menuitem.href">
-                                    <i v-bind:class="menuitem.icon"></i> {{menuitem.name}}
-                                </a>
-                            </li>
-                        </div>
-                    </ul>
-                </div>
-                <footer class="text-muted text-center text-small">
-                    <p class="mb-1">Nokia EE IoT Laboratory &copy; 2018</p>
-                </footer>
-            </nav>
+	<div class="container-fluid">
+		<div class="row">
+			<nav class="col-md-1 d-none d-md-block bg-light sidebar">
+				<div class="sidebar-sticky">
+					<ul class="nav flex-column">
+						<div id="dynamenu-instance">
+							<li v-for="menuitem in menuitems">
+								<dynamenu-component :item="menuitem"></dynamenu-component>
+							</li>
+						</div>
+					</ul>
+				</div>
+				<footer class="text-muted text-center text-small">
+					<p class="mb-1">Nokia EE IoT Laboratory &copy; 2018</p>
+				</footer>
+			</nav>
 
-            <main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-2 px-2">
-                <div class="container pb-1">
-                    <div class="row justify-content-center">
-                        <h2 class="align-self-center">Bus storage</h2>
-                        <div class="btn-group pb-1 pl-4 align-self-center">
-                            <button type="button" class="btn btn-sm btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                       Update time
+			<!-- component template -->
+			<script type="text/x-template" id="grid-template">
+				<div class="table-responsive">
+					<table class="table table-sm table-striped table-bordered">
+						<thead>
+							<tr>
+								<th style="width: 60%;">Topic</th>
+								<th style="width: 25%;">Update time</th>
+								<th style="width: 5%;">TSDB</th>
+								<th style="width: 10%;">Value</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="entry in data">
+								<td>{{entry.topic}}</td>
+								<td>{{entry.timestamp}}</td>
+								<td>
+									<div class="input-group input-group-sm input-group-prepend"><input class="tsdb_checkbox_subclass" topic="/glue/avg_seq_value" style="margin: auto" type="checkbox" v-bind:checked="{ checked : entry.tsdb_save}"></div>
+								</td>
+								<td v-highlight="entry.value">{{entry.value}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</script>
+
+			<!-- table root element -->
+
+			<main role="main" class="col-md-11 ml-sm-auto col-lg-11 pt-2 px-2">
+
+				<div id="vtable">
+					<div class="container pb-1">
+						<div class="row justify-content-center">
+							<h2 class="align-self-center">Bus storage &nbsp; &nbsp; </h2>
+							<div v-if="interval < 50000">
+								<h6> (data updated every {{interval/1000}} sec)</h6>
+							</div>
+							<div class="btn-group pb-1 pl-4 align-self-center">
+								<button type="button" class="btn btn-sm btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                       Change update frequency
                      </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item update_time_subclass" update-time="500" href="#">0,5 seconds</a>
+								<div class="dropdown-menu">
+									<a class="dropdown-item update_time_subclass" update-time="500" href="#" v-on:click="Updateintervalvalue(500)">0,5 seconds</a>
+									<a class="dropdown-item update_time_subclass" update-time="1000" href="#" v-on:click="Updateintervalvalue(1000)">1 second</a>
+									<a class="dropdown-item update_time_subclass" update-time="5000" href="#" v-on:click="Updateintervalvalue(5000)">5 seconds</a>
+									<a class="dropdown-item update_time_subclass" update-time="30000" href="#" v-on:click="Updateintervalvalue(30000)">30 seconds</a>
+									<div class="dropdown-divider"></div>
+									<a class="dropdown-item update_time_subclass" update-time="inf" href="#" v-on:click="Updateintervalvalue(10000000)">Not update</a>
+								</div>
+							</div>
 
-                                <a class="dropdown-item update_time_subclass" update-time="1000" href="#">1 second</a>
-                                <a class="dropdown-item update_time_subclass" update-time="5000" href="#">5 seconds</a>
-                                <a class="dropdown-item update_time_subclass" update-time="30000" href="#">30 seconds</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item update_time_subclass" update-time="inf" href="#">Not update</a>
-                            </div>
-                        </div>
-                        <div class="btn-group pb-1 pl-2 align-self-center">
-                            <button type="button" class="btn btn-sm btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                         TSDB Group
-                       </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item tsdb_save_subclass" tsdb="all" href="#">Save to TSDB all values</a>
-                                <a class="dropdown-item tsdb_save_subclass" tsdb="none" href="#">Not save to TSDB all values</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+						</div>
+					</div>
 
-                <div class="table-responsive">
-                    <table class="table table-sm table-striped table-bordered" id="table_values_bus_storage"></table>
-                </div>
+					<vue-grid :data="gridData" :columns="gridColumns" :updateinterval="interval">
+					</vue-grid>
+				</div>
 
+			</main>
+		</div>
+	</div>
 
-            </main>
-        </div>
-    </div>
-
-    <!-- Bootstrap core JavaScript
+	<!-- Bootstrap core JavaScript
     ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="system-js/jquery-slim.min.js"></script>
-    <script src="system-js/popper.min.js"></script>
-    <script src="system-js/bootstrap.min.js"></script>
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script src="system-js/jquery-slim.min.js"></script>
+	<script src="system-js/popper.min.js"></script>
+	<script src="system-js/bootstrap.min.js"></script>
 
-    <script src="js/table.js"></script>
-    <script src="js/menu.js"></script>
-
-    <script>
-        var xhr_tmr = new XMLHttpRequest();
-        var old_values = {};
-        var timer_update_value = 1000;
-        var timer_id;
-
-
-        function update_field_callback() {
-            if (xhr_tmr.readyState == 4 && xhr_tmr.status == 200) {
-                let json_data = JSON.parse(xhr_tmr.responseText);
-                if (json_data.none_data != "true") {
-                    //console.log(json_data)
-                    clear_table("table_values_bus_storage")
-                    add_row_table("table_values_bus_storage", "head", ["Topic", "Update time", "TSDB", "Value"], undefined, [60, 25, 5, 10])
-                    for (let index = 0; index < json_data.length; index++) {
-                        let checked = ""
-                        if (json_data[index].tsdb_save == true) {
-                            checked = "checked"
-                        }
-
-                        let checkbox_html = '<div class="input-group input-group-sm input-group-prepend" ><input class="tsdb_checkbox_subclass" topic="' + json_data[index].topic + '" style="margin: auto" type="checkbox" ' + checked + '></div>'
-                        if (old_values[json_data[index].topic] == json_data[index].value) {
-                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, checkbox_html, json_data[index].value])
-                        } else {
-                            add_row_table("table_values_bus_storage", "body", [json_data[index].topic, json_data[index].timestamp, checkbox_html, json_data[index].value], "bus_colored")
-                        }
-                        old_values[json_data[index].topic] = json_data[index].value
-                    }
-                    $(".tsdb_checkbox_subclass").change(tsdb_checkbox_action);
-
-                }
-            }
-            if (xhr_tmr.readyState == 4) {
-                timer_id = setTimeout(timer_update_field, timer_update_value)
-            }
-        }
-
-        function timer_update_field() {
-            xhr_tmr.open('POST', 'system_bus_data', true);
-            xhr_tmr.send()
-        }
-
-        xhr_tmr.onreadystatechange = update_field_callback
-        timer_update_field()
-
-
-
-
-
-
-
-
-        function update_time() {
-            let update_time = $(this).attr('update-time')
-            clearTimeout(timer_id);
-
-            if (update_time != "inf") {
-                timer_update_value = update_time
-                timer_id = setTimeout(timer_update_field, timer_update_value)
-            }
-        }
-
-        $(".update_time_subclass").on('click', update_time);
-
-
-
-
-
-        function save_tsdb_action() {
-            let action = $(this).attr('tsdb')
-            let xhr_tmr = new XMLHttpRequest();
-
-            if (action == "all") {
-                xhr_tmr.open('POST', 'system_bus_action?action=update_tsdb_attribute&topic=*&value=true', true);
-            } else {
-                xhr_tmr.open('POST', 'system_bus_action?action=update_tsdb_attribute&topic=*&value=false', true);
-            }
-            xhr_tmr.send()
-        }
-
-        $(".tsdb_save_subclass").on('click', save_tsdb_action);
-
-
-
-        function tsdb_checkbox_action() {
-            let topic = $(this).attr('topic')
-            let value = $(this)["0"].checked
-            let xhr_tmr = new XMLHttpRequest();
-            let address = 'system_bus_action?action=update_tsdb_attribute&topic=' + topic + '&value=' + value
-            xhr_tmr.open('POST', address, true);
-            xhr_tmr.send()
-        }
-    </script>
-
+	<script src="js/menu.js"></script>
+	<script src="js/vuetable.js"></script>
 
 </body>
 
