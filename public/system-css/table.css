@@ -1,0 +1,82 @@
+table {
+	border: 2px solid lightgray;
+	border-radius: 3px;
+	background-color: #fff;
+	width: 100%
+}
+
+
+tbody tr:nth-child(odd) td {
+	background-color: WhiteSmoke;
+}
+
+tbody tr:nth-child(even) td {
+	background-color: white;
+}
+
+
+th {
+	background-color: white;
+	color: black;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+td {
+	background-color: #f9f9f9;
+}
+
+th,
+td {
+	min-width: 120px;
+	padding: 10px 20px;
+}
+
+th.active {
+	color: #fff;
+}
+
+th.active .arrow {
+	opacity: 1;
+}
+
+.arrow {
+	display: inline-block;
+	vertical-align: middle;
+	width: 0;
+	height: 0;
+	margin-left: 5px;
+	opacity: 0.66;
+}
+
+.arrow.asc {
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-bottom: 4px solid #fff;
+}
+
+.arrow.dsc {
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-top: 4px solid #fff;
+}
+
+@keyframes highlight {
+	0% {
+		background-color: transparent;
+	}
+	50% {
+		background-color: skyblue;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+.highlight {
+	animation-name: highlight;
+	animation-duration: 1s;
+}
