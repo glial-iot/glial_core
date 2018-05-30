@@ -2,6 +2,7 @@
 local webedit = {}
 
 local fio = require 'fio'
+local digest = require 'digest'
 local inspect = require 'libs/inspect'
 
 local logger = require 'logger'
@@ -78,6 +79,39 @@ function webedit.http_handler(req)
       return req:render{ json = webedit.get_list(params["address"])  }
    end
 
+end
+
+
+function webedit.http_handler_v2(req)
+   local params = req:param()
+   local return_object = req:render{ json = ""  }
+
+   if (params["item"] == "get") then
+      return_object = { body = webedit.get_file(params["address"]) }
+
+   elseif (params["item"] == "save" and params["value"] ~= nil) then
+      local _,_, base_64_string = string.find(params["value"], "data:text/plain;base64,(.+)")
+      local text_decoded
+      if (base_64_string ~= nil) then
+         text_decoded = digest.base64_decode(base_64_string)
+         if (text_decoded ~= nil) then
+            return_object = req:render{ json = { result = webedit.save_file(params["address"], text_decoded)} }
+         end
+      end
+
+   elseif (params["item"] == "delete") then
+      return_object = req:render{ json = { result = webedit.delete_file(params["address"])} }
+
+   elseif (params["item"] == "new") then
+      return_object = req:render{ json = { result = webedit.new_file(params["address"]) } }
+
+   elseif (params["item"] == "get_list") then
+      return_object = req:render{ json = webedit.get_list(params["address"])  }
+   end
+
+   return_object.headers = return_object.headers or {}
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
+   return return_object
 end
 
 return webedit

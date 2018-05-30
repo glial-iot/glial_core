@@ -26,7 +26,7 @@ function logger.add_entry(level, source, entry)
    logger.storage:insert{nil, level, (source or ""), entry, timestamp, trace}
 end
 
-function logger.return_all_entry(req)
+function logger.return_all_entry(req) -- перенести в logger.actions(req)
    local params = req:param()
    local data_object = {}
 
@@ -47,7 +47,10 @@ function logger.return_all_entry(req)
          if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
       end
    end
-   return req:render{ json = data_object }
+   local return_object = req:render{ json = data_object }
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
+
+   return return_object
 end
 
 function logger.delete_logs()
@@ -60,7 +63,10 @@ function logger.actions(req)
    if (params["action"] == "delete_logs") then
       logger.delete_logs()
    end
-   return req:render{ json = { result = true } }
+   local return_object = req:render{ json = { result = true } }
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
+
+   return return_object
 end
 
 function logger.tarantool_pipe_log_handler(req)

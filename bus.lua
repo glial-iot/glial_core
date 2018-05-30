@@ -176,8 +176,10 @@ function bus.action_data_handler(req)
       end
       bus_private.delete_topics(params["topic"])
    end
+   local return_object = req:render{ json = { result = true } }
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
 
-   return req:render{ json = { result = true } }
+   return return_object
 end
 
 function bus.http_data_handler(req)
@@ -208,6 +210,7 @@ function bus.http_data_handler(req)
    else
       return_object = req:render{ json = { none_data = "true" } }
    end
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
 
    return return_object
 end

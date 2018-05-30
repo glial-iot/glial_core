@@ -34,8 +34,9 @@ event.event_function = function(req)
          result = true
          fiber.create(wait_and_exit)
       end
-
-      return req:render{ json = { result = result, msg = emessage } }
+      local resp = req:render{ json = { result = result, msg = emessage } }
+      resp.headers['Access-Control-Allow-Origin'] = '*';
+      return resp
    end
 end
 
