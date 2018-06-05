@@ -26,7 +26,7 @@ function logger.add_entry(level, source, entry)
    logger.storage:insert{nil, level, (source or ""), entry, timestamp, trace}
 end
 
-function logger.return_all_entry(req) -- перенести в logger.actions(req)
+function logger.return_all_entry(req) -- deprecated
    local params = req:param()
    local data_object = {}
 
@@ -59,13 +59,33 @@ function logger.delete_logs()
 end
 
 function logger.actions(req)
+   local return_object = {}
    local params = req:param()
    if (params["action"] == "delete_logs") then
       logger.delete_logs()
-   end
-   local return_object = req:render{ json = { result = true } }
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
+      return_object = req:render{ json = { result = true } }
 
+   elseif (params["action"] == "get_logs") then
+      local data_object = {}
+      local local_table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
+      for _, tuple in pairs(local_table) do
+         local key = tuple[1]
+         local level = tuple[2]
+         local source = tuple[3]
+         local entry = tuple[4]
+         local epoch = tuple[5]
+         local trace = tuple[6]
+
+         local date_abs = os.date("%Y-%m-%d, %H:%M:%S", epoch)
+         local diff_time = os.time() - epoch
+         local date_rel = (system.format_seconds(diff_time)).." ago"
+         table.insert(data_object, {key = key, level = level, source = source, entry = entry, date_abs = date_abs, date_rel = date_rel, trace = trace})
+         if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
+      end
+      return_object = req:render{ json = data_object }
+   end
+   return_object.headers = return_object.headers or {}
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object
 end
 

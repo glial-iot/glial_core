@@ -95,6 +95,8 @@ end
 local function http_data_endpoints_init()
    http_system.endpoint_config("/", http_server_root_handler)
    http_system.endpoint_config("/system_logger_data", logger.return_all_entry)
+   http_system.endpoint_config("/system_logger_data_v2", logger.return_all_entry_v2)
+
    http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
    http_system.endpoint_config("/system_logger_action", logger.actions)
    http_system.endpoint_config("/system_webedit_data", webedit.http_handler)
