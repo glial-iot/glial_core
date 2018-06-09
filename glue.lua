@@ -9,6 +9,7 @@ local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
 local webedit = require "webedit"
+local webedit_2 = require "webedit_2"
 local config = require 'config'
 local backup_restore = require 'backup_restore'
 
@@ -17,7 +18,7 @@ local function http_server_root_handler(req)
 end
 
 local function box_config()
-   box.cfg { listen = 3313, log_level = 4, memtx_dir = config.dir.DATABASE_DIR, vinyl_dir = config.dir.DATABASE_DIR, wal_dir = config.dir.DATABASE_DIR, log = "pipe: ./http_pipe_logger.lua" }
+   box.cfg { listen = 3313, log_level = 4, memtx_dir = config.dir.DATABASE, vinyl_dir = config.dir.DATABASE, wal_dir = config.dir.DATABASE, log = "pipe: ./http_pipe_logger.lua" }
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
@@ -83,7 +84,7 @@ end
 
 local function user_menu_file_init()
    local user_menu
-   local current_func, error_msg = loadfile(config.dir.USER_MENU_DIR.."/".."user_menu.lua")
+   local current_func, error_msg = loadfile(config.dir.USER_MENU.."/".."user_menu.lua")
    if (current_func == nil) then
       logger.add_entry(logger.INFO, "User menu subsystem", 'User menu not load: "'..error_msg..'", menu not generated')
    else
@@ -101,13 +102,14 @@ local function http_data_endpoints_init()
    http_system.endpoint_config("/system_logger_action", logger.actions)
    http_system.endpoint_config("/system_webedit_data", webedit.http_handler)
    http_system.endpoint_config("/system_webedit_data_v2", webedit.http_handler_v2)
+   http_system.endpoint_config("/system_webedit_data_v3", webedit_2.http_handler_v3)
 
    http_system.endpoint_config("/system_bus_data", bus.http_data_handler)
    http_system.endpoint_config("/system_bus_action", bus.action_data_handler)
    http_system.endpoint_config("/system_menu_data", http_system.menu_v2_json_handler)
 end
 
-system.dir_check(config.dir.DATABASE_DIR)
+system.dir_check(config.dir.DATABASE)
 box_config()
 
 logger.init()
@@ -126,8 +128,8 @@ webedit.init()
 
 http_system.init_server()
 http_system.init_client()
-http_system.enpoints_menu_config(system_menu_list(), config.dir.SYSTEM_HTML_DIR)
-http_system.enpoints_menu_config(user_menu_file_init(), config.dir.USER_HTML_DIR)
+http_system.enpoints_menu_config(system_menu_list(), config.dir.SYSTEM_HTML)
+http_system.enpoints_menu_config(user_menu_file_init(), config.dir.USER_HTML)
 http_system.enpoints_menu_v2_for_json_generate(system_menu_list())
 http_system.enpoints_menu_v2_for_json_generate(user_menu_file_init())
 
@@ -135,10 +137,10 @@ http_data_endpoints_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
 logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
-scripts_webevents.init(config.dir.WEBEVENT_SCRIPTS_DIR)
-scripts_webevents.init(config.dir.SYSTEM_WEBEVENT_SCRIPTS_DIR)
+scripts_webevents.init(config.dir.WEBEVENT_SCRIPTS)
+scripts_webevents.init(config.dir.SYSTEM_WEBEVENT_SCRIPTS)
 
 logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
-scripts_drivers.init(config.dir.DRIVERS_DIR)
+scripts_drivers.init(config.dir.DRIVERS)
 
 logger.add_entry(logger.INFO, "Main system", "System started")

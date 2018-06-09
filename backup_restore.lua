@@ -13,8 +13,8 @@ end
 
 function public.create_backup()
    local filename = "backup_"..os.date("%Y-%m-%d-%H-%M-%S")..".tar.gz"
-   local backup_path = config.dir.BACKUP_DIR.."/"..filename
-   local command = "tar -czf "..backup_path.." "..config.dir.USER_DIR.." 2>&1"
+   local backup_path = config.dir.BACKUP.."/"..filename
+   local command = "tar -czf "..backup_path.." "..config.dir.USER.." 2>&1"
    local exit_code = os.execute(command)
    if (exit_code ~= 0) then
       logger.add_entry(logger.INFO, "Backup-restore system", "Backup failed")
@@ -24,7 +24,7 @@ end
 function public.restore_backup(filename)
    local files_list = public.get_backup_files()
    filename = files_list[10]
-   os.execute("rm -rf ./"..config.dir.USER_DIR.."/*  2>&1")
+   os.execute("rm -rf ./"..config.dir.USER.."/*  2>&1")
    local command = "tar -xf "..filename.."  2>&1"
    local exit_code = os.execute(command)
    if (exit_code ~= 0) then
@@ -33,7 +33,7 @@ function public.restore_backup(filename)
 end
 
 function public.get_backup_files()
-   local files_list = system.get_files_in_dir(config.dir.BACKUP_DIR, ".+%.tar.gz")
+   local files_list = system.get_files_in_dir(config.dir.BACKUP, ".+%.tar.gz")
    table.sort( files_list, function(a,b) return a>b end)
    return files_list
 end
