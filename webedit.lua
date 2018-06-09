@@ -37,17 +37,19 @@ function webedit.delete_file(address)
 end
 
 function webedit.new_file(address)
-   local result
    local fh = fio.open(address, {'O_CREAT'})
-   fh:close()
+   if (fh ~= nil) then
+      fh:close()
 
-   fio.chmod(address, tonumber('0755', 8))
+      fio.chmod(address, tonumber('0755', 8))
 
-   local file = open(address, "w+")
-   file:write("\n")
-   file:close()
-   if (fh ~= nil) then result = true end
-   return result
+      local file = open(address, "w+")
+      file:write("\n")
+      file:close()
+      return true
+   else
+      return false
+   end
 end
 
 function webedit.get_list(address)
