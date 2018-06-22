@@ -20,7 +20,6 @@ function scripts_drivers.init(path)
       end
    end
 
-
    for i, item in pairs(scripts_drivers_functions) do
       if (item ~= nil) then
          if (type(item) == "table") then
