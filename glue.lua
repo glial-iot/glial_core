@@ -144,3 +144,10 @@ logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
 scripts_drivers.init(config.dir.DRIVERS)
 
 logger.add_entry(logger.INFO, "Main system", "System started")
+
+
+if tonumber(os.getenv('TARANTOOL_CONSOLE')) == 1 then
+    if pcall(require('console').start) then
+        os.exit(0)
+    end
+end

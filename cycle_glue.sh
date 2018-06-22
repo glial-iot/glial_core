@@ -1,6 +1,6 @@
 #!/bin/sh
 
 while true; do
-   tarantool  glue.lua
+   TARANTOOL_CONSOLE=1 tarantool glue.lua
    sleep 2
 done
