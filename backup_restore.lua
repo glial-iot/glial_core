@@ -7,14 +7,12 @@ local config = require 'config'
 local system = require 'system'
 local fio = require 'fio'
 
-function private.fuction_name()
-
-end
-
 function public.create_backup()
    local filename = "backup_"..os.date("%Y-%m-%d-%H-%M-%S")..".tar.gz"
    local backup_path = config.dir.BACKUP.."/"..filename
-   local command = "tar -czf "..backup_path.." "..config.dir.USER.." 2>&1"
+   local files_path = config.dir.DUMP_FILES
+   local command = "tar -czf "..backup_path.." "..files_path.." 2>&1"
+   require('dump').dump(files_path)
    local exit_code = os.execute(command)
    if (exit_code ~= 0) then
       logger.add_entry(logger.INFO, "Backup-restore system", "Backup failed")
@@ -22,14 +20,17 @@ function public.create_backup()
 end
 
 function public.restore_backup(filename)
-   local files_list = public.get_backup_files()
-   filename = files_list[10]
-   os.execute("rm -rf ./"..config.dir.USER.."/*  2>&1")
+--[[    local files_list = public.get_backup_files()
+   filename = files_list[10] --возьмет не последний, а 10
+   os.execute("rm -rf ./"...."/*  2>&1")
    local command = "tar -xf "..filename.."  2>&1"
    local exit_code = os.execute(command)
    if (exit_code ~= 0) then
       logger.add_entry(logger.INFO, "Backup-restore system", "Backup failed")
    end
+   require('dump').restore('/path/to/logical/backup')
+
+]]
 end
 
 function public.get_backup_files()

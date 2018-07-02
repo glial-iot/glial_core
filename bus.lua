@@ -3,6 +3,7 @@ local bus = {}
 local bus_private = {}
 
 local log = require 'log'
+local http_system = require 'http_system'
 local inspect = require 'libs/inspect'
 local box = box
 
@@ -11,8 +12,6 @@ local system = require 'system'
 local fiber = require 'fiber'
 local influx_storage = require "tsdb_drivers/influx_storage"
 local logger = require 'logger'
-
-
 
 bus.rps_i = 0
 bus.rps_o = 0
@@ -145,6 +144,9 @@ function bus.init()
 
    bus_private.fifo_storage_worker_fiber = fiber.create(bus_private.fifo_storage_worker)
    bus_private.bus_rps_stat_worker_fiber = fiber.create(bus_private.bus_rps_stat_worker)
+
+   http_system.endpoint_config("/system_bus_data", bus.http_data_handler)
+   http_system.endpoint_config("/system_bus_action", bus.action_data_handler)
 end
 
 function bus.update_value(topic, value) -- external value name (incorrect)
@@ -182,7 +184,7 @@ function bus.action_data_handler(req)
    return return_object
 end
 
-function bus.http_data_handler(req)
+function bus.http_data_handler(req) --move to actions
    local params = req:param()
    local return_object
    local data_object = {}

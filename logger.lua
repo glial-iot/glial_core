@@ -20,37 +20,23 @@ function logger.init()
    logger.storage:create_index('source', {type = 'tree', unique = false, parts = {3, 'string'}, if_not_exists = true })
 end
 
+function logger.http_init()
+   local http_system = require 'http_system'
+   http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
+   http_system.endpoint_config("/system_logger_action", logger.actions)
+end
+
 function logger.add_entry(level, source, entry)
    local trace = debug.traceback()
    local timestamp = os.time()
    logger.storage:insert{nil, level, (source or ""), entry, timestamp, trace}
-end
-
-function logger.return_all_entry(req) -- deprecated
-   local params = req:param()
-   local data_object = {}
-
-   local local_table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
-
-   for _, tuple in pairs(local_table) do
-      local key = tuple[1]
-      local level = tuple[2]
-      local source = tuple[3]
-      local entry = tuple[4]
-      local epoch = tuple[5]
-      local date = os.date("%Y-%m-%d, %H:%M:%S", epoch)
-
-      if (params["item"] == "ALL" or params["item"] == level) then
-         local diff_time = os.time() - epoch
-         local diff_time_format_text = date.." ("..(system.format_seconds(diff_time)).." ago)"
-         table.insert(data_object, {key = key, level = level, source = source, entry = entry, date = diff_time_format_text})
-         if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
-      end
+   if (level == logger.INFO) then
+      log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
+   elseif (level == logger.WARNING) then
+      log.warn("LOGGER:"..(source or "")..":"..(entry or "no entry"))
+   elseif (level == logger.ERROR) then
+      log.error("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    end
-   local return_object = req:render{ json = data_object }
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
-
-   return return_object
 end
 
 function logger.delete_logs()
@@ -91,8 +77,9 @@ end
 
 function logger.tarantool_pipe_log_handler(req)
    local body = req:read({delimiter = nil, chunk = 1000}, 10)
+
    local _, _, type, message = string.find(body, ".+%[.+%].+(.)>(.+)$")
-   if (type ~= nil and message ~= nil and string.find(message, "(Empty input string)") == nil) then
+   if (type ~= nil and message ~= nil and string.find(message, "(Empty input string)") == nil and string.find(body, "LOGGER:") == nil) then
       if (type == "W") then
          type = logger.WARNING
       elseif (type == "E") then

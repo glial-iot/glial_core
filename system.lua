@@ -54,20 +54,6 @@ function system.dir_check(dir_path)
    return true
 end
 
-
-function system.system_dir_check()
-   local config = require 'config'
-   local logger = require 'logger'
-
-   for i, item in pairs(config.dir) do
-      local status, err = system.dir_check(item)
-      if (status == false) then
-         logger.add_entry(logger.INFO, "System", 'Directory '..item..' check or create failed: '..(err or "no error"))
-      end
-  end
-
-end
-
 function system.get_files_in_dir(path, mask)
    local files = {}
    local i = 1
@@ -78,16 +64,6 @@ function system.get_files_in_dir(path, mask)
       end
    end
    return files
-end
-
-function system.script_file_load(path, scripts_functions)
-   local current_func, error_msg = loadfile(path)
-   if (current_func == nil) then
-      return false, error_msg
-   else
-      scripts_functions[#scripts_functions+1] = current_func()
-      return true
-   end
 end
 
 
