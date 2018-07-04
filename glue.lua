@@ -7,6 +7,7 @@ local scripts = require 'scripts'
 local http_system = require 'http_system'
 local scripts_drivers = require 'scripts_drivers'
 local scripts_webevents = require 'scripts_webevents'
+local system_webevent = require 'system_webevent'
 local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
@@ -23,32 +24,27 @@ end
 system.dir_check(config.dir.DATABASE)
 box_config()
 
-logger.init()
+logger.storage_init()
 logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
 logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
 
-http_system.init_server()
-http_system.init_client()
+http_system.init()
 logger.http_init()
 logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
 
+system_webevent.init()
 
 bus.init()
 logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
 
-
 logger.add_entry(logger.INFO, "Main system", "Starting script system...")
 scripts.init()
-scripts.start()
 
 --logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
 --scripts_webevents.init()
---scripts_webevents.init()
 
---logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
---scripts_drivers.init()
---scripts_drivers.start()
-
+logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
+scripts_drivers.init()
 
 backup_restore.create_backup()
 backup_restore.remove_old_files()

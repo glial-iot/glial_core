@@ -3,7 +3,6 @@ local scripts = {}
 local scripts_private = {}
 
 local box = box
-local http_system = require 'http_system'
 local uuid_lib = require('uuid')
 local digest = require 'digest'
 
@@ -14,7 +13,7 @@ local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
 scripts.statuses = {ERROR = "ERROR", WARNING = "WARNING", NORMAL = "NORMAL", STOPPED = "STOPPED"}
-scripts.flag = {START = "START", NOT_START = "NOT_START"}
+scripts.flag = {ACTIVE = "ACTIVE", NON_ACTIVE = "NON_ACTIVE"}
 scripts.type = {WEB_EVENT = "WEB_EVENT", TIMER_EVENT = "TIMER_EVENT", SHEDULE_EVENT = "SHEDULE_EVENT", BUS_EVENT = "BUS_EVENT", DRIVER = "DRIVER"}
 
 
@@ -84,7 +83,7 @@ function scripts_private.create(data)
    new_data.body = data.body or "\n"
    new_data.status = data.status or scripts.statuses.STOPPED
    new_data.status_msg = data.status_msg or "New script"
-   new_data.active_flag = data.active_flag or scripts.flag.NOT_START
+   new_data.active_flag = data.active_flag or scripts.flag.NON_ACTIVE
    new_data.specific_data = data.specific_data or {}
    local table = {
       new_data.uuid,
@@ -157,7 +156,7 @@ function scripts_private.http_api_update(params, req)
             local data = {}
             data.uuid = params["uuid"]
             data.name = params["name"]
-            data.start_flag = params["start_flag"]
+            data.active_flag = params["active_flag"]
             local _,_, base_64_string = string.find(params["body"] or "", "data:text/plain;base64,(.+)")
             if (base_64_string ~= nil) then
                local text_decoded = digest.base64_decode(base_64_string)
@@ -210,7 +209,9 @@ end
 
 ------------------ Public functions ------------------
 
-function scripts.init()
+
+
+function scripts.storage_init()
    scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true})
    scripts_private.storage:format({
       {name='uuid',type='string'}, --1
@@ -223,15 +224,34 @@ function scripts.init()
       {name='specific_data',type='array'} --8
    })
    scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
-   scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true})
+   scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
 end
 
-function scripts.start()
+function scripts.http_init()
+   local http_system = require 'http_system'
    http_system.endpoint_config("/scripts", scripts_private.http_api)
 end
 
+function scripts.init()
+   scripts.storage_init()
+   scripts.http_init()
+end
 
+function scripts.get(data)
+   return scripts_private.get({uuid = data.uuid})
+end
 
+function scripts.update(data)
+   return scripts_private.update(data)
+end
+
+function scripts.get_all(data)
+   if (data ~= nil and data.type ~= nil) then
+      return scripts_private.get_list({type = data.type})
+   else
+      return {}
+   end
+end
 
 return scripts
 

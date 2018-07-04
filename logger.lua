@@ -1,5 +1,6 @@
 #!/usr/bin/env tarantool
 local logger = {}
+local logger_private = {}
 
 local log = require 'log'
 local inspect = require 'libs/inspect'
@@ -12,64 +13,59 @@ logger.WARNING = "WARNING"
 logger.ERROR = "ERROR"
 logger.USER = "USER"
 
-function logger.init()
-   logger.storage = box.schema.space.create('logger_storage_2', {if_not_exists = true})
-   logger.sequence = box.schema.sequence.create("logger_storage_sequence", {if_not_exists = true})
-   logger.storage:create_index('key', {sequence="logger_storage_sequence", if_not_exists = true})
-   logger.storage:create_index('level', {type = 'tree', unique = false, parts = {2, 'string'}, if_not_exists = true })
-   logger.storage:create_index('source', {type = 'tree', unique = false, parts = {3, 'string'}, if_not_exists = true })
-end
 
-function logger.http_init()
-   local http_system = require 'http_system'
-   http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
-   http_system.endpoint_config("/system_logger_action", logger.actions)
-end
+------------------ Private functions ------------------
 
-function logger.add_entry(level, source, entry)
-   local trace = debug.traceback()
-   local timestamp = os.time()
-   logger.storage:insert{nil, level, (source or ""), entry, timestamp, trace}
-   if (level == logger.INFO) then
-      log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
-   elseif (level == logger.WARNING) then
-      log.warn("LOGGER:"..(source or "")..":"..(entry or "no entry"))
-   elseif (level == logger.ERROR) then
-      log.error("LOGGER:"..(source or "")..":"..(entry or "no entry"))
+------------------ HTTP API functions ------------------
+function logger_private.http_api_get_logs(params, req)
+   local processed_table, raw_table = {}
+
+   raw_table = logger.storage.index.key:select(nil, {iterator = 'REQ'}) --сортировать по source0uuid
+   for _, tuple in pairs(raw_table) do
+      repeat
+         if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+            if (params["uuid"] ~= tuple["uuid_source"]) then
+               do break end
+            end
+         end
+         local processed_tuple = {
+            key = tuple["key"],
+            level = tuple["level"],
+            source = tuple["source"],
+            uuid_source = tuple["uuid_source"],
+            entry = tuple["entry"],
+            epoch = tuple["epoch"],
+            trace = tuple["trace"],
+            date_abs = os.date("%Y-%m-%d, %H:%M:%S", tuple["epoch"]),
+            date_rel = (system.format_seconds(os.time() - tuple["epoch"])).." ago"
+         }
+         table.insert(processed_table, processed_tuple)
+         if (params["limit"] ~= nil and tonumber(params["limit"]) <= #processed_table) then break end
+      until true
    end
+   return req:render{ json = processed_table }
 end
 
-function logger.delete_logs()
+function logger_private.http_api_delete_logs(params, req)
    logger.storage:truncate()
    logger.sequence:reset()
+   return req:render{ json = { result = true } }
 end
 
-function logger.actions(req)
+function logger_private.http_api(req)
    local return_object = {}
    local params = req:param()
    if (params["action"] == "delete_logs") then
-      logger.delete_logs()
-      return_object = req:render{ json = { result = true } }
+      return_object = logger_private.http_api_delete_logs(params, req)
 
    elseif (params["action"] == "get_logs") then
-      local data_object = {}
-      local local_table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
-      for _, tuple in pairs(local_table) do
-         local key = tuple[1]
-         local level = tuple[2]
-         local source = tuple[3]
-         local entry = tuple[4]
-         local epoch = tuple[5]
-         local trace = tuple[6]
+      return_object = logger_private.http_api_get_logs(params, req)
 
-         local date_abs = os.date("%Y-%m-%d, %H:%M:%S", epoch)
-         local diff_time = os.time() - epoch
-         local date_rel = (system.format_seconds(diff_time)).." ago"
-         table.insert(data_object, {key = key, level = level, source = source, entry = entry, date_abs = date_abs, date_rel = date_rel, trace = trace})
-         if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
-      end
-      return_object = req:render{ json = data_object }
+   else
+      return_object = req:render{ json = {error = true, error_msg = "Logger API: No valid action"} }
    end
+
+   return_object = return_object or req:render{ json = {error = true, error_msg = "Logger API: Unknown error(224)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object
@@ -95,5 +91,60 @@ function logger.tarantool_pipe_log_handler(req)
 
    return { status = 200 }
 end
+
+
+------------------ Public functions ------------------
+
+function logger.add_entry(level, source, entry, uuid_source, trace)
+   local trace = trace or debug.traceback()
+   local timestamp = os.time()
+   if (level == nil) then
+      return
+   end
+
+   if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER) then
+      return
+   end
+
+   if (entry == nil or entry == "") then
+      return
+   end
+
+   logger.storage:insert{nil, level, (source or ""), (uuid_source or "No UUID"), entry, timestamp, trace}
+   if (level == logger.INFO) then
+      log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
+   elseif (level == logger.WARNING) then
+      log.warn("LOGGER:"..(source or "")..":"..(entry or "no entry"))
+   elseif (level == logger.ERROR) then
+      log.error("LOGGER:"..(source or "")..":"..(entry or "no entry"))
+   end
+end
+
+
+
+function logger.storage_init()
+   logger.storage = box.schema.space.create('log', {if_not_exists = true})
+   logger.sequence = box.schema.sequence.create("log_sequence", {if_not_exists = true})
+   logger.storage:format({
+      {name='key'}, --1
+      {name='level',type='string'}, --2
+      {name='source',type='string'}, --3
+      {name='uuid_source',type='string'}, --4
+      {name='entry',type='string'}, --5
+      {name='epoch',type='integer'}, --6
+      {name='trace',type='string'}, --7
+   })
+
+   logger.storage:create_index('key', {sequence="log_sequence", if_not_exists = true})
+   logger.storage:create_index('level', {parts = {'level'}, if_not_exists = true, unique = false})
+   logger.storage:create_index('uuid_source', {parts = {'uuid_source'}, if_not_exists = true, unique = false})
+end
+
+function logger.http_init()
+   local http_system = require 'http_system'
+   http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
+   http_system.endpoint_config("/logger", logger_private.http_api)
+end
+
 
 return logger

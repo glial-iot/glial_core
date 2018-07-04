@@ -4,9 +4,13 @@ local http_system = {}
 local box = box
 local log = require 'log'
 
-local scripts_events = require 'scripts_events'
 local system = require 'system'
 local config = require 'config'
+
+function http_system.init()
+   http_system.init_server()
+   http_system.init_client()
+end
 
 function http_system.init_server()
    http_system.server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})

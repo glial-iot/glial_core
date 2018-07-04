@@ -3,7 +3,6 @@ local bus = {}
 local bus_private = {}
 
 local log = require 'log'
-local http_system = require 'http_system'
 local inspect = require 'libs/inspect'
 local box = box
 
@@ -145,6 +144,7 @@ function bus.init()
    bus_private.fifo_storage_worker_fiber = fiber.create(bus_private.fifo_storage_worker)
    bus_private.bus_rps_stat_worker_fiber = fiber.create(bus_private.bus_rps_stat_worker)
 
+   local http_system = require 'http_system'
    http_system.endpoint_config("/system_bus_data", bus.http_data_handler)
    http_system.endpoint_config("/system_bus_action", bus.action_data_handler)
 end
@@ -179,8 +179,10 @@ function bus.action_data_handler(req)
       bus_private.delete_topics(params["topic"])
    end
    local return_object = req:render{ json = { result = true } }
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
 
+   return_object = return_object or req:render{ json = {error = true, error_msg = "Bus API: Unknown error(214)"} }
+   return_object.headers = return_object.headers or {}
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object
 end
 
@@ -212,6 +214,10 @@ function bus.http_data_handler(req) --move to actions
    else
       return_object = req:render{ json = { none_data = "true" } }
    end
+
+
+   return_object = return_object or req:render{ json = {error = true, error_msg = "Bus API: Unknown error(215)"} }
+   return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
 
    return return_object
