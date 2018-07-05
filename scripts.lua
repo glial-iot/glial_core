@@ -212,17 +212,17 @@ end
 
 
 function scripts.storage_init()
-   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true})
-   scripts_private.storage:format({
-      {name='uuid',type='string'}, --1
-      {name='type',type='string'}, --2
-      {name='name',type='string'}, --3
-      {name='body',type='string'}, --4
-      {name='status',type='string'}, --5
-      {name='status_msg',type='string'}, --6
-      {name='active_flag',type='string'}, --7
-      {name='specific_data',type='array'} --8
-   })
+   local format = {
+      {name='uuid',           type='string'},   --1
+      {name='type',           type='string'},   --2
+      {name='name',           type='string'},   --3
+      {name='body',           type='string'},   --4
+      {name='status',         type='string'},   --5
+      {name='status_msg',     type='string'},   --6
+      {name='active_flag',    type='string'},   --7
+      {name='specific_data',  type='array'}     --8
+   }
+   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format})
    scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
    scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
 end

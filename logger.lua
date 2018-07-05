@@ -143,17 +143,17 @@ end
 
 
 function logger.storage_init()
-   logger.storage = box.schema.space.create('log', {if_not_exists = true})
+   local format = {
+      {name='key'                       },   --1
+      {name='level',       type='string'},   --2
+      {name='source',      type='string'},   --3
+      {name='uuid_source', type='string'},   --4
+      {name='entry',       type='string'},   --5
+      {name='epoch',       type='integer'},  --6
+      {name='trace',       type='string'},   --7
+   }
+   logger.storage = box.schema.space.create('log', {if_not_exists = true, format = format})
    logger.sequence = box.schema.sequence.create("log_sequence", {if_not_exists = true})
-   logger.storage:format({
-      {name='key'}, --1
-      {name='level',type='string'}, --2
-      {name='source',type='string'}, --3
-      {name='uuid_source',type='string'}, --4
-      {name='entry',type='string'}, --5
-      {name='epoch',type='integer'}, --6
-      {name='trace',type='string'}, --7
-   })
 
    logger.storage:create_index('key', {sequence="log_sequence", if_not_exists = true})
    logger.storage:create_index('level', {parts = {'level'}, if_not_exists = true, unique = false})
