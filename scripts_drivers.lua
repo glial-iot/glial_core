@@ -51,6 +51,11 @@ function drivers_private.load(uuid)
    drivers_script_bodies[uuid] = nil
    local script_params = scripts.get({uuid = uuid})
 
+   if (script_params.type ~= scripts.type.DRIVER) then
+      log_driver_error('Attempt to stop non-driver script "'..script_params.name..'"', script_params.uuid)
+      return false
+   end
+
    if (script_params.uuid == nil) then
       log_driver_error('Driver "'..script_params.name..'" not start (not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
@@ -62,7 +67,7 @@ function drivers_private.load(uuid)
       return false
    end
 
-   if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then --вынести в start_all
+   if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
       log_driver_info('Driver "'..script_params.name..'" not start (non-active)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'})
       return true
@@ -78,6 +83,8 @@ function drivers_private.load(uuid)
 
    drivers_script_bodies[uuid] = setmetatable({}, {__index=_G})
    drivers_script_bodies[uuid].log_error, drivers_script_bodies[uuid].log_warning, drivers_script_bodies[uuid].log_info = drivers_private.generate_log_functions(uuid, script_params.name)
+   drivers_script_bodies[uuid]._script_name = script_params.name
+
 
    local status, err_msg = pcall(setfenv(current_func, drivers_script_bodies[uuid]))
    if (status ~= true) then
@@ -113,6 +120,12 @@ end
 function drivers_private.unload(uuid)
    local script_body = drivers_script_bodies[uuid]
    local script_params = scripts.get({uuid=uuid})
+
+   if (script_params.type ~= scripts.type.DRIVER) then
+      log_driver_error('Attempt to stop non-driver script "'..script_params.name..'"', script_params.uuid)
+      return false
+   end
+
    if (script_body == nil) then
       log_driver_error('Driver "'..script_params.name..'" not stop (script body error)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: script body error'})
@@ -147,17 +160,23 @@ end
 function drivers_private.http_api(req)
    local params = req:param()
    local return_object
-   if (params["action"] == "restart" and params["uuid"] ~= nil) then
-      local data = scripts.get({uuid = params["uuid"]})
-      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-         local result = drivers_private.unload(params["uuid"])
-         if (result == true) then
+   if (params["action"] == "restart") then
+      if (params["uuid"] ~= nil) then
+         local data = scripts.get({uuid = params["uuid"]})
+         if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+            local result = drivers_private.unload(params["uuid"])
+            if (result == true) then
+               drivers_private.load(params["uuid"])
+            end
+         else
             drivers_private.load(params["uuid"])
          end
+         return_object = req:render{ json = {error = false} }
       else
-         drivers_private.load(params["uuid"])
+         return_object = req:render{ json = {error = true, error_msg = "Drivers API: No UUID"} }
       end
-      return_object = req:render{ json = {error = false} }
+   --elseif (params["action"] == "create") then
+
    else
       return_object = req:render{ json = {error = true, error_msg = "Drivers API: No valid action"} }
    end
@@ -181,8 +200,8 @@ end
 function drivers.start_all()
    local list = scripts.get_all({type = scripts.type.DRIVER})
 
-   for _, current_driver in pairs(list) do
-      drivers_private.load(current_driver.uuid)
+   for _, driver in pairs(list) do
+      drivers_private.load(driver.uuid)
    end
 end
 
