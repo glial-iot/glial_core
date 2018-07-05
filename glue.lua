@@ -46,8 +46,8 @@ logger.add_entry(logger.INFO, "System", "Common bus and FIFO worker initialized"
 logger.add_entry(logger.INFO, "System", "Starting script system...")
 scripts.init()
 
---logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
---scripts_webevents.init()
+logger.add_entry(logger.INFO, "System", "Starting web-events...")
+scripts_webevents.init()
 
 logger.add_entry(logger.INFO, "System", "Starting drivers...")
 scripts_drivers.init()
