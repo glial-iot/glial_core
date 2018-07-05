@@ -15,30 +15,6 @@ local scripts = require 'scripts'
 
 local drivers_script_bodies = {}
 
------------------- Private functions ------------------
-
-
-function drivers_private.generate_log_functions(uuid, script_name)
-   local name = "Driver '"..(script_name or "undefined name").."'"
-
-   local function log_error(msg)
-      local trace = debug.traceback("", 2)
-      logger.add_entry(logger.ERROR, name, msg, uuid, trace)
-   end
-
-   local function log_info(msg)
-      local trace = debug.traceback("", 2)
-      logger.add_entry(logger.INFO, name, msg, uuid, trace)
-   end
-
-   local function log_warning(msg)
-      local trace = debug.traceback("", 2)
-      logger.add_entry(logger.WARNING, name, msg, uuid, trace)
-   end
-
-   return log_error, log_warning, log_info
-end
-
 local function log_driver_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Drivers subsystem", msg, uuid, "")
 end
@@ -47,8 +23,10 @@ local function log_driver_info(msg, uuid)
    logger.add_entry(logger.INFO, "Drivers subsystem", msg, uuid, "")
 end
 
+------------------ Private functions ------------------
+
 function drivers_private.load(uuid)
-   drivers_script_bodies[uuid] = nil
+   local body
    local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.DRIVER) then
@@ -81,31 +59,32 @@ function drivers_private.load(uuid)
       return false
    end
 
-   drivers_script_bodies[uuid] = setmetatable({}, {__index=_G})
-   drivers_script_bodies[uuid].log_error, drivers_script_bodies[uuid].log_warning, drivers_script_bodies[uuid].log_info = drivers_private.generate_log_functions(uuid, script_params.name)
-   drivers_script_bodies[uuid]._script_name = script_params.name
+   local log_script_name = "Driver '"..(script_params.name or "undefined name").."'"
+   body = setmetatable({}, {__index=_G})
+   body.log_error, body.log_warning, body.log_info = logger.generate_log_functions(uuid, log_script_name)
+   body._script_name = script_params.name
+   body._script_uuid = script_params.uuid
 
-
-   local status, err_msg = pcall(setfenv(current_func, drivers_script_bodies[uuid]))
+   local status, err_msg = pcall(setfenv(current_func, body))
    if (status ~= true) then
       log_driver_error('Driver "'..script_params.name..'" not start (load error: '..(err_msg or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: pcall error: '..(err_msg or "")})
       return false
    end
 
-   if (drivers_script_bodies[uuid].init == nil) then
+   if (body.init == nil) then
       log_driver_error('Driver "'..script_params.name..'" not start (init function not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Init function not found'})
       return false
    end
 
-   if (drivers_script_bodies[uuid].destroy == nil) then
+   if (body.destroy == nil) then
       log_driver_error('Driver "'..script_params.name..'" not start (destroy function not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function not found'})
       return false
    end
 
-   status, err_msg = pcall(drivers_script_bodies[uuid].init)
+   status, err_msg = pcall(body.init)
 
    if (status ~= true) then
       log_driver_error('Driver "'..script_params.name..'" not start (init function error: '..(err_msg or "")..')', script_params.uuid)
@@ -113,6 +92,8 @@ function drivers_private.load(uuid)
       return false
    end
 
+   drivers_script_bodies[uuid] = nil
+   drivers_script_bodies[uuid] = body
    log_driver_info('Driver "'..script_params.name..'" started', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Started'})
 end

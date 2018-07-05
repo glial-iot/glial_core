@@ -95,6 +95,26 @@ end
 
 ------------------ Public functions ------------------
 
+
+function logger.generate_log_functions(uuid, name)
+   local function log_error(msg)
+      local trace = debug.traceback("", 2)
+      logger.add_entry(logger.ERROR, name, msg, uuid, trace)
+   end
+
+   local function log_info(msg)
+      local trace = debug.traceback("", 2)
+      logger.add_entry(logger.INFO, name, msg, uuid, trace)
+   end
+
+   local function log_warning(msg)
+      local trace = debug.traceback("", 2)
+      logger.add_entry(logger.WARNING, name, msg, uuid, trace)
+   end
+
+   return log_error, log_warning, log_info
+end
+
 function logger.add_entry(level, source, entry, uuid_source, trace)
    local local_trace = trace or debug.traceback()
    local timestamp = os.time()
