@@ -20,7 +20,7 @@ logger.USER = "USER"
 function logger_private.http_api_get_logs(params, req)
    local processed_table, raw_table = {}
 
-   raw_table = logger.storage.index.key:select(nil, {iterator = 'REQ'}) --сортировать по source0uuid
+   raw_table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
    for _, tuple in pairs(raw_table) do
       repeat
          if (params["uuid"] ~= nil and params["uuid"] ~= "") then
@@ -40,8 +40,8 @@ function logger_private.http_api_get_logs(params, req)
             date_rel = (system.format_seconds(os.time() - tuple["epoch"])).." ago"
          }
          table.insert(processed_table, processed_tuple)
-         if (params["limit"] ~= nil and tonumber(params["limit"]) <= #processed_table) then break end
       until true
+      if (params["limit"] ~= nil and tonumber(params["limit"]) <= #processed_table) then break end
    end
    return req:render{ json = processed_table }
 end
@@ -49,11 +49,11 @@ end
 function logger_private.http_api_delete_logs(params, req)
    logger.storage:truncate()
    logger.sequence:reset()
-   return req:render{ json = { result = true } }
+   return req:render{ json = { error = false } }
 end
 
 function logger_private.http_api(req)
-   local return_object = {}
+   local return_object
    local params = req:param()
    if (params["action"] == "delete_logs") then
       return_object = logger_private.http_api_delete_logs(params, req)
@@ -96,7 +96,7 @@ end
 ------------------ Public functions ------------------
 
 function logger.add_entry(level, source, entry, uuid_source, trace)
-   local trace = trace or debug.traceback()
+   local local_trace = trace or debug.traceback()
    local timestamp = os.time()
    if (level == nil) then
       return
@@ -110,7 +110,7 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       return
    end
 
-   logger.storage:insert{nil, level, (source or ""), (uuid_source or "No UUID"), entry, timestamp, trace}
+   logger.storage:insert{nil, level, (source or ""), (uuid_source or "No UUID"), entry, timestamp, local_trace}
    if (level == logger.INFO) then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    elseif (level == logger.WARNING) then

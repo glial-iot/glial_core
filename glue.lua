@@ -25,36 +25,35 @@ system.dir_check(config.dir.DATABASE)
 box_config()
 
 logger.storage_init()
-logger.add_entry(logger.INFO, "Main system", "-----------------------------------------------------------------------")
-logger.add_entry(logger.INFO, "Main system", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
+logger.add_entry(logger.INFO, "------------", "-----------------------------------------------------------------------")
+logger.add_entry(logger.INFO, "System", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
 
 http_system.init()
 logger.http_init()
-logger.add_entry(logger.INFO, "Main system", "HTTP subsystem initialized")
+logger.add_entry(logger.INFO, "System", "HTTP subsystem initialized")
 
 system_webevent.init()
 
 bus.init()
-logger.add_entry(logger.INFO, "Main system", "Common bus and FIFO worker initialized")
+logger.add_entry(logger.INFO, "System", "Common bus and FIFO worker initialized")
 
-logger.add_entry(logger.INFO, "Main system", "Starting script system...")
+logger.add_entry(logger.INFO, "System", "Starting script system...")
 scripts.init()
 
 --logger.add_entry(logger.INFO, "Main system", "Configuring web-events...")
 --scripts_webevents.init()
 
-logger.add_entry(logger.INFO, "Main system", "Starting drivers...")
+logger.add_entry(logger.INFO, "System", "Starting drivers...")
 scripts_drivers.init()
 
 backup_restore.create_backup()
+logger.add_entry(logger.INFO, "System", "Backup created")
 backup_restore.remove_old_files()
-logger.add_entry(logger.INFO, "Main system", "Backup created")
 
-
-logger.add_entry(logger.INFO, "Main system", "System started")
+logger.add_entry(logger.INFO, "System", "System started")
 
 if tonumber(os.getenv('TARANTOOL_CONSOLE')) == 1 then
-   logger.add_entry(logger.INFO, "Main system", "Console active")
+   logger.add_entry(logger.INFO, "System", "Console active")
     if pcall(require('console').start) then
         os.exit(0)
     end
