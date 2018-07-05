@@ -18,6 +18,8 @@ bus.max_seq_value = 0
 bus.avg_seq_value = 0
 bus.current_key = 0
 
+------------------ Private functions ------------------
+
 function bus_private.events_handler(topic, value)
    for name, item in pairs(scripts_events) do
       if (item ~= nil and type(item) == "table" and item.topic ~= nil and item.topic == topic) then

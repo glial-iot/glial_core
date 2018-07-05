@@ -25,6 +25,4 @@ function http_system.endpoint_config(path, handler)
    http_system.server:route({ path = path }, handler)
 end
 
-
-
 return http_system
