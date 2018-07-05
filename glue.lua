@@ -7,7 +7,6 @@ local scripts = require 'scripts'
 local http_system = require 'http_system'
 local scripts_drivers = require 'scripts_drivers'
 local scripts_webevents = require 'scripts_webevents'
-local system_webevent = require 'system_webevent'
 local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
@@ -16,7 +15,14 @@ local backup_restore = require 'backup_restore'
 
 
 local function box_config()
-   box.cfg { listen = 3313, log_level = 4, memtx_dir = config.dir.DATABASE, vinyl_dir = config.dir.DATABASE, wal_dir = config.dir.DATABASE, log = "pipe: ./http_pipe_logger.lua" }
+   box.cfg {
+      listen = 3313,
+      log_level = 4,
+      memtx_dir = config.dir.DATABASE,
+      vinyl_dir = config.dir.DATABASE,
+      wal_dir = config.dir.DATABASE,
+      log = "pipe: ./http_pipe_logger.lua"
+    }
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
@@ -32,7 +38,7 @@ http_system.init()
 logger.http_init()
 logger.add_entry(logger.INFO, "System", "HTTP subsystem initialized")
 
-system_webevent.init()
+require('system_webevent').init()
 
 bus.init()
 logger.add_entry(logger.INFO, "System", "Common bus and FIFO worker initialized")
