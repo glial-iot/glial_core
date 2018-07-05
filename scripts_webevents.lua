@@ -4,6 +4,7 @@ local webevents_private = {}
 
 local box = box
 local http_system = require 'http_system'
+local http_script_system = require 'http_script_system'
 
 
 local inspect = require 'libs/inspect'
@@ -63,6 +64,7 @@ function webevents_private.load(uuid)
    local log_script_name = "Webevent '"..(script_params.name or "undefined name").."'"
    body = setmetatable({}, {__index=_G})
    body.log_error, body.log_warning, body.log_info = logger.generate_log_functions(uuid, log_script_name)
+   body.add_http_path, body.remove_http_path = http_script_system.generate_add_remove_functions(uuid, log_script_name)
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
 

@@ -5,6 +5,7 @@ local box = box
 local scripts = require 'scripts'
 
 local http_system = require 'http_system'
+local http_script_system = require 'http_script_system'
 local scripts_drivers = require 'scripts_drivers'
 local scripts_webevents = require 'scripts_webevents'
 local bus = require 'bus'
@@ -47,6 +48,7 @@ logger.add_entry(logger.INFO, "System", "Starting script system...")
 scripts.init()
 
 logger.add_entry(logger.INFO, "System", "Starting web-events...")
+http_script_system.init()
 scripts_webevents.init()
 
 logger.add_entry(logger.INFO, "System", "Starting drivers...")
