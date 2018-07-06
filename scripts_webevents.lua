@@ -6,7 +6,6 @@ local box = box
 local http_system = require 'http_system'
 local http_script_system = require 'http_script_system'
 
-
 local inspect = require 'libs/inspect'
 
 local logger = require 'logger'
@@ -32,7 +31,7 @@ function webevents_private.load(uuid)
    local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.WEB_EVENT) then
-      log_webevent_error('Attempt to stop non-webevent script "'..script_params.name..'"', script_params.uuid)
+      log_webevent_error('Attempt to start non-webevent script "'..script_params.name..'"', script_params.uuid)
       return false
    end
 
@@ -41,6 +40,7 @@ function webevents_private.load(uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
       return false
    end
+
    if (script_params.body == nil) then
       log_webevent_error('Web-event "'..script_params.name..'" not start (body nil)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: No body'})
@@ -67,6 +67,7 @@ function webevents_private.load(uuid)
    body.add_http_path, body.remove_http_path = http_script_system.generate_add_remove_functions(uuid, log_script_name)
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
+   body.update_value, body.get_value = require('bus').update_value, require('bus').get_value
 
    local status, err_msg = pcall(setfenv(current_func, body))
    if (status ~= true) then
@@ -75,15 +76,15 @@ function webevents_private.load(uuid)
       return false
    end
 
-   if (body.init == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (init function not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Init function not found'})
+   if (body.init == nil or type(body.init) ~= "function") then
+      log_webevent_error('Web-event "'..script_params.name..'" not start (init function not found or no function', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Init function not found or no function'})
       return false
    end
 
-   if (body.destroy == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (destroy function not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function not found'})
+   if (body.destroy == nil or type(body.destroy) ~= "function") then
+      log_webevent_error('Web-event "'..script_params.name..'" not start (destroy function not found or no function)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function not found or no function'})
       return false
    end
 
@@ -102,7 +103,7 @@ function webevents_private.load(uuid)
 end
 
 function webevents_private.unload(uuid)
-   local script_body = webevents_script_bodies[uuid]
+   local body = webevents_script_bodies[uuid]
    local script_params = scripts.get({uuid=uuid})
 
    if (script_params.type ~= scripts.type.WEB_EVENT) then
@@ -110,25 +111,25 @@ function webevents_private.unload(uuid)
       return false
    end
 
-   if (script_body == nil) then
+   if (body == nil) then
       log_webevent_error('Web-event "'..script_params.name..'" not stop (script body error)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: script body error'})
       return false
    end
 
-   if (script_body.init == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not stop (init function not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: init function not found'})
+   if (body.init == nil or type(body.init) ~= "function") then
+      log_webevent_error('Web-event "'..script_params.name..'" not stop (init function not found or no function)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: init function not found or no function'})
       return false
    end
 
-   if (script_body.destroy == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not stop (destroy function not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function not found'})
+   if (body.destroy == nil or type(body.destroy) ~= "function") then
+      log_webevent_error('Web-event "'..script_params.name..'" not stop (destroy function not found or no function)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function not found or no function'})
       return false
    end
 
-   local status, err_msg = pcall(script_body.destroy)
+   local status, err_msg = pcall(body.destroy)
    if (status ~= true) then
       log_webevent_error('Web-event "'..script_params.name..'" not stop (destroy function error: '..(err_msg or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(err_msg or "")})
@@ -141,20 +142,26 @@ function webevents_private.unload(uuid)
    return true
 end
 
+------------------ HTTP API functions ------------------
+
 function webevents_private.http_api(req)
    local params = req:param()
    local return_object
-   if (params["action"] == "restart" and params["uuid"] ~= nil) then
-      local data = scripts.get({uuid = params["uuid"]})
-      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-         local result = webevents_private.unload(params["uuid"])
-         if (result == true) then
+   if (params["action"] == "reload") then
+      if (params["uuid"] ~= nil or params["uuid"] ~= "") then
+         local data = scripts.get({uuid = params["uuid"]})
+         if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+            local result = webevents_private.unload(params["uuid"])
+            if (result == true) then
+               webevents_private.load(params["uuid"])
+            end
+         else
             webevents_private.load(params["uuid"])
          end
+         return_object = req:render{ json = {error = false} }
       else
-         webevents_private.load(params["uuid"])
+         return_object = req:render{ json = {error = true, error_msg = "Webevents API: No valid UUID"} }
       end
-      return_object = req:render{ json = {error = false} }
    else
       return_object = req:render{ json = {error = true, error_msg = "Webevents API: No valid action"} }
    end
@@ -182,7 +189,5 @@ function webevents.start_all()
       webevents_private.load(webevent.uuid)
    end
 end
-
-
 
 return webevents
