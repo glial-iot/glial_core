@@ -121,7 +121,7 @@ end
 
 -------------------Public functions-------------------
 
-function bus.init() --need refactoring
+function bus.init() --need refactoring(and add 'type')
    bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, id = config.id.bus_fifo})
    bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
    bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})

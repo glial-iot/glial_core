@@ -46,14 +46,14 @@ require('system_webevent').init()
 bus.init()
 logger.add_entry(logger.INFO, "System", "Common bus and FIFO worker initialized")
 
-logger.add_entry(logger.INFO, "System", "Starting script system...")
+logger.add_entry(logger.INFO, "System", "Starting script subsystem...")
 scripts.init()
 
 logger.add_entry(logger.INFO, "System", "Starting web-events...")
 http_script_system.init()
 scripts_webevents.init()
 
-logger.add_entry(logger.INFO, "System", "Starting Bus-events...")
+logger.add_entry(logger.INFO, "System", "Starting bus-events...")
 scripts_busevents.init()
 
 logger.add_entry(logger.INFO, "System", "Starting drivers...")
