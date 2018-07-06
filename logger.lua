@@ -5,6 +5,7 @@ local logger_private = {}
 local log = require 'log'
 local inspect = require 'libs/inspect'
 local box = box
+local clock = require 'clock'
 
 local system = require 'system'
 local config = require 'config'
@@ -21,7 +22,8 @@ logger.USER = "USER"
 function logger_private.http_api_get_logs(params, req)
    local processed_table, raw_table = {}
 
-   raw_table = logger.storage.index.key:select(nil, {iterator = 'REQ'})
+   raw_table = logger.storage.index.timestamp:select(nil, {iterator = 'REQ'})
+   local current_time_in_sec = os.time()
    for _, tuple in pairs(raw_table) do
       repeat
          if (params["uuid"] ~= nil and params["uuid"] ~= "") then
@@ -29,16 +31,16 @@ function logger_private.http_api_get_logs(params, req)
                do break end
             end
          end
+         local time_in_sec = math.ceil(tuple["timestamp"]/10000)
          local processed_tuple = {
-            key = tuple["key"],
             level = tuple["level"],
             source = tuple["source"],
             uuid_source = tuple["uuid_source"],
             entry = tuple["entry"],
-            epoch = tuple["epoch"],
+            epoch = time_in_sec,
             trace = tuple["trace"],
-            date_abs = os.date("%Y-%m-%d, %H:%M:%S", tuple["epoch"]),
-            date_rel = (system.format_seconds(os.time() - tuple["epoch"])).." ago"
+            date_abs = os.date("%Y-%m-%d, %H:%M:%S", time_in_sec),
+            date_rel = (system.format_seconds(current_time_in_sec - time_in_sec)).." ago"
          }
          table.insert(processed_table, processed_tuple)
       until true
@@ -49,7 +51,6 @@ end
 
 function logger_private.http_api_delete_logs(params, req)
    logger.storage:truncate()
-   logger.sequence:reset()
    return req:render{ json = { error = false } }
 end
 
@@ -94,6 +95,15 @@ function logger_private.tarantool_pipe_log_handler(req)
 end
 
 
+function logger_private.gen_id()
+   local new_id = clock.realtime()*10000
+   while logger.storage.index.timestamp:get(new_id) do
+      new_id = new_id + 1
+   end
+   return new_id
+end
+
+
 ------------------ Public functions ------------------
 
 
@@ -118,7 +128,6 @@ end
 
 function logger.add_entry(level, source, entry, uuid_source, trace)
    local local_trace = trace or debug.traceback()
-   local timestamp = os.time()
    if (level == nil) then
       return
    end
@@ -131,7 +140,7 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       return
    end
 
-   logger.storage:insert{nil, level, (source or ""), (uuid_source or "No UUID"), entry, timestamp, local_trace}
+   logger.storage:insert{logger_private.gen_id(), level, (source or ""), (uuid_source or "No UUID"), entry, local_trace}
    if (level == logger.INFO) then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    elseif (level == logger.WARNING) then
@@ -145,18 +154,16 @@ end
 
 function logger.storage_init()
    local format = {
-      {name='key'                       },   --1
+      {name='timestamp',   type='number'},   --1
       {name='level',       type='string'},   --2
       {name='source',      type='string'},   --3
       {name='uuid_source', type='string'},   --4
       {name='entry',       type='string'},   --5
-      {name='epoch',       type='integer'},  --6
-      {name='trace',       type='string'},   --7
+      {name='trace',       type='string'},   --6
    }
-   logger.sequence = box.schema.sequence.create("log_sequence", {if_not_exists = true})
    logger.storage = box.schema.space.create('log', {if_not_exists = true, format = format, id = config.id.logs})
 
-   logger.storage:create_index('key', {sequence="log_sequence", if_not_exists = true})
+   logger.storage:create_index('timestamp', {parts = {'timestamp'}, if_not_exists = true})
    logger.storage:create_index('level', {parts = {'level'}, if_not_exists = true, unique = false})
    logger.storage:create_index('uuid_source', {parts = {'uuid_source'}, if_not_exists = true, unique = false})
 end
