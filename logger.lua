@@ -72,7 +72,7 @@ function logger_private.http_api(req)
    return return_object
 end
 
-function logger.tarantool_pipe_log_handler(req)
+function logger_private.tarantool_pipe_log_handler(req)
    local body = req:read({delimiter = nil, chunk = 1000}, 10)
 
    local _, _, type, message = string.find(body, ".+%[.+%].+(.)>(.+)$")
@@ -163,7 +163,7 @@ end
 
 function logger.http_init()
    local http_system = require 'http_system'
-   http_system.endpoint_config("/system_logger_ext", logger.tarantool_pipe_log_handler)
+   http_system.endpoint_config("/system_logger_ext", logger_private.tarantool_pipe_log_handler)
    http_system.endpoint_config("/logger", logger_private.http_api)
 end
 
