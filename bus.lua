@@ -6,7 +6,7 @@ local log = require 'log'
 local inspect = require 'libs/inspect'
 local box = box
 
-local scripts_events = require 'scripts_events'
+local scripts_busevents = require 'scripts_busevents'
 local system = require 'system'
 local fiber = require 'fiber'
 local influx_storage = require "tsdb_drivers/influx_storage"
@@ -20,20 +20,6 @@ bus.avg_seq_value = 0
 bus.current_key = 0
 
 ------------------ Private functions ------------------
-
-function bus_private.events_handler(topic, value)
-   for name, item in pairs(scripts_events) do
-      if (item ~= nil and type(item) == "table" and item.topic ~= nil and item.topic == topic) then
-         --print("Event "..name.." started on topic "..topic)
-         local status, data = pcall(item.event_function, topic, value)
-         if (status == true) then
-            return data
-         else
-            logger.add_entry(logger.ERROR, "Events subsystem", 'Event "'..item.name..'" run failed (internal error: '..(data or "")..')')
-         end
-      end
-   end
-end
 
 function bus_private.get_tsdb_save_attribute(topic)
    local table = bus.bus_storage.index.topic:select(topic, {iterator = 'EQ', limit = 1})
@@ -86,13 +72,13 @@ end
 function bus_private.add_value_to_fifo_buffer(topic, value)
    local timestamp = os.time()
    if (topic ~= nil and value ~= nil) then
-      local new_value  = bus_private.events_handler(topic, value)
+      local new_value  = scripts_busevents.process(topic, value)
       bus.fifo_storage:insert{nil, topic, timestamp, (new_value or value)}
       bus.rps_i = bus.rps_i + 1
    end
 end
 
-function bus_private.fifo_get_delete_topics()
+function bus_private.fifo_get_delete_topics() --need refactoring
    local table = bus.fifo_storage.index.primary:select(nil, {iterator = 'EQ', limit = 1})
    local key, topic, timestamp, value
    if (table[1] ~= nil) then
@@ -135,7 +121,7 @@ end
 
 -------------------Public functions-------------------
 
-function bus.init()
+function bus.init() --need refactoring
    bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, id = config.id.bus_fifo})
    bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
    bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
@@ -151,9 +137,21 @@ function bus.init()
    http_system.endpoint_config("/system_bus_action", bus.action_data_handler)
 end
 
+
 function bus.update_value(topic, value) -- external value name (incorrect)
    bus_private.add_value_to_fifo_buffer(topic, value)
 end
+
+
+function bus.get_value(topic)
+      local tuple = bus.bus_storage.index.topic:get(topic)
+
+      if (tuple ~= nil) then
+         return tuple[3]
+      else
+         return nil
+      end
+   end
 
 function bus.action_data_handler(req)
    local params = req:param()

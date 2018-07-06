@@ -8,6 +8,8 @@ local http_system = require 'http_system'
 local http_script_system = require 'http_script_system'
 local scripts_drivers = require 'scripts_drivers'
 local scripts_webevents = require 'scripts_webevents'
+local scripts_busevents = require 'scripts_busevents'
+
 local bus = require 'bus'
 local system = require "system"
 local logger = require "logger"
@@ -50,6 +52,9 @@ scripts.init()
 logger.add_entry(logger.INFO, "System", "Starting web-events...")
 http_script_system.init()
 scripts_webevents.init()
+
+logger.add_entry(logger.INFO, "System", "Starting Bus-events...")
+scripts_busevents.init()
 
 logger.add_entry(logger.INFO, "System", "Starting drivers...")
 scripts_drivers.init()
