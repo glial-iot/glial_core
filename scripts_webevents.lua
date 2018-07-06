@@ -22,6 +22,10 @@ local function log_webevent_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Web-events subsystem", msg, uuid, "")
 end
 
+local function log_webevent_warning(msg, uuid)
+   logger.add_entry(logger.WARNING, "Web-events subsystem", msg, uuid, "")
+end
+
 local function log_webevent_info(msg, uuid)
    logger.add_entry(logger.INFO, "Web-events subsystem", msg, uuid, "")
 end
@@ -69,10 +73,10 @@ function webevents_private.load(uuid)
    body._script_uuid = script_params.uuid
    body.update_value, body.get_value = require('bus').update_value, require('bus').get_value
 
-   local status, err_msg = pcall(setfenv(current_func, body))
+   local status, returned_data = pcall(setfenv(current_func, body))
    if (status ~= true) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (load error: '..(err_msg or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: pcall error: '..(err_msg or "")})
+      log_webevent_error('Web-event "'..script_params.name..'" not start (load error: '..(returned_data or "")..')', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: pcall error: '..(returned_data or "")})
       return false
    end
 
@@ -88,11 +92,11 @@ function webevents_private.load(uuid)
       return false
    end
 
-   status, err_msg = pcall(body.init)
+   status, returned_data = pcall(body.init)
 
    if (status ~= true) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (init function error: '..(err_msg or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function error: '..(err_msg or "")})
+      log_webevent_error('Web-event "'..script_params.name..'" not start (init function error: '..(returned_data or "")..')', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function error: '..(returned_data or "")})
       return false
    end
 
@@ -129,11 +133,17 @@ function webevents_private.unload(uuid)
       return false
    end
 
-   local status, err_msg = pcall(body.destroy)
+   local status, returned_data = pcall(body.destroy)
    if (status ~= true) then
-      log_webevent_error('Web-event "'..script_params.name..'" not stop (destroy function error: '..(err_msg or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(err_msg or "")})
+      log_webevent_error('Web-event "'..script_params.name..'" not stop (destroy function error: '..(returned_data or "")..')', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(returned_data or "")})
       return false
+   end
+
+   if (returned_data == false) then
+      log_webevent_warning('Web-event "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
+      return true
    end
 
    log_webevent_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)
