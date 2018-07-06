@@ -7,6 +7,7 @@ local inspect = require 'libs/inspect'
 local box = box
 
 local system = require 'system'
+local config = require 'config'
 
 logger.INFO = "INFO"
 logger.WARNING = "WARNING"
@@ -152,8 +153,8 @@ function logger.storage_init()
       {name='epoch',       type='integer'},  --6
       {name='trace',       type='string'},   --7
    }
-   logger.storage = box.schema.space.create('log', {if_not_exists = true, format = format})
    logger.sequence = box.schema.sequence.create("log_sequence", {if_not_exists = true})
+   logger.storage = box.schema.space.create('log', {if_not_exists = true, format = format, id = config.id.logs})
 
    logger.storage:create_index('key', {sequence="log_sequence", if_not_exists = true})
    logger.storage:create_index('level', {parts = {'level'}, if_not_exists = true, unique = false})

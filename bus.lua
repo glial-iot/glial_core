@@ -11,6 +11,7 @@ local system = require 'system'
 local fiber = require 'fiber'
 local influx_storage = require "tsdb_drivers/influx_storage"
 local logger = require 'logger'
+local config = require 'config'
 
 bus.rps_i = 0
 bus.rps_o = 0
@@ -132,15 +133,14 @@ function bus_private.delete_topics(topic)
    end
 end
 
-
 -------------------Public functions-------------------
 
 function bus.init()
-   bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true})
+   bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, id = config.id.bus_fifo})
    bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
    bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
 
-   bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true})
+   bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, id = config.id.bus})
    bus.bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
 
    bus_private.fifo_storage_worker_fiber = fiber.create(bus_private.fifo_storage_worker)

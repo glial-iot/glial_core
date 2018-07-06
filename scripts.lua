@@ -222,7 +222,7 @@ function scripts.storage_init()
       {name='active_flag',    type='string'},   --7
       {name='specific_data',  type='array'}     --8
    }
-   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format})
+   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format, id = config.id.scripts})
    scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
    scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
 end

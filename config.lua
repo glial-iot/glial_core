@@ -10,6 +10,11 @@ config.dir.DUMP_FILES = "dump"
 config.MAX_BACKUP_FILES = 100
 config.HTTP_PORT = 8080
 
+config.id = {}
+config.id.bus = 600
+config.id.bus_fifo = 601
+config.id.logs = 610
+config.id.scripts = 620
 
 --[[
 config.limit.value = 10
