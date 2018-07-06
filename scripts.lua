@@ -12,6 +12,7 @@ local inspect = require 'libs/inspect'
 local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
+
 scripts.statuses = {ERROR = "ERROR", WARNING = "WARNING", NORMAL = "NORMAL", STOPPED = "STOPPED"}
 scripts.flag = {ACTIVE = "ACTIVE", NON_ACTIVE = "NON_ACTIVE"}
 scripts.type = {WEB_EVENT = "WEB_EVENT", TIMER_EVENT = "TIMER_EVENT", SHEDULE_EVENT = "SHEDULE_EVENT", BUS_EVENT = "BUS_EVENT", DRIVER = "DRIVER"}
@@ -101,6 +102,27 @@ end
 
 function scripts_private.delete(data)
    return scripts_private.storage.index.uuid:delete(data.uuid)
+end
+
+function scripts_private.storage_init()
+   local format = {
+      {name='uuid',           type='string'},   --1
+      {name='type',           type='string'},   --2
+      {name='name',           type='string'},   --3
+      {name='body',           type='string'},   --4
+      {name='status',         type='string'},   --5
+      {name='status_msg',     type='string'},   --6
+      {name='active_flag',    type='string'},   --7
+      {name='specific_data',  type='array'}     --8
+   }
+   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format, id = config.id.scripts})
+   scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
+   scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
+end
+
+function scripts_private.http_init()
+   local http_system = require 'http_system'
+   http_system.endpoint_config("/scripts", scripts_private.http_api)
 end
 
 ------------------ HTTP API functions ------------------
@@ -204,37 +226,11 @@ function scripts_private.http_api(req)
    return return_object
 end
 
-
-
-
 ------------------ Public functions ------------------
 
-
-
-function scripts.storage_init()
-   local format = {
-      {name='uuid',           type='string'},   --1
-      {name='type',           type='string'},   --2
-      {name='name',           type='string'},   --3
-      {name='body',           type='string'},   --4
-      {name='status',         type='string'},   --5
-      {name='status_msg',     type='string'},   --6
-      {name='active_flag',    type='string'},   --7
-      {name='specific_data',  type='array'}     --8
-   }
-   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format, id = config.id.scripts})
-   scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
-   scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
-end
-
-function scripts.http_init()
-   local http_system = require 'http_system'
-   http_system.endpoint_config("/scripts", scripts_private.http_api)
-end
-
 function scripts.init()
-   scripts.storage_init()
-   scripts.http_init()
+   scripts_private.storage_init()
+   scripts_private.http_init()
 end
 
 function scripts.get(data)
@@ -254,17 +250,4 @@ function scripts.get_all(data)
 end
 
 return scripts
-
-
-
-
-
-
-
-
-
-
-
-
-
 
