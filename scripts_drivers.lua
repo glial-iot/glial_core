@@ -51,7 +51,7 @@ function drivers_private.load(uuid)
       return true
    end
 
-   local current_func, error_msg = loadstring(script_params.body)
+   local current_func, error_msg = loadstring(script_params.body, script_params.name)
 
    if (current_func == nil) then
       log_driver_error('Driver "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
