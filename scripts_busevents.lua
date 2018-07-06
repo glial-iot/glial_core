@@ -119,7 +119,6 @@ end
 ------------------ Public functions ------------------
 
 function busevents.process(topic, value)
-   print(busevents_script_bodies[topic])
    if (busevents_script_bodies[topic] ~= nil) then
       local body = busevents_script_bodies[topic]
       if  (type(body) == "table" and  type(body.event_handler) == "function") then
