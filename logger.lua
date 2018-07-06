@@ -13,6 +13,7 @@ local config = require 'config'
 logger.INFO = "INFO"
 logger.WARNING = "WARNING"
 logger.ERROR = "ERROR"
+logger.REBOOT = "REBOOT"
 logger.USER = "USER"
 
 
@@ -27,7 +28,7 @@ function logger_private.http_api_get_logs(params, req)
    for _, tuple in pairs(raw_table) do
       repeat
          if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-            if (params["uuid"] ~= tuple["uuid_source"]) then
+            if (params["uuid"] ~= tuple["uuid_source"] and tuple["level"] ~= logger.REBOOT) then
                do break end
             end
          end
@@ -132,7 +133,7 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       return
    end
 
-   if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER) then
+   if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER and level ~= logger.REBOOT) then
       return
    end
 
@@ -141,6 +142,7 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
    end
 
    logger.storage:insert{logger_private.gen_id(), level, (source or ""), (uuid_source or "No UUID"), entry, local_trace}
+
    if (level == logger.INFO) then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    elseif (level == logger.WARNING) then

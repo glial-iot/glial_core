@@ -32,7 +32,7 @@ system.dir_check(config.dir.DATABASE)
 box_config()
 
 logger.storage_init()
-logger.add_entry(logger.INFO, "------------", "-----------------------------------------------------------------------")
+logger.add_entry(logger.REBOOT, "------------", "-----------------------------------------------------------------------")
 logger.add_entry(logger.INFO, "System", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
 
 http_system.init()
