@@ -78,7 +78,14 @@ function logger_private.tarantool_pipe_log_handler(req)
    local body = req:read({delimiter = nil, chunk = 1000}, 10)
 
    local _, _, type, message = string.find(body, ".+%[.+%].+(.)>(.+)$")
-   if (type ~= nil and message ~= nil and string.find(message, "(Empty input string)") == nil and string.find(body, "LOGGER:") == nil) then
+   if (
+      type ~= nil and
+      message ~= nil and
+      string.find(message, "Empty input string") == nil and
+      string.find(message, "^Tarantool .+") == nil and
+      string.find(message, "^log level .+") == nil and
+      string.find(body, "LOGGER:") == nil
+         ) then
       if (type == "W") then
          type = logger.WARNING
       elseif (type == "E") then
