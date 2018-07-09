@@ -4,7 +4,6 @@ local webevents_private = {}
 
 local box = box
 local http_system = require 'http_system'
-local http_script_system = require 'http_script_system'
 
 local inspect = require 'libs/inspect'
 
@@ -12,6 +11,8 @@ local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
 local scripts = require 'scripts'
+local http_script_system = require 'http_script_system'
+local fiber = require 'fiber'
 
 local webevents_script_bodies = {}
 webevents.bodies = webevents_script_bodies
@@ -72,6 +73,10 @@ function webevents_private.load(uuid)
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
    body.update_value, body.get_value = require('bus').update_value, require('bus').get_value
+   body.fiber = {}
+   body.fiber.create = scripts.generate_fibercreate(uuid, log_script_name)
+   body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
+
 
    local status, returned_data = pcall(setfenv(current_func, body))
    if (status ~= true) then
@@ -143,7 +148,7 @@ function webevents_private.unload(uuid)
    if (returned_data == false) then
       log_webevent_warning('Web-event "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
-      return true
+      return false
    end
 
    log_webevent_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)

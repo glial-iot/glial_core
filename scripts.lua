@@ -5,6 +5,7 @@ local scripts_private = {}
 local box = box
 local uuid_lib = require('uuid')
 local digest = require 'digest'
+local fiber = require 'fiber'
 
 
 local inspect = require 'libs/inspect'
@@ -227,6 +228,24 @@ function scripts_private.http_api(req)
 end
 
 ------------------ Public functions ------------------
+
+function scripts.generate_fibercreate(uuid, name)
+   local function generate_fiber_error_handler(uuid_i, name_i)
+      local function fiber_error_handler(msg)
+         local trace = debug.traceback("", 2)
+         logger.add_entry(logger.WARNING, name_i, msg, uuid_i, trace)
+         scripts.update({uuid = uuid_i, status = scripts.statuses.WARNING, status_msg = 'Fiber error: '..(msg or "")})
+      end
+      return fiber_error_handler
+   end
+   local error_handler = generate_fiber_error_handler(uuid, name)
+
+   local function fiber_create_modifed(f_function, ...)
+      fiber.create(function(...) return xpcall(f_function, error_handler, ...) end, ...)
+   end
+   return fiber_create_modifed
+end
+
 
 function scripts.init()
    scripts_private.storage_init()

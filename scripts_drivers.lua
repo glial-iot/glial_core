@@ -3,15 +3,15 @@ local drivers = {}
 local drivers_private = {}
 
 local box = box
-local http_system = require 'http_system'
 
-
+local fiber = require 'fiber'
 local inspect = require 'libs/inspect'
 
 local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
 local scripts = require 'scripts'
+local http_system = require 'http_system'
 
 local drivers_script_bodies = {}
 
@@ -70,6 +70,9 @@ function drivers_private.load(uuid)
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
    body.update_value, body.get_value = require('bus').update_value, require('bus').get_value
+   body.fiber = {}
+   body.fiber.create = scripts.generate_fibercreate(uuid, log_script_name)
+   body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
 
    local status, returned_data = pcall(setfenv(current_func, body))
    if (status ~= true) then
@@ -94,7 +97,7 @@ function drivers_private.load(uuid)
 
    if (status ~= true) then
       log_driver_error('Driver "'..script_params.name..'" not start (init function error: '..(returned_data or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function error: '..(returned_data or "")})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init function error: '..(returned_data or "")})
       return false
    end
 
@@ -132,7 +135,7 @@ function drivers_private.unload(uuid)
    end
 
    local status, returned_data = pcall(body.destroy) --если возвращает false, то невозможно завершить без перезагрузки, warning
-   if (status ~= true) then
+    if (status ~= true) then
       log_driver_error('Driver "'..script_params.name..'" not stop (destroy function error: '..(returned_data or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(returned_data or "")})
       return false
@@ -141,7 +144,7 @@ function drivers_private.unload(uuid)
    if (returned_data == false) then
       log_driver_warning('Driver "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
-      return true
+      return false
    end
 
    log_driver_info('Driver "'..script_params.name..'" stopped', script_params.uuid)

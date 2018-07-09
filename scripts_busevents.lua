@@ -11,10 +11,10 @@ local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
 local scripts = require 'scripts'
+local fiber = require 'fiber'
 
 local busevents_script_bodies = {}
 busevents.scripts = busevents_script_bodies
-
 
 local function log_busevent_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Bus-events subsystem", msg, uuid, "")
@@ -68,6 +68,10 @@ function busevents_private.load(uuid)
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
    body.update_value, body.get_value = require('bus').update_value, require('bus').get_value
+   body.fiber = {}
+   body.fiber.create = scripts.generate_fibercreate(uuid, log_script_name)
+   body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
+
 
    local status, err_msg = pcall(setfenv(current_func, body))
    if (status ~= true) then
