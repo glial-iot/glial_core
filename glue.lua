@@ -44,7 +44,7 @@ logger.add_entry(logger.INFO, "System", "HTTP subsystem initialized")
 require('system_webevent').init()
 
 bus.init()
-logger.add_entry(logger.INFO, "System", "Common bus and FIFO worker initialized")
+logger.add_entry(logger.INFO, "System", "Bus and FIFO worker initialized")
 
 logger.add_entry(logger.INFO, "System", "Starting script subsystem...")
 scripts.init()
