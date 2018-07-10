@@ -160,8 +160,8 @@ function backup_restore.http_api(req)
       local files_list = backup_restore.get_backup_files()
       local current_time = os.time()
       for i, filename in pairs(files_list) do
-         local _, _, time_epoch = string.find(filename, "backup/gluebackup_(%d+)%.tar%.gz") or nil, nil, 0
-         local diff_time_text = system.format_seconds(current_time - time_epoch).." ago"
+         local _, _, time_epoch = string.find(filename, "backup/gluebackup_(%d+)%.tar%.gz")
+         local diff_time_text = system.format_seconds(current_time - (time_epoch or 0)).." ago"
          local time_text = os.date("%Y-%m-%d, %H:%M:%S", time_epoch).." ("..(diff_time_text).." ago)"
          local size = system.round((fio.lstat(filename).size / 1000), 1)
          table.insert(processed_table, {filename = filename, time = time_epoch, time_text = time_text, size = size})
