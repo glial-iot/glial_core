@@ -148,7 +148,7 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       return
    end
 
-   logger.storage:insert{logger_private.gen_id(), level, (source or ""), (uuid_source or "No UUID"), entry, local_trace}
+   logger.storage:insert{logger_private.gen_id(), level, (source or ""), (uuid_source or "No UUID"), (tostring(entry) or ""), (tostring(local_trace) or "")}
 
    if (level == logger.INFO) then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))

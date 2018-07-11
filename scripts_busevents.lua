@@ -128,6 +128,7 @@ function busevents.process(topic, value)
       if  (type(body) == "table" and  type(body.event_handler) == "function") then
          local status, returned_data = pcall(body.event_handler, value, topic)
          if (status ~= true) then
+            returned_data = tostring(returned_data)
             log_busevent_error('Bus-event "'..body._script_name..'" generate error: '..(returned_data or "")..')', body._script_uuid)
             scripts.update({uuid = body._script_uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
          end
