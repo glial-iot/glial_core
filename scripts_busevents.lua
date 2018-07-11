@@ -62,7 +62,7 @@ function busevents_private.load(uuid)
       return false
    end
 
-   local log_script_name = "Busvent '"..(script_params.name or "undefined name").."'"
+   local log_script_name = "Bus event '"..(script_params.name or "undefined name").."'"
    body = setmetatable({}, {__index=_G})
    body.log_error, body.log_warning, body.log_info = logger.generate_log_functions(uuid, log_script_name)
    body._script_name = script_params.name
