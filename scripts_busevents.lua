@@ -134,7 +134,8 @@ end
 function busevents.process(topic, value)
    if (busevents_script_bodies[topic] ~= nil) then
       local body = busevents_script_bodies[topic]
-      if  (type(body) == "table" and  type(body.event_handler) == "function") then
+      local script_params = scripts.get({uuid = body._script_uuid})
+      if (type(body) == "table" and type(body.event_handler) == "function" and script_params.status ~= scripts.statuses.ERROR) then
          local status, returned_data = pcall(body.event_handler, value, topic)
          if (status ~= true) then
             returned_data = tostring(returned_data)
