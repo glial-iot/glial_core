@@ -22,7 +22,7 @@ end
 function http_script_system_private.main_handler(req)
    local name = req:stash('name')
    if (http_script_system_private.path_table[name] ~= nil) then
-      return http_script_system_private.path_table[name](req)
+      return http_script_system_private.path_table[name](req) --обернуть в xpcall и генерировать записи в логе с uuid
    end
 
    return { status = 404, headers = { ['content-type'] = 'text/html; charset=utf8' } }

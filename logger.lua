@@ -115,7 +115,7 @@ end
 ------------------ Public functions ------------------
 
 
-function logger.generate_log_functions(uuid, name)
+function logger.generate_log_functions(uuid, name) ---не принимают несколько аргументов, сделать.
    local function log_error(msg)
       local trace = debug.traceback("", 2)
       logger.add_entry(logger.ERROR, name, msg, uuid, trace)
