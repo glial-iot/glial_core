@@ -60,7 +60,7 @@ logger.add_entry(logger.INFO, "System", "Starting drivers...")
 scripts_drivers.init()
 
 backup_restore.init()
-backup_restore.create_backup()
+backup_restore.create_backup("Backup after start")
 logger.add_entry(logger.INFO, "System", "Backup created")
 backup_restore.remove_old_files()
 

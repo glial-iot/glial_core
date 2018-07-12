@@ -34,11 +34,12 @@ function backup_restore_private.remove_space_files()
    return true
 end
 
-function backup_restore_private.archive_dump_files()
-   local filename = "gluebackup_"..os.time()..".tar.gz"
+function backup_restore_private.archive_dump_files(comment)
+   comment = comment:gsub("%s", "_")
+   local filename = "gluebackup_"..os.time().."_"..comment..".tar.gz"
    local backup_path = config.dir.BACKUP.."/"..filename
    local files_path = config.dir.DUMP_FILES
-   local command = "tar -czf "..backup_path.." "..files_path.." 2>&1"
+   local command = "tar -czf '"..backup_path.."' '"..files_path.."' 2>&1"
    local exit_code = os.execute(command)
    if (exit_code ~= 0) then
       return false
@@ -47,7 +48,7 @@ function backup_restore_private.archive_dump_files()
 end
 
 function backup_restore_private.unarchive_dump_files(filename)
-   local command = "tar -xf "..filename.."  2>&1"
+   local command = "tar -xf '"..filename.."'  2>&1"
    local exit_code = os.execute(command)
    if (exit_code ~= 0) then
       return false
@@ -71,8 +72,6 @@ function backup_restore_private.restore()
    return true, result.rows
 end
 
-
-
 function backup_restore.get_backup_files()
    local files_list = system.get_files_in_dir(config.dir.BACKUP, ".+%.tar.gz")
    table.sort( files_list, function(a,b) return a>b end)
@@ -95,22 +94,26 @@ function backup_restore.remove_old_files()
    end
 end
 
-function backup_restore.create_backup()
+function backup_restore.create_backup(comment)
    local result, msg
+   comment = comment or "undefined"
    result = backup_restore_private.remove_dump_files()
    if (result == false) then
-      logger.add_entry(logger.ERROR, "Backup-restore system", "Backup failed on stage 1")
-      return false, "Backup failed on stage 1"
+      local message = "Backup failed on clear stage"
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
    end
    result, msg = backup_restore_private.dump()
    if (result == false) then
-      logger.add_entry(logger.ERROR, "Backup-restore system", "Backup failed on stage 2: "..(msg or ""))
-      return false, "Backup failed on stage 2: "..(msg or "")
+      local message = "Backup failed on dump stage: "..(msg or "")
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
    end
-   result = backup_restore_private.archive_dump_files()
+   result = backup_restore_private.archive_dump_files(comment)
    if (result == false) then
-      logger.add_entry(logger.ERROR, "Backup-restore system", "Backup failed on stage 3")
-      return false, "Backup failed on stage 3"
+      local message = "Backup failed on archive stage"
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
    end
    backup_restore_private.remove_dump_files()
    return true
@@ -125,23 +128,27 @@ function backup_restore.restore_backup(filename)
    local result, count, msg
    result = backup_restore_private.remove_dump_files()
    if (result == false) then
-      logger.add_entry(logger.ERROR, "Backup-restore system", "Restore failed on stage 1")
-      return false, "Restore failed on stage 1"
+      local message = "Restore failed on clear stage"
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
    end
    result = backup_restore_private.unarchive_dump_files(filename)
    if (result == false) then
-      logger.add_entry(logger.ERROR, "Backup-restore system", "Restore failed on stage 2")
-      return false, "Restore failed on stage 2"
+      local message = "Restore failed on dump stage"
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
    end
    result, msg = backup_restore_private.remove_space_files()
    if (result == false) then
-      logger.add_entry(logger.ERROR, "Backup-restore system", "Restore failed on stage 3: "..(msg or ""))
-      return false, "Restore failed on stage 3: "..(msg or "")
+      local message = "Restore failed on space-clean stage: "..(msg or "")
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
    end
    result, count = backup_restore_private.restore()
    if (result == false) then
-      logger.add_entry(logger.ERROR, "Backup-restore system", "Restore failed on stage 4: "..(count or 0).." count")
-      return false, "Restore failed on stage 4: "..(count or 0).." count"
+      local message = "Restore failed on restore stage: "..(count or 0).." count"
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
    end
    backup_restore_private.remove_dump_files()
    return true, count
@@ -160,15 +167,16 @@ function backup_restore.http_api(req)
       local files_list = backup_restore.get_backup_files()
       local current_time = os.time()
       for i, filename in pairs(files_list) do
-         local _, _, time_epoch = string.find(filename, "backup/gluebackup_(%d+)%.tar%.gz")
+         local _, _, time_epoch, comment = string.find(filename, "backup/gluebackup_(%d+)_([A-Za-z0-9_]+)%.tar%.gz")
+         comment = comment:gsub("_", " ")
          local diff_time_text = system.format_seconds(current_time - (time_epoch or 0)).." ago"
          local time_text = os.date("%Y-%m-%d, %H:%M:%S", time_epoch).." ("..(diff_time_text).." ago)"
          local size = system.round((fio.lstat(filename).size / 1000), 1)
-         table.insert(processed_table, {filename = filename, time = time_epoch, time_text = time_text, size = size})
+         table.insert(processed_table, {filename = filename, time = time_epoch, time_text = time_text, comment = comment, size = size})
       end
       return_object = req:render{ json = processed_table }
    elseif (params["action"] == "restore" and params["filename"] ~= nil and params["filename"] ~= "") then
-      local result, msg = backup_restore.create_backup()
+      local result, msg = backup_restore.create_backup("Backup before restore")
       if (result == true) then
          result, msg = backup_restore.restore_backup(params["filename"])
          if (result == true) then
