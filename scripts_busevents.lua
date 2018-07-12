@@ -71,7 +71,8 @@ function busevents_private.load(uuid)
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(uuid, log_script_name)
    body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
-
+   scripts.store[script_params.uuid] = scripts.store[script_params.uuid] or {}
+   body.store = scripts.store[script_params.uuid]
 
    local status, err_msg = pcall(setfenv(current_func, body))
    if (status ~= true) then
