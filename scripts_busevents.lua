@@ -100,12 +100,20 @@ function busevents_private.load(uuid)
    return true
 end
 
+function busevents_private.remove_body_by_uuid(uuid)
+   for topic, body in pairs(busevents_script_bodies) do
+      if (uuid == body._script_uuid) then
+         busevents_script_bodies[topic] = nil
+      end
+   end
+end
 
 function busevents_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
       if (params["uuid"] ~= nil or params["uuid"] ~= "") then
+         busevents_private.remove_body_by_uuid(params["uuid"])
          busevents_private.load(params["uuid"])
          return_object = req:render{ json = {error = false} }
       else
