@@ -205,7 +205,7 @@ function bus.http_data_handler(req) --move to actions
       else
          processed_timestamp = os.date("%Y-%m-%d, %H:%M:%S", timestamp)
       end
-      table.insert(data_object, {topic = topic, timestamp = processed_timestamp, value = value, tsdb_save = (tsdb_save or false)})
+      table.insert(data_object, {topic = topic, timestamp = processed_timestamp, time = timestamp, value = value, tsdb_save = (tsdb_save or false)})
       if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
    end
 

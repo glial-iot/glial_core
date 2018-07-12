@@ -38,7 +38,7 @@ function logger_private.http_api_get_logs(params, req)
             source = tuple["source"],
             uuid_source = tuple["uuid_source"],
             entry = tuple["entry"],
-            epoch = time_in_sec,
+            time = time_in_sec,
             trace = tuple["trace"],
             date_abs = os.date("%Y-%m-%d, %H:%M:%S", time_in_sec),
             date_rel = (system.format_seconds(current_time_in_sec - time_in_sec)).." ago"
