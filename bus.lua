@@ -152,6 +152,27 @@ function bus.get_value(topic)
          return nil
       end
    end
+function bus.serializer()
+   for i, tuple in bus.bus_storage.index.topic:pairs() do
+      local topic = tuple[1]
+      local _
+      print("alltopic:", topic)
+      repeat
+         local subtopic, alt_subtopic
+         _, _, alt_subtopic = topic:find("/(.*)")
+         _, _, subtopic, topic = topic:find("/(.-)(/.*)")
+         if (subtopic == nil and topic == nil) then
+            subtopic = alt_subtopic
+         end
+
+         print("subtopic:", subtopic)
+      until subtopic == nil or topic == nil
+
+      --return
+
+
+   end
+end
 
 function bus.action_data_handler(req)
    local params = req:param()
