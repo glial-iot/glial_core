@@ -32,6 +32,11 @@ function system.os_command(command)
    return return_value
 end
 
+function system.print_n(data, ...)
+	io.write(data, ...)
+	io.flush()
+end
+
 
 function system.git_version(new_flag)
    if (git_version == nil or new_flag == true) then
