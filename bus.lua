@@ -154,7 +154,6 @@ end
 
 function bus.serialize(pattern)
    local bus_table = {}
-   pattern = pattern or ""
 
    for i, tuple in bus.bus_storage.index.topic:pairs() do
       local topic = tuple[1].."/"
@@ -163,7 +162,7 @@ function bus.serialize(pattern)
       local timestamp = tuple[2]
       local subtopic, _, local_table
 
-      if (topic:find(pattern)) then
+      if (topic:find(pattern or "")) then
          local_table = bus_table
          repeat
             _, _, subtopic, topic = topic:find("/(.-)(/.*)")

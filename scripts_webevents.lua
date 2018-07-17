@@ -72,7 +72,7 @@ function webevents_private.load(uuid)
    body.add_http_path, body.remove_http_path = http_script_system.generate_add_remove_functions(uuid, log_script_name)
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
-   body.update_value, body.get_value = require('bus').update_value, require('bus').get_value
+   body.update_value, body.get_value, body.bus_serialize  = require('bus').update_value, require('bus').get_value, require('bus').serialize
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(uuid, log_script_name)
    body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
