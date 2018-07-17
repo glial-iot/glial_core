@@ -142,36 +142,43 @@ function bus.update_value(topic, value) -- external value name (incorrect)
    bus_private.add_value_to_fifo_buffer(topic, value)
 end
 
-
 function bus.get_value(topic)
-      local tuple = bus.bus_storage.index.topic:get(topic)
+   local tuple = bus.bus_storage.index.topic:get(topic)
 
-      if (tuple ~= nil) then
-         return tuple[3]
-      else
-         return nil
-      end
+   if (tuple ~= nil) then
+      return tuple[3]
+   else
+      return nil
    end
-function bus.serializer()
+end
+
+function bus.serialize(pattern)
+   local bus_table = {}
+   pattern = pattern or ""
+
    for i, tuple in bus.bus_storage.index.topic:pairs() do
-      local topic = tuple[1]
-      local _
-      print("alltopic:", topic)
-      repeat
-         local subtopic, alt_subtopic
-         _, _, alt_subtopic = topic:find("/(.*)")
-         _, _, subtopic, topic = topic:find("/(.-)(/.*)")
-         if (subtopic == nil and topic == nil) then
-            subtopic = alt_subtopic
-         end
+      local topic = tuple[1].."/"
+      local topic_original = tuple[1]
+      local value = tuple[3]
+      local timestamp = tuple[2]
+      local subtopic, _, local_table
 
-         print("subtopic:", subtopic)
-      until subtopic == nil or topic == nil
-
-      --return
-
+      if (topic:find(pattern)) then
+         local_table = bus_table
+         repeat
+            _, _, subtopic, topic = topic:find("/(.-)(/.*)")
+            if (subtopic ~= nil) then
+               local_table[subtopic] = local_table[subtopic] or {}
+               local_table = local_table[subtopic]
+            end
+         until subtopic == nil or topic == nil
+         local_table.value = value
+         local_table.update_time = timestamp
+         local_table.topic = topic_original
+      end
 
    end
+   return bus_table
 end
 
 function bus.action_data_handler(req)
