@@ -2,11 +2,22 @@
 local backup_restore = {}
 local backup_restore_private = {}
 
+local fiber = require 'fiber'
+
 local logger = require 'logger'
 local dump = require 'dump'
 local config = require 'config'
 local system = require 'system'
 local fio = require 'fio'
+
+
+function backup_restore_private.time_backup()
+   while true do
+      fiber.sleep(60*60*config.BACKUP_PERIODIC_HOURS)
+      backup_restore.create_backup("Periodic backup("..config.BACKUP_PERIODIC_HOURS.."h)")
+   end
+end
+
 
 function backup_restore_private.remove_dump_files()
    local exit_code = os.execute("rm -rf ./"..config.dir.DUMP_FILES.."/*  2>&1")
@@ -167,10 +178,11 @@ function backup_restore.http_api(req)
       local files_list = backup_restore.get_backup_files()
       local current_time = os.time()
       for i, filename in pairs(files_list) do
-         local _, _, time_epoch, comment = string.find(filename, "backup/gluebackup_(%d+)_([A-Za-z0-9_]+)%.tar%.gz")
+         local _, _, time_epoch, comment = string.find(filename, "backup/gluebackup_(%d+)_([A-Za-z0-9_%(%)]+)%.tar%.gz")
+         comment = comment or ""
          comment = comment:gsub("_", " ")
          local diff_time_text = system.format_seconds(current_time - (time_epoch or 0)).." ago"
-         local time_text = os.date("%Y-%m-%d, %H:%M:%S", time_epoch).." ("..(diff_time_text).." ago)"
+         local time_text = os.date("%Y-%m-%d, %H:%M:%S", time_epoch).." ("..(diff_time_text)..")"
          local size = system.round((fio.lstat(filename).size / 1000), 1)
          table.insert(processed_table, {filename = filename, time = time_epoch, time_text = time_text, comment = comment, size = size})
       end
@@ -205,6 +217,7 @@ end
 function backup_restore.init()
    local http_system = require 'http_system'
    http_system.endpoint_config("/backups", backup_restore.http_api)
+   fiber.create(backup_restore_private.time_backup)
 end
 
 

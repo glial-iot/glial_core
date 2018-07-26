@@ -7,7 +7,8 @@ config.dir.DATABASE = "db"
 
 config.dir.BACKUP = "backup"
 config.dir.DUMP_FILES = "dump"
-config.MAX_BACKUP_FILES = 100
+config.MAX_BACKUP_FILES = 200
+config.BACKUP_PERIODIC_HOURS = 5
 config.HTTP_PORT = 8080
 
 config.id = {}
