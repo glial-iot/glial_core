@@ -162,6 +162,7 @@ function backup_restore.restore_backup(filename)
       return false, message
    end
    backup_restore_private.remove_dump_files()
+   system.wait_and_exit()
    return true, count
 end
 

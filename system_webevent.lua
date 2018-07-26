@@ -5,13 +5,6 @@ local logger = require 'logger'
 local system = require 'system'
 local fiber = require 'fiber'
 
-
-function private.wait_and_exit()
-   fiber.sleep(2)
-   logger.add_entry(logger.INFO, "Action events", 'System stopped')
-   os.exit()
-end
-
 function private.system_action_http_api(req)
    local params = req:param()
    local return_object
@@ -30,7 +23,7 @@ function private.system_action_http_api(req)
       local new_version = system.git_version(true)
       logger.add_entry(logger.INFO, "Action events", 'System update: '..(old_version or "").." -> "..(new_version or "").." and will be stopped")
       return_object = req:render{ json = { result = true, msg = emessage } }
-      fiber.create(private.wait_and_exit)
+      system.wait_and_exit()
    else
       return_object = req:render{ json = {error = true, error_msg = "Sysevent API: No valid action"} }
    end

@@ -2,6 +2,8 @@
 local system = {}
 
 local fio = require 'fio'
+local fiber = require 'fiber'
+local logger = require 'logger'
 
 local git_version, _
 
@@ -69,6 +71,15 @@ function system.get_files_in_dir(path, mask)
       end
    end
    return files
+end
+
+function system.wait_and_exit()
+   local function exit()
+      fiber.sleep(2)
+      logger.add_entry(logger.INFO, "System", 'System stopped')
+      os.exit()
+   end
+   fiber.create(exit)
 end
 
 
