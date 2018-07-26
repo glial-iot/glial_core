@@ -31,6 +31,8 @@ end
 
 
 system.dir_check(config.dir.DATABASE)
+system.dir_check(config.dir.BACKUP)
+system.dir_check(config.dir.DUMP_FILES)
 box_config()
 
 logger.storage_init()
