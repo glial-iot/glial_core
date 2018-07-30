@@ -3,7 +3,6 @@ local system = {}
 
 local fio = require 'fio'
 local fiber = require 'fiber'
-local logger = require 'logger'
 
 local git_version, _
 
@@ -76,7 +75,7 @@ end
 function system.wait_and_exit()
    local function exit()
       fiber.sleep(2)
-      logger.add_entry(logger.INFO, "System", 'System stopped')
+      require('logger').add_entry(logger.INFO, "System", 'System stopped')
       os.exit()
    end
    fiber.create(exit)
