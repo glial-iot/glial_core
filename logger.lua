@@ -131,7 +131,12 @@ function logger.generate_log_functions(uuid, name) ---не принимают н
       logger.add_entry(logger.WARNING, name, msg, uuid, trace)
    end
 
-   return log_error, log_warning, log_info
+   local function log_user(msg)
+      local trace = debug.traceback("", 2)
+      logger.add_entry(logger.USER, name, msg, uuid, trace)
+   end
+
+   return log_error, log_warning, log_info, log_user
 end
 
 function logger.add_entry(level, source, entry, uuid_source, trace)

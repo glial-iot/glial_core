@@ -66,7 +66,8 @@ function drivers_private.load(uuid)
 
    local log_script_name = "Driver '"..(script_params.name or "undefined name").."'"
    body = setmetatable({}, {__index=_G})
-   body.log_error, body.log_warning, body.log_info = logger.generate_log_functions(uuid, log_script_name)
+   body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(uuid, log_script_name)
+   body.log, body.print = body.log_user, body.log_user
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
    body.update_value, body.get_value, body.bus_serialize  = require('bus').update_value, require('bus').get_value, require('bus').serialize
