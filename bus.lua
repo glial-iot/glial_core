@@ -2,7 +2,6 @@
 local bus = {}
 local bus_private = {}
 
-local log = require 'log'
 local inspect = require 'libs/inspect'
 local box = box
 
@@ -21,7 +20,7 @@ bus.current_key = 0
 
 ------------------ Private functions ------------------
 
-function bus_private.get_tsdb_save_attribute(topic)
+function bus_private.get_tsdb_attr(topic)
    local table = bus.bus_storage.index.topic:select(topic, {iterator = 'EQ', limit = 1})
    if (table[1] ~= nil) then
       local tsdb_save = table[1][4]
@@ -33,7 +32,7 @@ function bus_private.get_tsdb_save_attribute(topic)
 end
 
 function bus_private.tsdb_attr_check_and_save(topic, value)
-   local tsdb_save = bus_private.get_tsdb_save_attribute(topic)
+   local tsdb_save = bus_private.get_tsdb_attr(topic)
    if (tsdb_save == true) then
          local answer = influx_storage.update_value("glue", topic, value)
          if (answer ~= nil) then
