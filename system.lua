@@ -73,9 +73,10 @@ function system.get_files_in_dir(path, mask)
 end
 
 function system.wait_and_exit()
+   local logger = require('logger')
    local function exit()
       fiber.sleep(2)
-      require('logger').add_entry(logger.INFO, "System", 'System stopped')
+      logger.add_entry(logger.INFO, "System", 'System stopped')
       os.exit()
    end
    fiber.create(exit)
