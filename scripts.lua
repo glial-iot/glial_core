@@ -125,6 +125,7 @@ end
 function scripts_private.http_init()
    local http_system = require 'http_system'
    http_system.endpoint_config("/scripts", scripts_private.http_api)
+   http_system.endpoint_config("/scripts_body", scripts_private.http_api_body)
 end
 
 ------------------ HTTP API functions ------------------
@@ -181,23 +182,46 @@ function scripts_private.http_api_update(params, req)
             data.uuid = params["uuid"]
             data.name = params["name"]
             data.active_flag = params["active_flag"]
-            local _,_, base_64_string = string.find(params["body"] or "", "data:text/plain;base64,(.+)")
-            if (base_64_string ~= nil) then
-               local text_decoded = digest.base64_decode(base_64_string)
-               if (text_decoded ~= nil) then
-                  data.body = text_decoded
-               end
-            end
-
             local table = scripts_private.update(data)
             return req:render{ json = table }
-
          else
             return req:render{ json = {error = true, error_msg = "Script API Update: UUID not found"} }
          end
       else
          return req:render{ json = {error = true, error_msg = "Script API Update: no UUID"} }
       end
+end
+
+
+function scripts_private.http_api_body(req)
+   local return_object
+
+   local uuid = req:query_param().uuid
+   local post_params = req:post_param()
+   local text_base64 = pairs(post_params)(post_params)
+   local text_decoded
+   local data = {}
+   local _,_, base_64_string = string.find(text_base64 or "", "data:text/plain;base64,(.+)")
+   if (base_64_string ~= nil) then
+      text_decoded = digest.base64_decode(base_64_string)
+   end
+   if (uuid ~= nil and text_decoded ~= nil) then
+      data.uuid = uuid
+      data.body = text_decoded
+      if (scripts_private.get({uuid = uuid}) ~= nil) then
+         local table = scripts_private.update(data)
+         return_object = req:render{ json = table }
+      else
+         return_object = req:render{ json = {error = true, error_msg = "Script API Body update: UUID not found"} }
+      end
+   else
+      return_object = req:render{ json = {error = true, error_msg = "Script API Body update: no UUID or no body"} }
+   end
+
+   return_object = return_object or req:render{ json = {error = true, error_msg = "Script API Body update: Unknown error(1213)"} }
+   return_object.headers = return_object.headers or {}
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
+   return return_object
 end
 
 
@@ -218,6 +242,7 @@ function scripts_private.http_api(req)
 
    elseif (params["action"] == "update") then
       return_object = scripts_private.http_api_update(params, req)
+
    else
       return_object = req:render{ json = {error = true, error_msg = "Script API: No valid action"} }
    end
