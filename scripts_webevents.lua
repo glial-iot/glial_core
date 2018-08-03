@@ -107,6 +107,14 @@ function webevents_private.load(uuid)
       return false
    end
 
+   local object
+   if (body.endpoint ~= nil) then
+      object = "/we/"..body.endpoint.."/"
+   else
+      object = ""
+   end
+   scripts.update({uuid = uuid, specific_data = {object}})
+
    webevents_script_bodies[uuid] = nil
    webevents_script_bodies[uuid] = body
    log_webevent_info('Web-event "'..script_params.name..'" started', script_params.uuid)

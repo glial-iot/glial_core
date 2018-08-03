@@ -36,7 +36,7 @@ function scripts_private.get_list(data)
          status = tuple["status"],
          status_msg = tuple["status_msg"],
          active_flag = tuple["active_flag"],
-         specific_data = tuple["specific_data"]
+         object = tuple["specific_data"][1]
       }
       table.insert(processed_table, processed_tuple)
    end
@@ -55,7 +55,7 @@ function scripts_private.get(data)
          status = tuple["status"],
          status_msg = tuple["status_msg"],
          active_flag = tuple["active_flag"],
-         specific_data = tuple["specific_data"]
+         object = tuple["specific_data"][1]
       }
       return table
    else
