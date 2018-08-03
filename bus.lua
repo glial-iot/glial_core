@@ -21,9 +21,10 @@ bus.current_key = 0
 ------------------ Private functions ------------------
 
 function bus_private.get_tsdb_attr(topic)
-   local table = bus.bus_storage.index.topic:select(topic, {iterator = 'EQ', limit = 1})
-   if (table[1] ~= nil) then
-      local tsdb_save = table[1][4]
+   local tuple = bus.storage.index.topic:get(topic)
+
+   if (tuple ~= nil) then
+      local tsdb_save = tuple["tsdb"]
       if (tsdb_save ~= nil and tsdb_save == true) then
          return true
       end
@@ -44,10 +45,10 @@ end
 
 function bus_private.fifo_storage_worker()
    while true do
-      local key, topic, timestamp, value = bus_private.fifo_get_delete_topics()
+      local key, topic, update_time, value = bus_private.fifo_get_delete_topics()
       --print("get fifo value:", key, topic, timestamp, value)
       if (key ~= nil) then
-         bus.bus_storage:upsert({topic, timestamp, value}, {{"=", 2, timestamp} , {"=", 3, value}})
+         bus.storage:upsert({topic, value, update_time, "", {}, ""}, {{"=", 2, value} , {"=", 3, update_time}})
          bus.rps_o = bus.rps_o + 1
          bus_private.tsdb_attr_check_and_save(topic, value)
          fiber.yield()
@@ -69,26 +70,26 @@ end
 
 
 function bus_private.add_value_to_fifo_buffer(topic, value)
-   local timestamp = os.time()
+   local update_time = os.time()
    if (topic ~= nil and value ~= nil) then
       local new_value  = scripts_busevents.process(topic, value)
-      bus.fifo_storage:insert{nil, topic, timestamp, (new_value or value)}
+      bus.fifo_storage:insert{nil, topic, tostring((new_value or value)), tonumber(update_time)}
       bus.rps_i = bus.rps_i + 1
    end
 end
 
 function bus_private.fifo_get_delete_topics() --need refactoring
    local table = bus.fifo_storage.index.primary:select(nil, {iterator = 'EQ', limit = 1})
-   local key, topic, timestamp, value
-   if (table[1] ~= nil) then
-      key = table[1][1]
-      topic = table[1][2]
-      timestamp = table[1][3]
-      value = table[1][4]
-      bus.fifo_storage:delete(key)
+   local tuple = table[1]
+   if (tuple ~= nil) then
+       local key = tonumber(tuple['key'])
+      local topic = tuple['topic']
+      local update_time = tuple['update_time']
+      local value = tuple["value"]
+      bus.fifo_storage.index.primary:delete(key)
       if (key > bus.max_seq_value) then bus.max_seq_value = key end
       bus.current_key = key
-      return key, topic, timestamp, value
+      return key, topic, update_time, value
    else
       if (bus.current_key > 1) then bus.avg_seq_value = bus.current_key end
       bus.fifo_sequence:reset()
@@ -98,12 +99,11 @@ end
 function bus_private.set_tsdb_save_attribute(topic, value)
    if (value ~= nil and (value == true or value == false)) then
       if (topic == "*") then
-         for _, tuple in bus.bus_storage.index.topic:pairs() do
-            local current_topic = tuple[1]
-            bus.bus_storage:update(current_topic, {{"=", 4, value}})
+         for _, tuple in bus.storage.index.topic:pairs() do
+            bus.storage:update(tuple["topic"], {{"=", 6, value}})
          end
       else
-         bus.bus_storage:update(topic, {{"=", 4, value}})
+         bus.storage.index.topic:update(topic, {{"=", 6, value}})
       end
    end
 end
@@ -111,29 +111,45 @@ end
 function bus_private.delete_topics(topic)
    if (topic ~= nil) then
       if (topic == "*") then
-         bus.bus_storage:truncate()
+         bus.storage:truncate()
       else
-         bus.bus_storage.index.topic:delete(topic)
+         bus.storage.index.topic:delete(topic)
       end
    end
 end
 
 -------------------Public functions-------------------
 
-function bus.init() --need refactoring(and add 'type')
-   bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, id = config.id.bus_fifo})
+function bus.init()
+   local format = {
+      {name='topic',        type='string'},   --1
+      {name='value',        type='string'},   --2
+      {name='update_time',  type='number'},   --3
+      {name='type',         type='string'},   --4
+      {name='tags',         type='array'},    --5
+      {name='tsdb',         type='string'},   --6
+   }
+   bus.storage = box.schema.space.create('storage', {if_not_exists = true, format = format, id = config.id.bus})
+   bus.storage:create_index('topic', {parts = {'topic'}, if_not_exists = true})
+
+
+
+   --------------------------------
+   local fifo_format = {
+      {name='key',            type='integer'},   --1
+      {name='topic',          type='string'},   --2
+      {name='value',          type='string'},   --3
+      {name='update_time',    type='number'},   --4
+   }
+   bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, format = fifo_format, id = config.id.bus_fifo})
    bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
    bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
-
-   bus.bus_storage = box.schema.space.create('bus_storage', {if_not_exists = true, id = config.id.bus})
-   bus.bus_storage:create_index('topic', {parts = {1, 'string'}, if_not_exists = true})
 
    bus_private.fifo_storage_worker_fiber = fiber.create(bus_private.fifo_storage_worker)
    bus_private.bus_rps_stat_worker_fiber = fiber.create(bus_private.bus_rps_stat_worker)
 
    local http_system = require 'http_system'
-   http_system.endpoint_config("/system_bus_data", bus.http_data_handler)
-   http_system.endpoint_config("/system_bus_action", bus.action_data_handler)
+   http_system.endpoint_config("/system_bus", bus.http_api_handler)
 end
 
 
@@ -142,10 +158,10 @@ function bus.update_value(topic, value) -- external value name (incorrect)
 end
 
 function bus.get_value(topic)
-   local tuple = bus.bus_storage.index.topic:get(topic)
+   local tuple = bus.storage.index.topic:get(topic)
 
    if (tuple ~= nil) then
-      return tuple[3]
+      return tuple["value"]
    else
       return nil
    end
@@ -154,11 +170,8 @@ end
 function bus.serialize(pattern)
    local bus_table = {}
 
-   for i, tuple in bus.bus_storage.index.topic:pairs() do
-      local topic = tuple[1].."/"
-      local topic_original = tuple[1]
-      local value = tuple[3]
-      local timestamp = tuple[2]
+   for _, tuple in bus.storage.index.topic:pairs() do
+      local topic = tuple["topic"].."/"
       local subtopic, _, local_table
 
       if (topic:find(pattern or "")) then
@@ -170,17 +183,20 @@ function bus.serialize(pattern)
                local_table = local_table[subtopic]
             end
          until subtopic == nil or topic == nil
-         local_table.value = value
-         local_table.update_time = timestamp
-         local_table.topic = topic_original
+         local_table.value = tuple["value"]
+         local_table.update_time = tuple["update_time"]
+         local_table.topic = tuple["topic"]
+         local_table.tsdb = tuple["tsdb"]
+         local_table.type = tuple["type"]
+         local_table.tags = tuple["tags"]
       end
-
    end
    return bus_table
 end
 
-function bus.action_data_handler(req)
+function bus.http_api_handler(req)
    local params = req:param()
+   local return_object
 
    if (params["action"] == "update_tsdb_attribute") then
       if (params["value"] == "true") then
@@ -188,64 +204,60 @@ function bus.action_data_handler(req)
       elseif (params["value"] == "false") then
          params["value"] = false
       else
-         return req:render{ json = { result = false } }
+         return_object = req:render{ json = { result = false } }
       end
       bus_private.set_tsdb_save_attribute(params["topic"], params["value"])
 
    elseif (params["action"] == "update_value") then
       if (params["topic"] == nil or params["value"] == nil) then
-         return req:render{ json = { result = false } }
+         return_object = req:render{ json = { result = false } }
       end
       bus.update_value(params["topic"], params["value"])
 
    elseif (params["action"] == "delete_topics") then
       if (params["topic"] == nil) then
-         return req:render{ json = { result = false } }
+         return_object = req:render{ json = { result = false } }
       end
       bus_private.delete_topics(params["topic"])
+
+   elseif (params["action"] == "get_bus_serialized") then
+      local bus_data = bus.serialize(params["pattern"])
+      return_object = req:render{ json = { bus = bus_data } }
+
+   elseif (params["action"] == "get_bus") then
+      local data_object = {}
+      local current_time = os.time()
+      for _, tuple in bus.storage.index.topic:pairs() do
+         local text_time
+         local topic = tuple["topic"]
+         local update_time = tuple["update_time"]
+         local value = tuple["value"]
+         local tsdb = tuple["tsdb"]
+         local type = tuple["type"]
+         local tags = tuple["tags"]
+         local diff_time = current_time - update_time
+         local diff_time_text = system.format_seconds(diff_time)
+         if (diff_time > 1) then
+            text_time = os.date("%Y-%m-%d, %H:%M:%S", update_time).." ("..(diff_time_text).." ago)"
+         else
+            text_time = os.date("%Y-%m-%d, %H:%M:%S", update_time)
+         end
+         table.insert(data_object, {topic = topic, text_time = text_time, time = update_time, value = value, tsdb = (tsdb or false), type = type, tags = tags})
+         if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
+      end
+
+      if (#data_object > 0) then
+         return_object = req:render{ json =  data_object  }
+      else
+         return_object = req:render{ json = { none_data = "true" } }
+      end
+
+
    end
-   local return_object = req:render{ json = { result = true } }
 
    return_object = return_object or req:render{ json = {error = true, error_msg = "Bus API: Unknown error(214)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
-   return return_object
-end
-
-function bus.http_data_handler(req) --move to actions
-   local params = req:param()
-   local return_object
-   local data_object = {}
-   local current_time = os.time()
-   --Database struct: 1(topic), 2(timestamp), 3(value), 4(tsdb_save)
-   for _, tuple in bus.bus_storage.index.topic:pairs() do
-      local processed_timestamp
-      local topic = tuple[1]
-      local timestamp = tuple[2]
-      local value = tuple[3]
-      local tsdb_save = tuple[4]
-      local diff_time = current_time - timestamp
-      local diff_time_text = system.format_seconds(diff_time)
-      if (diff_time > 1) then
-         processed_timestamp = os.date("%Y-%m-%d, %H:%M:%S", timestamp).." ("..(diff_time_text).." ago)"
-      else
-         processed_timestamp = os.date("%Y-%m-%d, %H:%M:%S", timestamp)
-      end
-      table.insert(data_object, {topic = topic, timestamp = processed_timestamp, time = timestamp, value = value, tsdb_save = (tsdb_save or false)})
-      if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
-   end
-
-   if (#data_object > 0) then
-      return_object = req:render{ json =  data_object  }
-   else
-      return_object = req:render{ json = { none_data = "true" } }
-   end
-
-
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Bus API: Unknown error(215)"} }
-   return_object.headers = return_object.headers or {}
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
-
    return return_object
 end
 
