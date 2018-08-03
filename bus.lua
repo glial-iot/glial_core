@@ -112,6 +112,15 @@ function bus_private.set_tsdb_save_attribute(topic, value)
    end
 end
 
+function bus_private.update_type(topic, type)
+   if (topic ~= nil and type ~= nil) then
+      bus.storage.index.topic:update(topic, {{"=", 4, type}})
+      return true
+   else
+      return false
+   end
+end
+
 function bus_private.delete_topics(topic)
    if (topic ~= nil) then
       if (topic == "*") then
@@ -163,6 +172,7 @@ function bus.update_value(topic, value) -- external value name (incorrect)
    local result = bus_private.add_value_to_fifo_buffer(topic, value)
    return result
 end
+
 
 function bus.get_value(topic)
    local tuple = bus.storage.index.topic:get(topic)
@@ -222,6 +232,14 @@ function bus.http_api_handler(req)
          return_object = req:render{ json = { result = false, msg = "No valid param topic or value" } }
       else
          local result = bus.update_value(params["topic"], params["value"])
+         return_object = req:render{ json = { result = result } }
+      end
+
+   elseif (params["action"] == "update_type") then
+      if (params["topic"] == nil or params["type"] == nil) then
+         return_object = req:render{ json = { result = false, msg = "No valid param topic or type" } }
+      else
+         local result = bus_private.update_type(params["topic"], params["type"])
          return_object = req:render{ json = { result = result } }
       end
 
