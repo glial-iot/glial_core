@@ -17,6 +17,8 @@ function private.system_action_http_api(req)
       os.execute("rm -rf ./db/*")
       fiber.create(system.wait_and_exit)
       return_object = req:render{ json = { result = true } }
+   elseif (params["action"] == "get_git_version") then
+      return_object = req:render{ json = { version = system.git_version() } }
    elseif (params["action"] == "update") then
       local old_version = system.git_version(true)
       local emessage = system.os_command("git pull 2>&1")
