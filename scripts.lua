@@ -77,6 +77,70 @@ function scripts_private.update(data)
    return scripts_private.get({uuid = data.uuid})
 end
 
+function scripts_private.generate_init_body(type)
+   if (type == scripts.type.WEB_EVENT) then
+      return [[-- The generated script is filled with the default content --
+endpoint = "endpoint_".._script_name
+
+local function http_callback(req)
+   local params = req:param()
+   local ret
+
+   -- Script body start --
+   if (params ~= nil) then
+      ret = req:render{ json = {params = params} }
+   end
+   -- Script body end --
+
+   ret = ret or req:render{ json = {result = false} }
+   ret.headers = ret.headers or {}
+   ret.headers['Access-Control-Allow-Origin'] = '*';
+   return ret
+end
+
+function init()
+   add_http_path(endpoint, http_callback)
+end
+
+function destroy()
+   remove_http_path(endpoint)
+end]]
+   end
+
+   if (type == scripts.type.DRIVER) then
+      return [[-- The generated script is filled with the default content --
+local fiber_object
+
+local function main ()
+   while true do
+      print("test")
+      fiber.sleep(600)
+   end
+end
+
+function init()
+   fiber_object = fiber.create(main)
+end
+
+function destroy()
+   fiber_object:cancel()
+end]]
+   end
+
+
+   if (type == scripts.type.BUS_EVENT) then
+      return [[-- The generated script is filled with the default content --
+topic = "/glue/rps_o"
+
+function event_handler(value)
+    store.old_value = store.old_value or 0
+    store.old_value = store.old_value + value
+    log_info(store.old_value)
+end]]
+   end
+
+end
+
 function scripts_private.create(data)
    if (data.type == nil) then return nil end
    local new_data = {}
@@ -139,7 +203,12 @@ end
 
 function scripts_private.http_api_create(params, req)
    if (params["name"] ~= nil and params["name"] ~= "" and params["type"] ~= nil and scripts.type[params["type"]] ~= nil) then
-      local table = scripts_private.create({type = params["type"], name = params["name"], status = params["status"], status_msg = params["status_msg"]})
+      local table = scripts_private.create({type = params["type"],
+                                            name = params["name"],
+                                            status = params["status"],
+                                            status_msg = params["status_msg"],
+                                            body = scripts_private.generate_init_body(params["type"])
+                                          })
       return req:render{ json = table }
    else
       return req:render{ json = {error = true, error_msg = "Script API Create: no name or type"} }
