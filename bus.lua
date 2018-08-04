@@ -12,6 +12,8 @@ local influx_storage = require "tsdb_drivers/influx_storage"
 local logger = require 'logger'
 local config = require 'config'
 
+bus.TYPE = {SHADOW = "SHADOW", NORMAL = "NORMAL"}
+
 bus.rps_i = 0
 bus.rps_o = 0
 bus.max_seq_value = 0
@@ -68,10 +70,13 @@ function bus_private.bus_rps_stat_worker()
 end
 
 
-function bus_private.add_value_to_fifo_buffer(topic, value)
+function bus_private.add_value_to_fifo_buffer(topic, value, shadow_flag)
    local update_time = os.time()
    if (topic ~= nil and value ~= nil) then
-      local new_value  = scripts_busevents.process(topic, value)
+      local new_value
+      if (shadow_flag == bus.TYPE.NORMAL) then
+         new_value  = scripts_busevents.process(topic, value)
+      end
       bus.fifo_storage:insert{nil, topic, tostring((new_value or value)), tonumber(update_time)}
       bus.rps_i = bus.rps_i + 1
       return true
@@ -168,8 +173,13 @@ function bus.init()
 end
 
 
-function bus.update_value(topic, value) -- external value name (incorrect)
-   local result = bus_private.add_value_to_fifo_buffer(topic, value)
+function bus.update_value(topic, value)
+   local result = bus_private.add_value_to_fifo_buffer(topic, value, bus.TYPE.NORMAL)
+   return result
+end
+
+function bus.shadow_update_value(topic, value)
+   local result = bus_private.add_value_to_fifo_buffer(topic, value, bus.TYPE.SHADOW)
    return result
 end
 
