@@ -108,13 +108,13 @@ function webevents_private.load(uuid)
       return false
    end
 
-   local object
+   local specific_data = {}
    if (body.endpoint ~= nil) then
-      object = "/we/"..body.endpoint.."/"
+      specific_data.object = "/we/"..body.endpoint.."/"
    else
-      object = ""
+      specific_data.object = ""
    end
-   scripts.update({uuid = uuid, specific_data = {object}})
+   scripts.update({uuid = uuid, specific_data = specific_data})
 
    webevents_script_bodies[uuid] = nil
    webevents_script_bodies[uuid] = body

@@ -36,7 +36,7 @@ function scripts_private.get_list(data)
          status = tuple["status"],
          status_msg = tuple["status_msg"],
          active_flag = tuple["active_flag"],
-         object = tuple["specific_data"][1]
+         object = tuple["specific_data"]["object"]
       }
       table.insert(processed_table, processed_tuple)
    end
@@ -55,7 +55,7 @@ function scripts_private.get(data)
          status = tuple["status"],
          status_msg = tuple["status_msg"],
          active_flag = tuple["active_flag"],
-         object = tuple["specific_data"][1]
+         object = tuple["specific_data"]["object"]
       }
       return table
    else
@@ -72,7 +72,10 @@ function scripts_private.update(data)
    if (data.status ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 5, data.status}}) end
    if (data.status_msg ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 6, data.status_msg}}) end
    if (data.active_flag ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 7, data.active_flag}}) end
-   if (data.specific_data ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, data.specific_data}}) end
+   if (data.specific_data ~= nil and type(data.specific_data) == "table") then
+      data.specific_data = setmetatable(data.specific_data, {__serialize = 'map'})
+      scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, data.specific_data}})
+   end
 
    return scripts_private.get({uuid = data.uuid})
 end
@@ -151,7 +154,7 @@ function scripts_private.create(data)
    new_data.status = data.status or scripts.statuses.STOPPED
    new_data.status_msg = data.status_msg or "New script"
    new_data.active_flag = data.active_flag or scripts.flag.NON_ACTIVE
-   new_data.specific_data = data.specific_data or {}
+   new_data.specific_data = data.specific_data or setmetatable({}, {__serialize = 'map'})
    local table = {
       new_data.uuid,
       new_data.type,
@@ -179,7 +182,7 @@ function scripts_private.storage_init()
       {name='status',         type='string'},   --5
       {name='status_msg',     type='string'},   --6
       {name='active_flag',    type='string'},   --7
-      {name='specific_data',  type='array'}     --8
+      {name='specific_data',  type='map'}       --8
    }
    scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format, id = config.id.scripts})
    scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
@@ -251,6 +254,8 @@ function scripts_private.http_api_update(params, req)
             data.uuid = params["uuid"]
             data.name = params["name"]
             data.active_flag = params["active_flag"]
+            data.specific_data = {}
+            data.specific_data.object = params["object"]
             local table = scripts_private.update(data)
             return req:render{ json = table }
          else

@@ -94,8 +94,9 @@ function busevents_private.load(uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: topic "variable" not found or not string'})
       return false
    end
-   local object = body.topic or ""
-   scripts.update({uuid = uuid, specific_data = {object}})
+   local specific_data = {}
+   specific_data.object = body.topic or ""
+   scripts.update({uuid = uuid, specific_data = specific_data})
 
    busevents_script_bodies[body.topic] = body
    log_busevent_info('Bus-event "'..script_params.name..'" active on topic '..(body.topic or ""), script_params.uuid)
