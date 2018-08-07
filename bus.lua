@@ -3,6 +3,7 @@ local bus = {}
 local bus_private = {}
 
 local inspect = require 'libs/inspect'
+local clock = require 'clock'
 local box = box
 
 local scripts_busevents = require 'scripts_busevents'
@@ -14,11 +15,9 @@ local config = require 'config'
 
 bus.TYPE = {SHADOW = "SHADOW", NORMAL = "NORMAL"}
 
-bus.rps_i = 0
-bus.rps_o = 0
-bus.max_seq_value = 0
-bus.avg_seq_value = 0
-bus.current_key = 0
+bus.fifo_saved_rps = 0
+bus.bus_saved_rps = 0
+bus.max_fifo_count = 0
 
 ------------------ Private functions ------------------
 
@@ -33,11 +32,11 @@ end
 
 function bus_private.fifo_storage_worker()
    while true do
-      local key, topic, update_time, value = bus_private.fifo_get_delete_topics()
-      --print("get fifo value:", key, topic, timestamp, value)
-      if (key ~= nil) then
-         bus.storage:upsert({topic, value, update_time, "", {}, ""}, {{"=", 2, value} , {"=", 3, update_time}})
-         bus.rps_o = bus.rps_o + 1
+      local topic, value = bus_private.get_value_from_fifo()
+      if (value ~= nil and topic ~= nil) then
+         local timestamp = os.time()
+         bus.storage:upsert({topic, value, timestamp, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp}})
+         bus.bus_saved_rps = bus.bus_saved_rps + 1
          bus_private.tsdb_attr_check_and_save(topic, value)
          fiber.yield()
       else
@@ -48,44 +47,37 @@ end
 
 function bus_private.bus_rps_stat_worker()
    while true do
-      bus.update_value("/glue/rps_i", bus.rps_i)
-      bus.update_value("/glue/rps_o", bus.rps_o)
-      bus.rps_i = 0
-      bus.rps_o = 0
+      if (bus.bus_saved_rps >= 3) then bus.bus_saved_rps = bus.bus_saved_rps - 3 end
+      bus.update_value("/glue/bus/fifo_saved", bus.fifo_saved_rps)
+      bus.update_value("/glue/bus/bus_saved", bus.bus_saved_rps)
+      bus.update_value("/glue/bus/fifo_max", bus.max_fifo_count)
+      bus.fifo_saved_rps = 0
+      bus.bus_saved_rps = 0
       fiber.sleep(1)
    end
 end
 
 
-function bus_private.add_value_to_fifo_buffer(topic, value, shadow_flag)
-   local update_time = os.time()
+function bus_private.add_value_to_fifo(topic, value, shadow_flag)
    if (topic ~= nil and value ~= nil) then
       local new_value
       if (shadow_flag == bus.TYPE.NORMAL) then
-         new_value  = scripts_busevents.process(topic, value)
+         new_value = scripts_busevents.process(topic, value)
       end
-      bus.fifo_storage:insert{nil, topic, tostring((new_value or value)), tonumber(update_time)}
-      bus.rps_i = bus.rps_i + 1
+      bus.fifo_storage:insert{bus_private.gen_fifo_id(), topic, tostring((new_value or value))}
+      bus.fifo_saved_rps = bus.fifo_saved_rps + 1
       return true
    end
    return false
 end
 
-function bus_private.fifo_get_delete_topics() --need refactoring
-   local table = bus.fifo_storage.index.primary:select(nil, {iterator = 'EQ', limit = 1})
-   local tuple = table[1]
+function bus_private.get_value_from_fifo()
+   local tuple = bus.fifo_storage.index.timestamp:min()
    if (tuple ~= nil) then
-       local key = tonumber(tuple['key'])
-      local topic = tuple['topic']
-      local update_time = tuple['update_time']
-      local value = tuple["value"]
-      bus.fifo_storage.index.primary:delete(key)
-      if (key > bus.max_seq_value) then bus.max_seq_value = key end
-      bus.current_key = key
-      return key, topic, update_time, value
-   else
-      if (bus.current_key > 1) then bus.avg_seq_value = bus.current_key end
-      bus.fifo_sequence:reset()
+      bus.fifo_storage.index.timestamp:delete(tuple['timestamp'])
+      local count = bus.fifo_storage.index.timestamp:count()
+      if (count > bus.max_fifo_count) then bus.max_fifo_count = count end
+      return tuple['topic'], tuple["value"]
    end
 end
 
@@ -105,7 +97,7 @@ function bus_private.set_tsdb_save_attribute(topic, value)
 end
 
 function bus_private.update_type(topic, type)
-   if (topic ~= nil and type ~= nil) then
+   if (topic ~= nil and type ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
       bus.storage.index.topic:update(topic, {{"=", 4, type}})
       return true
    else
@@ -125,6 +117,14 @@ function bus_private.delete_topics(topic)
    return false
 end
 
+function bus_private.gen_fifo_id()
+   local new_id = clock.realtime()*10000
+   while bus.fifo_storage.index.timestamp:get(new_id) do
+      new_id = new_id + 1
+   end
+   return new_id
+end
+
 -------------------Public functions-------------------
 
 function bus.init()
@@ -134,7 +134,7 @@ function bus.init()
       {name='update_time',  type='number'},   --3
       {name='type',         type='string'},   --4
       {name='tags',         type='array'},    --5
-      {name='tsdb',         type='string'},  --6
+      {name='tsdb',         type='string'},   --6
    }
    bus.storage = box.schema.space.create('storage', {if_not_exists = true, format = format, id = config.id.bus})
    bus.storage:create_index('topic', {parts = {'topic'}, if_not_exists = true})
@@ -143,30 +143,33 @@ function bus.init()
 
    --------------------------------
    local fifo_format = {
-      {name='key',            type='integer'},   --1
+      {name='timestamp',      type='number'},   --1
       {name='topic',          type='string'},   --2
       {name='value',          type='string'},   --3
-      {name='update_time',    type='number'},   --4
    }
    bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, format = fifo_format, id = config.id.bus_fifo})
-   bus.fifo_sequence = box.schema.sequence.create("fifo_storage_sequence", {if_not_exists = true})
-   bus.fifo_storage:create_index('primary', {sequence="fifo_storage_sequence", if_not_exists = true})
+   bus.fifo_storage:create_index('timestamp', {parts={'timestamp'}, if_not_exists = true})
+   --------------------------------
 
-   bus_private.fifo_storage_worker_fiber = fiber.create(bus_private.fifo_storage_worker)
-   bus_private.bus_rps_stat_worker_fiber = fiber.create(bus_private.bus_rps_stat_worker)
+   fiber.create(bus_private.fifo_storage_worker)
+   fiber.create(bus_private.bus_rps_stat_worker)
 
    local http_system = require 'http_system'
    http_system.endpoint_config("/system_bus", bus.http_api_handler)
+
+   bus.storage:upsert({"/glue/bus/fifo_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
+   bus.storage:upsert({"/glue/bus/bus_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
+   bus.storage:upsert({"/glue/bus/fifo_max", "0", os.time(), "records", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
 end
 
 
 function bus.update_value(topic, value)
-   local result = bus_private.add_value_to_fifo_buffer(topic, value, bus.TYPE.NORMAL)
+   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL)
    return result
 end
 
 function bus.shadow_update_value(topic, value)
-   local result = bus_private.add_value_to_fifo_buffer(topic, value, bus.TYPE.SHADOW)
+   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW)
    return result
 end
 
@@ -200,7 +203,7 @@ function bus.serialize(pattern)
          local_table.value = tuple["value"]
          local_table.update_time = tuple["update_time"]
          local_table.topic = tuple["topic"]
-         local_table.tsdb = tuple["tsdb"]
+         if (tuple["tsdb"] == "true") then local_table.tsdb = true else local_table.tsdb = false end
          local_table.type = tuple["type"]
          local_table.tags = tuple["tags"]
       end
@@ -261,7 +264,7 @@ function bus.http_api_handler(req)
          local update_time = tuple["update_time"]
          local value = tuple["value"]
          local tsdb
-         if (tuple["tsdb"] == "false") then tsdb = false else tsdb = true end
+         if (tuple["tsdb"] == "true") then tsdb = true else tsdb = false end
          local type = tuple["type"]
          local tags = tuple["tags"]
          local diff_time = current_time - update_time
@@ -272,7 +275,7 @@ function bus.http_api_handler(req)
          else
             text_time = os.date("%Y-%m-%d, %H:%M:%S", update_time)
          end
-         table.insert(data_object, {topic = topic, text_time = text_time, time = update_time, value = value, tsdb = (tsdb or false), type = type, tags = tags})
+         table.insert(data_object, {topic = topic, text_time = text_time, time = update_time, value = value, tsdb = tsdb, type = type, tags = tags})
          if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
       end
 
