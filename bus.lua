@@ -8,7 +8,7 @@ local box = box
 local scripts_busevents = require 'scripts_busevents'
 local system = require 'system'
 local fiber = require 'fiber'
-local influx_storage = require "tsdb_drivers/influx_storage"
+local export = require "exports/export"
 local logger = require 'logger'
 local config = require 'config'
 
@@ -22,24 +22,11 @@ bus.current_key = 0
 
 ------------------ Private functions ------------------
 
-function bus_private.get_tsdb_attr(topic)
+function bus_private.tsdb_attr_check_and_save(topic, value)
    local tuple = bus.storage.index.topic:get(topic)
 
-   if (tuple ~= nil) then
-      if (tuple["tsdb"] ~= nil and tuple["tsdb"] == "true") then
-         return true
-      end
-   end
-   return false
-end
-
-function bus_private.tsdb_attr_check_and_save(topic, value)
-   local tsdb_save = bus_private.get_tsdb_attr(topic)
-   if (tsdb_save == true) then
-         local answer = influx_storage.update_value("glue", topic, value)
-         if (answer ~= nil) then
-             logger.add_entry(logger.ERROR, "Influx adapter", 'Influx answer: '..answer)
-         end
+   if (tuple ~= nil and tuple["tsdb"] == "true") then
+      export.send_value(topic, value)
    end
 end
 

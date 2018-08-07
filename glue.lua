@@ -11,6 +11,7 @@ local scripts_webevents = require 'scripts_webevents'
 local scripts_busevents = require 'scripts_busevents'
 
 local bus = require 'bus'
+local export = require 'exports/export'
 local system = require "system"
 local logger = require "logger"
 local config = require 'config'
@@ -65,6 +66,9 @@ backup_restore.init()
 backup_restore.create_backup("Backup after start")
 logger.add_entry(logger.INFO, "System", "Backup created")
 backup_restore.remove_old_files()
+
+export.init()
+logger.add_entry(logger.INFO, "System", "Export modules started")
 
 logger.add_entry(logger.INFO, "System", "System started")
 
