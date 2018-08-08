@@ -36,7 +36,7 @@ function backup_restore_private.remove_space_files()
       local scripts_space_number = config.id.scripts
       local bus_space_number = config.id.bus
       if (space_number ~= scripts_space_number and space_number ~= bus_space_number) then
-         local exit_code = os.execute("rm -f "..filename.." 2>&1")
+         local exit_code = os.execute("rm -f '"..filename.."' 2>&1")
          if (exit_code ~= 0) then
             return false, "delete space file("..filename..") failed"
          end
@@ -95,7 +95,7 @@ function backup_restore.remove_old_files()
    if (#files_list > config.MAX_BACKUP_FILES) then
       for i, filename in pairs(files_list) do
          if (i > config.MAX_BACKUP_FILES) then
-            local command = "rm -f "..filename.." 2>&1"
+            local command = "rm -f '"..filename.."' 2>&1"
             local exit_code = os.execute(command)
             if (exit_code ~= 0) then
                logger.add_entry(logger.ERROR, "Backup-restore system", "Delete old backup file("..filename..") failed")
