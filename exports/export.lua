@@ -22,27 +22,21 @@ function export.send_value(topic, value)
    influx.send_value(topic, value)
 end
 
-
-
 function export.http_api_handler(req)
    local params = req:param()
    local return_object
 
    if (params["action"] == "set") then
       if (params["type"] == "influx") then
-         if (params["value"] == "true") then
-            influx.set_status(true)
-         elseif (params["value"] == "true") then
-            influx.set_status(false)
+         if (params["value"] == "true" or params["value"] == "false") then
+            influx.set_status(params["value"])
          else
             return_object = req:render{ json = {error = true, error_msg = "Export API set: No valid value"} }
          end
 
       elseif (params["type"] == "impact") then
-         if (params["status"] == "true") then
-            impact.set_status(true)
-         elseif (params["value"] == "true") then
-            impact.set_status(false)
+         if (params["value"] == "true" or params["value"] == "false") then
+            impact.set_status(params["value"])
          else
             return_object = req:render{ json = {error = true, error_msg = "Export API set: No valid value"} }
          end
@@ -64,10 +58,10 @@ function export.http_api_handler(req)
 
 
    else
-      return_object = req:render{ json = {error = true, error_msg = "Bus API: No valid action"} }
+      return_object = req:render{ json = {error = true, error_msg = "Exports API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Bus API: Unknown error(214)"} }
+   return_object = return_object or req:render{ json = {error = true, error_msg = "Exports API: Unknown error(214)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object

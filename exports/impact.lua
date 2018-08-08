@@ -4,6 +4,7 @@ local impact = {}
 
 local box = box
 local logger = require 'logger'
+local settings = require 'settings'
 local fiber = require 'fiber'
 local mqtt = require 'mqtt'
 local json = require 'json'
@@ -21,7 +22,7 @@ impact.config.MQTT_TOKEN = "trqspu69qcz7"
 impact.config.IMPACT_URL = "https://impact.iot.nokia.com"
 
 impact.count = 0
-impact.status = true
+impact.STATUS_SETTINGS_NAME = "impact_save"
 
 function impact.create_mqtt_token(username, password, tenant, description)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
@@ -48,17 +49,20 @@ function impact.init()
 end
 
 function impact.get_status()
-   return impact.status
+   local status, value = settings.get(impact.STATUS_SETTINGS_NAME, "false")
+   if (value == "true") then value = true else value = false end
+   return value
 end
-
 
 function impact.set_status(status)
-   impact.status = status
+   if (status == "false" or status == "true") then
+      settings.set(impact.STATUS_SETTINGS_NAME, status)
+   end
 end
 
-
 function impact.send_value(topic, value)
-   if (impact.status == false) then return end
+   local status, settings_value = settings.get(impact.STATUS_SETTINGS_NAME, "false")
+   if (status == false or settings_value == "false") then return end
    impact.count = impact.count + 1
    if (topic == nil or value == nil) then return nil end
    if (impact.mqtt_conn == nil) then return nil end
