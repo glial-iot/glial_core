@@ -16,6 +16,7 @@ config.id.bus = 600
 config.id.bus_fifo = 601
 config.id.logs = 610
 config.id.scripts = 620
+config.id.settings = 630
 
 --[[
 config.limit.value = 10

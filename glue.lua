@@ -16,7 +16,7 @@ local system = require "system"
 local logger = require "logger"
 local config = require 'config'
 local backup_restore = require 'backup_restore'
-
+local settings = require 'settings'
 
 local function box_config()
    box.cfg {
@@ -45,6 +45,10 @@ logger.http_init()
 logger.add_entry(logger.INFO, "System", "HTTP subsystem initialized")
 
 require('system_webevent').init()
+
+settings.init()
+logger.add_entry(logger.INFO, "System", "Settings database initialized")
+
 
 bus.init()
 logger.add_entry(logger.INFO, "System", "Bus and FIFO worker initialized")
