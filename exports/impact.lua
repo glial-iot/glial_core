@@ -20,7 +20,8 @@ impact.config.MQTT_ID = "impact_tarantool_client"
 impact.config.MQTT_TOKEN = "trqspu69qcz7"
 impact.config.IMPACT_URL = "https://impact.iot.nokia.com"
 
-local impact_count = 0
+impact.count = 0
+impact.status = true
 
 function impact.create_mqtt_token(username, password, tenant, description)
    local basic = "Basic "..(base64.to_base64(username..":"..password))
@@ -46,9 +47,19 @@ function impact.init()
    --impact.create_mqtt_token(username, password, tenant, description)
 end
 
+function impact.get_status()
+   return impact.status
+end
+
+
+function impact.set_status(status)
+   impact.status = status
+end
+
 
 function impact.send_value(topic, value)
-   impact_count = impact_count + 1
+   if (impact.status == false) then return end
+   impact.count = impact.count + 1
    if (topic == nil or value == nil) then return nil end
    if (impact.mqtt_conn == nil) then return nil end
    local ok, err = impact.mqtt_conn:publish(impact.config.MQTT_TOKEN.."/"..topic, value, mqtt.QOS_0, mqtt.NON_RETAIN)
@@ -62,7 +73,7 @@ end
 function impact.rps_stat_worker()
    local bus = require 'bus'
    while true do
-      bus.update_value("/glue/export/impact_count", impact_count)
+      bus.update_value("/glue/export/impact_count", impact.count)
       fiber.sleep(10)
    end
 end
