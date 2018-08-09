@@ -211,6 +211,35 @@ function bus.serialize(pattern)
    return bus_table
 end
 
+
+function bus.serialize_v2(pattern)
+   local bus_table = {}
+
+   for _, tuple in bus.storage.index.topic:pairs() do
+      local topic = tuple["topic"].."/"
+      local subtopic, _, local_table
+
+      if (topic:find(pattern or "")) then
+         local_table = bus_table
+         repeat
+            _, _, subtopic, topic = topic:find("/(.-)(/.*)")
+            if (subtopic ~= nil and subtopic ~= "") then
+               local_table[subtopic] = local_table[subtopic] or {}
+               local_table = local_table[subtopic]
+            end
+         until subtopic == nil or topic == nil
+         local_table.__data__ = {}
+         local_table.__data__.value = tuple["value"]
+         local_table.__data__.update_time = tuple["update_time"]
+         local_table.__data__.topic = tuple["topic"]
+         if (tuple["tsdb"] == "true") then local_table.__data__.tsdb = true else local_table.__data__.tsdb = false end
+         local_table.__data__.type = tuple["type"]
+         local_table.__data__.tags = tuple["tags"]
+      end
+   end
+   return bus_table
+end
+
 function bus.http_api_handler(req)
    local params = req:param()
    local return_object
@@ -253,6 +282,10 @@ function bus.http_api_handler(req)
 
    elseif (params["action"] == "get_bus_serialized") then
       local bus_data = bus.serialize(params["pattern"])
+      return_object = req:render{ json = { bus = bus_data } }
+
+   elseif (params["action"] == "get_bus_serialized_v2") then
+      local bus_data = bus.serialize_v2(params["pattern"])
       return_object = req:render{ json = { bus = bus_data } }
 
    elseif (params["action"] == "get_bus") then
