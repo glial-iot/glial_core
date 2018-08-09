@@ -62,19 +62,8 @@ function busevents_private.load(uuid)
       return false
    end
 
-   local bus = require('bus')
    local log_script_name = "Bus event '"..(script_params.name or "undefined name").."'"
-   body = setmetatable({}, {__index=_G})
-   body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(uuid, log_script_name)
-   body.log, body.print = body.log_user, body.log_user
-   body._script_name = script_params.name
-   body._script_uuid = script_params.uuid
-   body.update_value, body.shadow_update_value, body.get_value, body.bus_serialize  = bus.update_value, bus.shadow_update_value, bus.get_value, bus.serialize
-   body.fiber = {}
-   body.fiber.create = scripts.generate_fibercreate(uuid, log_script_name)
-   body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
-   scripts.store[script_params.uuid] = scripts.store[script_params.uuid] or {}
-   body.store = scripts.store[script_params.uuid]
+   body = scripts.generate_body(script_params, log_script_name)
 
    local status, err_msg = pcall(setfenv(current_func, body))
    if (status ~= true) then
