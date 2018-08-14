@@ -83,31 +83,16 @@ end
 function scripts_private.generate_init_body(type)
    if (type == scripts.type.WEB_EVENT) then
       return [[-- The generated script is filled with the default content --
-endpoint = "endpoint_".._script_name
+function http_callback(params)
 
-local function http_callback(req)
-   local params = req:param()
-   local ret
-
-   -- Script body start --
-   if (params ~= nil) then
-      ret = req:render{ json = {params = params} }
+   -- The script will receive parameters in the params table with this kind of query: /we/object?action=print_test
+   if (params["action"] == "print_test") then
+      return {print_text = "test"}
    end
-   -- Script body end --
+   -- The table returned by the script will be given as json: { "print_text": "test" }
 
-   ret = ret or req:render{ json = {result = false} }
-   ret.headers = ret.headers or {}
-   ret.headers['Access-Control-Allow-Origin'] = '*';
-   return ret
 end
-
-function init()
-   add_http_path(endpoint, http_callback)
-end
-
-function destroy()
-   remove_http_path(endpoint)
-end]]
+]]
    end
 
    if (type == scripts.type.DRIVER) then
@@ -254,8 +239,10 @@ function scripts_private.http_api_update(params, req)
             data.uuid = params["uuid"]
             data.name = params["name"]
             data.active_flag = params["active_flag"]
-            data.specific_data = {}
-            data.specific_data.object = params["object"]
+            if (params["object"] ~= nil) then --все равно будет очищать всю таблицу. будет работать только пока в ней хранится исключительно object
+               data.specific_data = {}
+               data.specific_data.object = params["object"]
+            end
             local table = scripts_private.update(data)
             return req:render{ json = table }
          else

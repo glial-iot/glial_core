@@ -6,7 +6,7 @@ local box = box
 local log = require 'log'
 local inspect = require 'libs/inspect'
 
-
+local logger = require 'logger'
 local http_system = require 'http_system'
 local system = require 'system'
 local config = require 'config'
@@ -43,20 +43,38 @@ end
 
 -------------------Public functions-------------------
 
-function http_script_system.generate_add_remove_functions(uuid, name)
-   local logger = require 'logger'
+function http_script_system.generate_callback_func(handler)
+   return function(req)
+      local params = req:param()
+      local ret
 
-   local function add_path(path, handler)
-      logger.add_entry(logger.INFO, name, "Attached path '/we/"..(path or "").."'", uuid, "")
+      local result = handler(params, req)
+      if (result ~= nil) then
+         ret = req:render{ json = result }
+      else
+         ret = req:render{ json = {} }
+      end
+
+      ret.headers = ret.headers or {}
+      ret.headers['Access-Control-Allow-Origin'] = '*';
+      return ret
+   end
+end
+
+
+
+function http_script_system.attach_path(path, handler)
+   if (http_script_system_private.path_table[path] ~= nil) then
+      return false, "duplicate"
+   else
       http_script_system_private.path_table[path] = handler
+      return true
    end
 
-   local function remove_path(path)
-      logger.add_entry(logger.INFO, name, "Detached path '/we/"..(path or "").."'", uuid, "")
-      http_script_system_private.path_table[path] = nil
-   end
+end
 
-   return add_path, remove_path
+function http_script_system.remove_path(path)
+   http_script_system_private.path_table[path] = nil
 end
 
 

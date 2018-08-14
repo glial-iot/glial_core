@@ -68,7 +68,6 @@ function webevents_private.load(uuid)
 
    local log_script_name = "Webevent '"..(script_params.name or "undefined name").."'"
    body = scripts.generate_body(script_params, log_script_name)
-   body.add_http_path, body.remove_http_path = http_script_system.generate_add_remove_functions(uuid, log_script_name)
 
    local status, returned_data = pcall(setfenv(current_func, body))
    if (status ~= true) then
@@ -77,39 +76,35 @@ function webevents_private.load(uuid)
       return false
    end
 
-   if (body.init == nil or type(body.init) ~= "function") then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (init function not found or no function', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Init function not found or no function'})
+   if (body.http_callback == nil or type(body.http_callback) ~= "function") then
+      log_webevent_error('Web-event "'..script_params.name..'" not start (http_callback function not found or no function)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: http_callback function not found or no function'})
       return false
    end
 
-   if (body.destroy == nil or type(body.destroy) ~= "function") then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (destroy function not found or no function)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function not found or no function'})
+   if (script_params.object == nil or script_params.object == "") then
+      log_webevent_error('Web-event "'..script_params.name..'" not start (endpoint not found)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: endpoint not found'})
       return false
    end
-
-   status, returned_data = pcall(body.init)
-
-   if (status ~= true) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (init function error: '..(returned_data or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function error: '..(returned_data or "")})
-      return false
-   end
-
-   local specific_data = {}
-   if (body.endpoint ~= nil) then
-      specific_data.object = "/we/"..body.endpoint.."/"
-   else
-      specific_data.object = ""
-   end
-   scripts.update({uuid = uuid, specific_data = specific_data})
 
    webevents_script_bodies[uuid] = nil
    webevents_script_bodies[uuid] = body
-   log_webevent_info('Web-event "'..script_params.name..'" started', script_params.uuid)
-   scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Started'})
+
+   local callback = http_script_system.generate_callback_func(webevents_script_bodies[uuid].http_callback)
+
+   local attach_result = http_script_system.attach_path(script_params.object, callback)
+
+   if (attach_result == false) then
+      log_webevent_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'"', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: duplicate path'})
+   else
+      log_webevent_info('Web-event "'..script_params.name..'" started and attached path "'..(script_params.object or '')..'"', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Started'})
+   end
+
 end
+
 
 function webevents_private.unload(uuid)
    local body = webevents_script_bodies[uuid]
@@ -126,30 +121,7 @@ function webevents_private.unload(uuid)
       return false
    end
 
-   if (body.init == nil or type(body.init) ~= "function") then
-      log_webevent_error('Web-event "'..script_params.name..'" not stop (init function not found or no function)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: init function not found or no function'})
-      return false
-   end
-
-   if (body.destroy == nil or type(body.destroy) ~= "function") then
-      log_webevent_error('Web-event "'..script_params.name..'" not stop (destroy function not found or no function)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function not found or no function'})
-      return false
-   end
-
-   local status, returned_data = pcall(body.destroy)
-   if (status ~= true) then
-      log_webevent_error('Web-event "'..script_params.name..'" not stop (destroy function error: '..(returned_data or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(returned_data or "")})
-      return false
-   end
-
-   if (returned_data == false) then
-      log_webevent_warning('Web-event "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
-      return false
-   end
+   http_script_system.remove_path(script_params.object)
 
    log_webevent_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Stopped'})
