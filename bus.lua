@@ -58,11 +58,11 @@ function bus_private.bus_rps_stat_worker()
 end
 
 
-function bus_private.add_value_to_fifo(topic, value, shadow_flag)
+function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid)
    if (topic ~= nil and value ~= nil) then
       local new_value
       if (shadow_flag == bus.TYPE.NORMAL) then
-         new_value = scripts_busevents.process(topic, value)
+         new_value = scripts_busevents.process(topic, value, source_uuid)
       end
       bus.fifo_storage:insert{bus_private.gen_fifo_id(), topic, tostring((new_value or value))}
       bus.fifo_saved_rps = bus.fifo_saved_rps + 1
@@ -160,6 +160,15 @@ function bus.init()
    bus.storage:upsert({"/glue/bus/fifo_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
    bus.storage:upsert({"/glue/bus/bus_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
    bus.storage:upsert({"/glue/bus/fifo_max", "0", os.time(), "records", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
+end
+
+function bus.update_value_genarator(uuid)
+   local function update_value(topic, value)
+      local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid)
+      return result
+   end
+
+   return update_value
 end
 
 

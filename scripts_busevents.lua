@@ -125,11 +125,17 @@ end
 
 ------------------ Public functions ------------------
 
-function busevents.process(topic, value)
+function busevents.process(topic, value, source_uuid)
    if (busevents_script_bodies[topic] ~= nil) then
       local body = busevents_script_bodies[topic]
       local script_params = scripts.get({uuid = body._script_uuid})
-      if (type(body) == "table" and type(body.event_handler) == "function" and script_params.status ~= scripts.statuses.ERROR) then
+      if (type(body) == "table" and
+          type(body.event_handler) == "function" and
+          script_params.status ~= scripts.statuses.ERROR) then
+
+         if (script_params.uuid == (source_uuid or "0")) then
+            return
+         end
          local status, returned_data = pcall(body.event_handler, value, topic)
          if (status ~= true) then
             returned_data = tostring(returned_data)
@@ -137,6 +143,7 @@ function busevents.process(topic, value)
             scripts.update({uuid = body._script_uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
          end
          return returned_data
+
       end
    end
 end

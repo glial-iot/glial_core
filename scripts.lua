@@ -336,11 +336,12 @@ end
 function scripts.generate_body(script_params, log_script_name)
    local bus = require 'bus'
    local body = setmetatable({}, {__index=_G})
+   local uuid_related_update_value = bus.update_value_genarator(script_params.uuid)
    body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(script_params.uuid, log_script_name)
    body.log, body.print = body.log_user, body.log_user
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
-   body.update_value, body.shadow_update_value, body.get_value, body.bus_serialize = bus.update_value, bus.shadow_update_value, bus.get_value, bus.serialize
+   body.update_value, body.shadow_update_value, body.get_value, body.bus_serialize = uuid_related_update_value, bus.shadow_update_value, bus.get_value, bus.serialize
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(script_params.uuid, log_script_name)
    body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
