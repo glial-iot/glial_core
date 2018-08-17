@@ -200,7 +200,7 @@ function drivers.init()
 end
 
 function drivers.process(topic, value, source_uuid)
-   for uuid, scripts_bodies_table in pairs(drivers_script_callback_bodies) do
+   for uuid, scripts_bodies_table in pairs(drivers_script_callback_bodies) do --TODO: обход таблицы потенциально медленный, надо сделать индекс
       local script_params = scripts.get({uuid = uuid})
       if (script_params.status == scripts.statuses.NORMAL and
           script_params.active_flag == scripts.flag.ACTIVE and
