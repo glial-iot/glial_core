@@ -14,6 +14,7 @@ local scripts = require 'scripts'
 local http_system = require 'http_system'
 
 local drivers_script_bodies = {}
+local drivers_script_callback_bodies = {}
 
 local function log_driver_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Drivers subsystem", msg, uuid, "")
@@ -86,6 +87,15 @@ function drivers_private.load(uuid)
       return false
    end
 
+   if (body.topics ~= nil and type(body.topics) == "table" and #body.topics > 0) then
+      if (type(body.topic_update_callback) == "function") then
+         drivers_script_callback_bodies[uuid] = {}
+         for _, topic in pairs(body.topics) do
+            drivers_script_callback_bodies[uuid][topic] = body.topic_update_callback
+         end
+      end
+   end
+
    status, returned_data = pcall(body.init)
 
    if (status ~= true) then
@@ -140,6 +150,10 @@ function drivers_private.unload(uuid)
       return false
    end
 
+   if (body.topics ~= nil and type(body.topics) == "table" and #body.topics > 0) then
+      drivers_script_callback_bodies[uuid] = nil
+   end
+
    log_driver_info('Driver "'..script_params.name..'" stopped', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Stopped'})
    drivers_script_bodies[uuid] = nil
@@ -186,6 +200,25 @@ end
 function drivers.init()
    drivers.start_all()
    http_system.endpoint_config("/drivers", drivers_private.http_api)
+end
+
+function drivers.process(topic, value, source_uuid)
+   for uuid, scripts_bodies_table in pairs(drivers_script_callback_bodies) do
+      local script_params = scripts.get({uuid = uuid})
+      if (script_params.status == scripts.statuses.NORMAL and
+          script_params.active_flag == scripts.flag.ACTIVE and
+          script_params.uuid ~= (source_uuid or "0")) then
+         local body = scripts_bodies_table[topic]
+         if (type(body) == "function") then
+            local status, returned_data = pcall(body, value, topic)
+            if (status ~= true) then
+               returned_data = tostring(returned_data)
+               log_driver_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+               scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver-event: error: '..(returned_data or "")})
+            end
+         end
+      end
+   end
 end
 
 function drivers.start_all()

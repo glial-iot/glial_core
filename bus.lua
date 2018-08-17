@@ -7,6 +7,7 @@ local clock = require 'clock'
 local box = box
 
 local scripts_busevents = require 'scripts_busevents'
+local scripts_drivers = require 'scripts_drivers'
 local system = require 'system'
 local fiber = require 'fiber'
 local export = require "exports/export"
@@ -63,6 +64,7 @@ function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid)
       local new_value
       if (shadow_flag == bus.TYPE.NORMAL) then
          new_value = scripts_busevents.process(topic, value, source_uuid)
+         scripts_drivers.process(topic, value, source_uuid)
       end
       bus.fifo_storage:insert{bus_private.gen_fifo_id(), topic, tostring((new_value or value))}
       bus.fifo_saved_rps = bus.fifo_saved_rps + 1
