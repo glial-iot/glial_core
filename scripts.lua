@@ -25,11 +25,10 @@ scripts.store = {}
 ------------------ Internal API functions ------------------
 
 function scripts_private.get_list(data)
-   local processed_table, raw_table = {}
+   local table = {}
 
-   raw_table = scripts_private.storage.index.type:select(data.type) --TODO: заменить на pairs в базе данных
-   for _, tuple in pairs(raw_table) do
-      local processed_tuple = {
+   for _, tuple in scripts_private.storage.index.type:pairs(data.type) do
+      local current_script_table = {
          uuid = tuple["uuid"],
          type = tuple["type"],
          name = tuple["name"],
@@ -38,9 +37,9 @@ function scripts_private.get_list(data)
          active_flag = tuple["active_flag"],
          object = tuple["specific_data"]["object"]
       }
-      table.insert(processed_table, processed_tuple)
+      table.insert(table, current_script_table)
    end
-   return processed_table
+   return table
 end
 
 function scripts_private.get(data)
