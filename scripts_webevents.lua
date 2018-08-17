@@ -159,9 +159,6 @@ function webevents_private.http_api(req)
    return return_object
 end
 
-
-
-
 ------------------ Public functions ------------------
 
 function webevents.init()

@@ -115,7 +115,7 @@ end
 ------------------ Public functions ------------------
 
 
-function logger.generate_log_functions(uuid, name) ---не принимают несколько аргументов, сделать.
+function logger.generate_log_functions(uuid, name) --TODO: не принимают несколько аргументов, сделать.
    local function log_error(msg)
       local trace = debug.traceback("", 2)
       logger.add_entry(logger.ERROR, name, msg, uuid, trace)
@@ -163,7 +163,6 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       log.error("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    end
 end
-
 
 
 function logger.storage_init()

@@ -26,7 +26,7 @@ function http_script_system_private.main_handler(req)
       else
          return req:render{ json = {error = true, msg = returned_data } }
       end
-       --обернуть в xpcall и генерировать записи в логе с uuid
+       --TODO: обернуть в xpcall и генерировать записи в логе с uuid
    end
 
    return req:render{ json = {avilable_endpoints = http_script_system_private.path_table} }

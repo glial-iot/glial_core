@@ -137,7 +137,7 @@ function drivers_private.unload(uuid)
       return false
    end
 
-   local status, returned_data = pcall(body.destroy) --если возвращает false, то невозможно завершить без перезагрузки, warning
+   local status, returned_data = pcall(body.destroy)
     if (status ~= true) then
       log_driver_error('Driver "'..script_params.name..'" not stop (destroy function error: '..(returned_data or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(returned_data or "")})
@@ -191,9 +191,6 @@ function drivers_private.http_api(req)
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object
 end
-
-
-
 
 ------------------ Public functions ------------------
 

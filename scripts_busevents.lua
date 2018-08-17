@@ -50,7 +50,7 @@ function busevents_private.load(uuid)
 
    if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
       log_busevent_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'}) --не работает без перезагрузки
+      scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'}) -- TODO: не работает без перезагрузки
       return true
    end
 

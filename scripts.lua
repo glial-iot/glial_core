@@ -239,7 +239,7 @@ function scripts_private.http_api_update(params, req)
             data.uuid = params["uuid"]
             data.name = params["name"]
             data.active_flag = params["active_flag"]
-            if (params["object"] ~= nil) then --все равно будет очищать всю таблицу. будет работать только пока в ней хранится исключительно object
+            if (params["object"] ~= nil) then -- TODO: все равно будет очищать всю таблицу. будет работать только пока в ней хранится исключительно object
                data.specific_data = {}
                data.specific_data.object = params["object"]
             end
