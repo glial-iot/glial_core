@@ -24,8 +24,7 @@ function logger_private.http_api_get_logs(params, req)
    local processed_table, raw_table = {}
 
    raw_table = logger.storage.index.timestamp:select(nil, {iterator = 'REQ'})
-   local current_time_in_sec = os.time()
-   for _, tuple in pairs(raw_table) do
+      for _, tuple in pairs(raw_table) do
       repeat
          if (params["uuid"] ~= nil and params["uuid"] ~= "") then
             if (params["uuid"] ~= tuple["uuid_source"] and tuple["level"] ~= logger.REBOOT) then
@@ -41,7 +40,6 @@ function logger_private.http_api_get_logs(params, req)
             time = time_in_sec,
             trace = tuple["trace"],
             date_abs = os.date("%Y-%m-%d, %H:%M:%S", time_in_sec),
-            date_rel = (system.format_seconds(current_time_in_sec - time_in_sec)).." ago"
          }
          table.insert(processed_table, processed_tuple)
       until true
