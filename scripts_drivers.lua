@@ -176,17 +176,17 @@ function drivers_private.http_api(req)
          else
             drivers_private.load(params["uuid"])
          end
-         return_object = req:render{ json = {error = false} }
+         return_object = req:render{ json = {result = true} }
       else
-         return_object = req:render{ json = {error = true, error_msg = "Drivers API: No valid UUID"} }
+         return_object = req:render{ json = {result = false, error_msg = "Drivers API: No valid UUID"} }
       end
    --elseif (params["action"] == "create") then
 
    else
-      return_object = req:render{ json = {error = true, error_msg = "Drivers API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Drivers API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Drivers API: Unknown error(233)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Drivers API: Unknown error(233)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object

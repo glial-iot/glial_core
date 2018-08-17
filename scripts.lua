@@ -207,7 +207,7 @@ function scripts_private.http_api_create(params, req)
                                           })
       return req:render{ json = table }
    else
-      return req:render{ json = {error = true, error_msg = "Script API Create: no name or type"} }
+      return req:render{ json = {result = false, error_msg = "Script API Create: no name or type"} }
    end
 end
 
@@ -218,10 +218,10 @@ function scripts_private.http_api_delete(params, req)
          local table = scripts_private.delete({uuid = params["uuid"]})
          return req:render{ json = table }
       else
-         return req:render{ json = {error = true, error_msg = "Script API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Script API Delete: UUID not found"} }
       end
    else
-      return req:render{ json = {error = true, error_msg = "Script API Delete: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Script API Delete: no UUID"} }
    end
 end
 
@@ -232,10 +232,10 @@ function scripts_private.http_api_get(params, req)
       if (table ~= nil) then
          return req:render{ json = table }
       else
-         return req:render{ json = {error = true, error_msg = "UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "UUID not found"} }
       end
    else
-      return req:render{ json = {error = true, error_msg = "Script API Get: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Script API Get: no UUID"} }
    end
 end
 
@@ -251,10 +251,10 @@ function scripts_private.http_api_update(params, req)
             local table = scripts_private.update(data)
             return req:render{ json = table }
          else
-            return req:render{ json = {error = true, error_msg = "Script API Update: UUID not found"} }
+            return req:render{ json = {result = false, error_msg = "Script API Update: UUID not found"} }
          end
       else
-         return req:render{ json = {error = true, error_msg = "Script API Update: no UUID"} }
+         return req:render{ json = {result = false, error_msg = "Script API Update: no UUID"} }
       end
 end
 
@@ -278,13 +278,13 @@ function scripts_private.http_api_body(req)
          local table = scripts_private.update(data)
          return_object = req:render{ json = table }
       else
-         return_object = req:render{ json = {error = true, error_msg = "Script API Body update: UUID not found"} }
+         return_object = req:render{ json = {result = false, error_msg = "Script API Body update: UUID not found"} }
       end
    else
-      return_object = req:render{ json = {error = true, error_msg = "Script API Body update: no UUID or no body"} }
+      return_object = req:render{ json = {result = false, error_msg = "Script API Body update: no UUID or no body"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Script API Body update: Unknown error(1213)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Script API Body update: Unknown error(1213)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object
@@ -310,10 +310,10 @@ function scripts_private.http_api(req)
       return_object = scripts_private.http_api_update(params, req)
 
    else
-      return_object = req:render{ json = {error = true, error_msg = "Script API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Script API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Script API: Unknown error(213)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Script API: Unknown error(213)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object

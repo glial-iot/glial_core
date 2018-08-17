@@ -52,7 +52,7 @@ end
 
 function logger_private.http_api_delete_logs(params, req)
    logger.storage:truncate()
-   return req:render{ json = { error = false } }
+   return req:render{ json = { result = true } }
 end
 
 function logger_private.http_api(req)
@@ -65,10 +65,10 @@ function logger_private.http_api(req)
       return_object = logger_private.http_api_get_logs(params, req)
 
    else
-      return_object = req:render{ json = {error = true, error_msg = "Logger API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Logger API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Logger API: Unknown error(224)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Logger API: Unknown error(224)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object

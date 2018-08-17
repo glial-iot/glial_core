@@ -330,10 +330,10 @@ function bus.http_api_handler(req)
       end
 
    else
-      return_object = req:render{ json = {error = true, error_msg = "Bus API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Bus API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Bus API: Unknown error(214)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Bus API: Unknown error(214)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object

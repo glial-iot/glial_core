@@ -106,15 +106,15 @@ function busevents_private.http_api(req)
       if (params["uuid"] ~= nil or params["uuid"] ~= "") then
          busevents_private.remove_body_by_uuid(params["uuid"])
          busevents_private.load(params["uuid"])
-         return_object = req:render{ json = {error = false} }
+         return_object = req:render{ json = {result = true} }
       else
-         return_object = req:render{ json = {error = true, error_msg = "Busevents API: No valid UUID"} }
+         return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
       end
    else
-      return_object = req:render{ json = {error = true, error_msg = "Busevents API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Busevents API: Unknown error(435)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Busevents API: Unknown error(435)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object

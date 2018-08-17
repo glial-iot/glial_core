@@ -21,20 +21,20 @@ function settings_private.http_api_get(params, req)
       if (status == true) then
          return req:render{ json = {param = param, value = value, description = description} }
       else
-         return req:render{ json = {error = true, error_msg = "No found param"} }
+         return req:render{ json = {result = false, error_msg = "No found param"} }
       end
    else
-      return req:render{ json = {error = true, error_msg = "No param param"} }
+      return req:render{ json = {result = false, error_msg = "No param param"} }
    end
 end
 
 function settings_private.http_api_set_param(params, req)
    if (params["param"] ~= nil and params["value"] ~= nil) then
       settings.set(params["param"], params["value"], params["description"])
-      return req:render{ error = false }
+      return req:render{ result = true }
    end
 
-   return req:render{ error = true, error_msg = "No param param or value" }
+   return req:render{ result = false, error_msg = "No param param or value" }
 end
 
 function settings_private.http_api(req)
@@ -47,10 +47,10 @@ function settings_private.http_api(req)
       return_object = settings_private.http_api_get(params, req)
 
    else
-      return_object = req:render{ json = {error = true, error_msg = "Settings API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Settings API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Settings API: Unknown error(624)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Settings API: Unknown error(624)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object

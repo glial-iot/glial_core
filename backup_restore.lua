@@ -193,18 +193,18 @@ function backup_restore.http_api(req)
       if (result == true) then
          result, msg = backup_restore.restore_backup(params["filename"])
          if (result == true) then
-            return_object = req:render{ json = {error = false, error_msg = "Backups API: backup restored"} }
+            return_object = req:render{ json = {result = true, error_msg = "Backups API: backup restored"} }
          else
-            return_object = req:render{ json = {error = true, error_msg = "Backups API: "..(msg or "")} }
+            return_object = req:render{ json = {result = false, error_msg = "Backups API: "..(msg or "")} }
          end
       else
-         return_object = req:render{ json = {error = true, error_msg = "Backups API: no create backup before restore("..(msg or "")..")"} }
+         return_object = req:render{ json = {result = false, error_msg = "Backups API: no create backup before restore("..(msg or "")..")"} }
       end
    else
-      return_object = req:render{ json = {error = true, error_msg = "Backups API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Backups API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {error = true, error_msg = "Backups API: Unknown error(238)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Backups API: Unknown error(238)"} }
    return_object.headers = return_object.headers or {}
    return_object.headers['Access-Control-Allow-Origin'] = '*';
    return return_object
