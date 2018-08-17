@@ -74,6 +74,7 @@ function scripts_private.update(data)
    if (data.active_flag ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 7, data.active_flag}}) end
    if (data.specific_data ~= nil and type(data.specific_data) == "table") then
       data.specific_data = setmetatable(data.specific_data, {__serialize = 'map'})
+      --TODO: обновлять не скопом specific_data, а отдельные обьекты: смысл в том, чтобы можно было модифицировать схемы хранения метаданных скрипта без изменения бд
       scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, data.specific_data}})
    end
 
@@ -118,8 +119,6 @@ end]]
 
    if (type == scripts.type.BUS_EVENT) then
       return [[-- The generated script is filled with the default content --
-topic = "/glue/rps_o"
-
 function event_handler(value)
     store.old_value = store.old_value or 0
     store.old_value = store.old_value + value
@@ -131,6 +130,7 @@ end
 
 function scripts_private.create(data)
    if (data.type == nil) then return nil end
+   data.specific_data = data.specific_data or {}
    local new_data = {}
    new_data.uuid = uuid_lib.str()
    new_data.type = data.type
@@ -139,7 +139,7 @@ function scripts_private.create(data)
    new_data.status = data.status or scripts.statuses.STOPPED
    new_data.status_msg = data.status_msg or "New script"
    new_data.active_flag = data.active_flag or scripts.flag.NON_ACTIVE
-   new_data.specific_data = data.specific_data or setmetatable({}, {__serialize = 'map'})
+   new_data.specific_data = setmetatable(data.specific_data, {__serialize = 'map'})
    local table = {
       new_data.uuid,
       new_data.type,
@@ -195,6 +195,7 @@ function scripts_private.http_api_create(params, req)
                                             name = params["name"],
                                             status = params["status"],
                                             status_msg = params["status_msg"],
+                                            specific_data = {object = params["object"]},
                                             body = scripts_private.generate_init_body(params["type"])
                                           })
       return req:render{ json = table }

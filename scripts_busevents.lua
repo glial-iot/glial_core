@@ -78,16 +78,13 @@ function busevents_private.load(uuid)
       return false
    end
 
-   if (body.topic == nil or body.topic == "" or type(body.topic) ~= "string") then
-      log_busevent_error('Bus-event "'..script_params.name..'" not start ("topic" variable not found or not string)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: topic "variable" not found or not string'})
+   if (script_params.object == nil or script_params.object == "") then
+      log_busevent_error('Bus-event "'..script_params.name..'" not start (topic not found)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: topic not found'})
       return false
    end
-   local specific_data = {}
-   specific_data.object = body.topic or ""
-   scripts.update({uuid = uuid, specific_data = specific_data})
 
-   busevents_script_bodies[body.topic] = body
+   busevents_script_bodies[script_params.object] = body
    log_busevent_info('Bus-event "'..script_params.name..'" active on topic '..(body.topic or ""), script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on topic '..(body.topic or "")})
 
