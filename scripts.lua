@@ -25,7 +25,7 @@ scripts.store = {}
 ------------------ Internal API functions ------------------
 
 function scripts_private.get_list(data)
-   local table = {}
+   local list_table = {}
 
    for _, tuple in scripts_private.storage.index.type:pairs(data.type) do
       local current_script_table = {
@@ -37,9 +37,9 @@ function scripts_private.get_list(data)
          active_flag = tuple["active_flag"],
          object = tuple["specific_data"]["object"]
       }
-      table.insert(table, current_script_table)
+      table.insert(list_table, current_script_table)
    end
-   return table
+   return list_table
 end
 
 function scripts_private.get(data)
