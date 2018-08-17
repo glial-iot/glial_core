@@ -27,7 +27,7 @@ scripts.store = {}
 function scripts_private.get_list(data)
    local processed_table, raw_table = {}
 
-   raw_table = scripts_private.storage.index.type:select(data.type)
+   raw_table = scripts_private.storage.index.type:select(data.type) --TODO: заменить на pairs в базе данных
    for _, tuple in pairs(raw_table) do
       local processed_tuple = {
          uuid = tuple["uuid"],
@@ -72,10 +72,13 @@ function scripts_private.update(data)
    if (data.status ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 5, data.status}}) end
    if (data.status_msg ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 6, data.status_msg}}) end
    if (data.active_flag ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 7, data.active_flag}}) end
-   if (data.specific_data ~= nil and type(data.specific_data) == "table") then
-      data.specific_data = setmetatable(data.specific_data, {__serialize = 'map'})
-      --TODO: обновлять не скопом specific_data, а отдельные обьекты: смысл в том, чтобы можно было модифицировать схемы хранения метаданных скрипта без изменения бд
-      scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, data.specific_data}})
+
+   if (data.object ~= nil) then
+      local tuple = scripts_private.storage.index.uuid:get(data.uuid)
+      local specific_data = tuple["specific_data"]
+      specific_data.object = data.object
+      specific_data = setmetatable(specific_data, {__serialize = 'map'})
+      scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, specific_data}})
    end
 
    return scripts_private.get({uuid = data.uuid})
@@ -130,7 +133,6 @@ end
 
 function scripts_private.create(data)
    if (data.type == nil) then return nil end
-   data.specific_data = data.specific_data or {}
    local new_data = {}
    new_data.uuid = uuid_lib.str()
    new_data.type = data.type
@@ -139,7 +141,13 @@ function scripts_private.create(data)
    new_data.status = data.status or scripts.statuses.STOPPED
    new_data.status_msg = data.status_msg or "New script"
    new_data.active_flag = data.active_flag or scripts.flag.NON_ACTIVE
-   new_data.specific_data = setmetatable(data.specific_data, {__serialize = 'map'})
+   if (data.object ~= nil) then
+      local specific_data = {object = data.object}
+      new_data.specific_data = setmetatable(specific_data, {__serialize = 'map'})
+   else
+      new_data.specific_data = setmetatable({}, {__serialize = 'map'})
+   end
+
    local table = {
       new_data.uuid,
       new_data.type,
@@ -195,7 +203,7 @@ function scripts_private.http_api_create(params, req)
                                             name = params["name"],
                                             status = params["status"],
                                             status_msg = params["status_msg"],
-                                            specific_data = {object = params["object"]},
+                                            object = params["object"],
                                             body = scripts_private.generate_init_body(params["type"])
                                           })
       return req:render{ json = table }
@@ -240,10 +248,7 @@ function scripts_private.http_api_update(params, req)
             data.uuid = params["uuid"]
             data.name = params["name"]
             data.active_flag = params["active_flag"]
-            if (params["object"] ~= nil) then -- TODO: все равно будет очищать всю таблицу. будет работать только пока в ней хранится исключительно object
-               data.specific_data = {}
-               data.specific_data.object = params["object"]
-            end
+            data.object = params["object"]
             local table = scripts_private.update(data)
             return req:render{ json = table }
          else
