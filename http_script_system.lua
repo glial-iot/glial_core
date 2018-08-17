@@ -24,12 +24,17 @@ function http_script_system_private.main_handler(req)
       if (status == true) then
          return returned_data
       else
-         return req:render{ json = {error = true, msg = returned_data } }
+         return req:render{ json = {result = false, msg = returned_data } }
       end
        --TODO: обернуть в xpcall и генерировать записи в логе с uuid
    end
 
-   return req:render{ json = {avilable_endpoints = http_script_system_private.path_table} }
+   local avilable_endpoints = {}
+   for endpoint, _ in pairs(http_script_system_private.path_table) do
+      table.insert(avilable_endpoints, endpoint)
+   end
+
+   return req:render{ json = {result = false, msg = "Endpoint '"..name.."' not found",  avilable_endpoints = avilable_endpoints} }
 end
 
 function http_script_system.init_client()
