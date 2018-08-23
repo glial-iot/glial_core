@@ -4,6 +4,7 @@ local export = {}
 local box = box
 
 local logger = require 'logger'
+local system = require 'system'
 
 local impact = require 'exports/impact'
 local influx = require 'exports/influx'
@@ -62,9 +63,7 @@ function export.http_api_handler(req)
    end
 
    return_object = return_object or req:render{ json = {result = false, error_msg = "Exports API: Unknown error(214)"} }
-   return_object.headers = return_object.headers or {}
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
-   return return_object
+   return system.add_headers(return_object)
 end
 
 

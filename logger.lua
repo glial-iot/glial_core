@@ -45,12 +45,14 @@ function logger_private.http_api_get_logs(params, req)
       until true
       if (params["limit"] ~= nil and tonumber(params["limit"]) <= #processed_table) then break end
    end
-   return req:render{ json = processed_table }
+   local return_object = req:render{ json = processed_table }
+   return system.add_headers(return_object)
 end
 
 function logger_private.http_api_delete_logs(params, req)
    logger.storage:truncate()
-   return req:render{ json = { result = true } }
+   local return_object = req:render{ json = { result = true } }
+   return system.add_headers(return_object)
 end
 
 function logger_private.http_api(req)
@@ -67,9 +69,7 @@ function logger_private.http_api(req)
    end
 
    return_object = return_object or req:render{ json = {result = false, error_msg = "Logger API: Unknown error(224)"} }
-   return_object.headers = return_object.headers or {}
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
-   return return_object
+   return system.add_headers(return_object)
 end
 
 function logger_private.tarantool_pipe_log_handler(req)

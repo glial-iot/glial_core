@@ -3,6 +3,7 @@ local system = {}
 
 local fio = require 'fio'
 local fiber = require 'fiber'
+local inspect = require 'libs/inspect'
 
 local git_version, _
 
@@ -82,6 +83,15 @@ function system.wait_and_exit()
    fiber.create(exit)
 end
 
+
+function system.add_headers(return_object)
+   return_object.headers = return_object.headers or {}
+   return_object.headers['Charset'] = 'utf-8';
+   return_object.headers['Access-Control-Allow-Origin'] = '*';
+   return_object.headers['Content-Type'] = 'application/json';
+   return_object.headers['content-type'] = nil;
+   return return_object
+end
 
 
 function system.format_seconds(elapsed_seconds)

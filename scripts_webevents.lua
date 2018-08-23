@@ -154,9 +154,7 @@ function webevents_private.http_api(req)
    end
 
    return_object = return_object or req:render{ json = {result = false, error_msg = "Webevents API: Unknown error(335)"} }
-   return_object.headers = return_object.headers or {}
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
-   return return_object
+   return system.add_headers(return_object)
 end
 
 ------------------ Public functions ------------------

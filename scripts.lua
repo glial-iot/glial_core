@@ -241,21 +241,21 @@ end
 
 
 function scripts_private.http_api_update(params, req)
-      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-         if (scripts_private.get({uuid = params["uuid"]}) ~= nil) then
-            local data = {}
-            data.uuid = params["uuid"]
-            data.name = params["name"]
-            data.active_flag = params["active_flag"]
-            data.object = params["object"]
-            local table = scripts_private.update(data)
-            return req:render{ json = table }
-         else
-            return req:render{ json = {result = false, error_msg = "Script API Update: UUID not found"} }
-         end
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      if (scripts_private.get({uuid = params["uuid"]}) ~= nil) then
+         local data = {}
+         data.uuid = params["uuid"]
+         data.name = params["name"]
+         data.active_flag = params["active_flag"]
+         data.object = params["object"]
+         local table = scripts_private.update(data)
+         return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Script API Update: no UUID"} }
+         return req:render{ json = {result = false, error_msg = "Script API Update: UUID not found"} }
       end
+   else
+      return req:render{ json = {result = false, error_msg = "Script API Update: no UUID"} }
+   end
 end
 
 
@@ -285,9 +285,7 @@ function scripts_private.http_api_body(req)
    end
 
    return_object = return_object or req:render{ json = {result = false, error_msg = "Script API Body update: Unknown error(1213)"} }
-   return_object.headers = return_object.headers or {}
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
-   return return_object
+   return system.add_headers(return_object)
 end
 
 
@@ -314,9 +312,7 @@ function scripts_private.http_api(req)
    end
 
    return_object = return_object or req:render{ json = {result = false, error_msg = "Script API: Unknown error(213)"} }
-   return_object.headers = return_object.headers or {}
-   return_object.headers['Access-Control-Allow-Origin'] = '*';
-   return return_object
+   return system.add_headers(return_object)
 end
 
 ------------------ Public functions ------------------

@@ -19,22 +19,26 @@ http_script_system_private.main_path = "/we/:name"
 
 function http_script_system_private.main_handler(req)
    local name = req:stash('name')
+   local return_object
    if (http_script_system_private.path_table[name] ~= nil) then
       local status, returned_data = pcall(http_script_system_private.path_table[name], req)
       if (status == true) then
-         return returned_data
+         return_object = returned_data
       else
-         return req:render{ json = {result = false, msg = returned_data } }
+         return_object = req:render{ json = {result = false, msg = returned_data } }
       end
        --TODO: обернуть в xpcall и генерировать записи в логе с uuid
+
+   else
+      local avilable_endpoints = {}
+      for endpoint, _ in pairs(http_script_system_private.path_table) do
+         table.insert(avilable_endpoints, endpoint)
+      end
+
+      return_object = req:render{ json = {result = false, msg = "Endpoint '"..name.."' not found",  avilable_endpoints = avilable_endpoints} }
    end
 
-   local avilable_endpoints = {}
-   for endpoint, _ in pairs(http_script_system_private.path_table) do
-      table.insert(avilable_endpoints, endpoint)
-   end
-
-   return req:render{ json = {result = false, msg = "Endpoint '"..name.."' not found",  avilable_endpoints = avilable_endpoints} }
+   return system.add_headers(return_object)
 end
 
 function http_script_system.init_client()
@@ -51,23 +55,20 @@ end
 function http_script_system.generate_callback_func(handler)
    return function(req)
       local params = req:param()
-      local ret
+      local return_object
 
       local json_result, raw_result = handler(params, req)
       if (json_result ~= nil) then
-         ret = req:render{ json = json_result }
+         return_object = req:render{ json = json_result }
       else
          if (raw_result ~= nil) then
-            ret = raw_result
+            return_object = raw_result
          else
-            ret = req:render{ json = {} }
+            return_object = req:render{ json = {} }
          end
       end
 
-      ret.headers = ret.headers or {}
-      ret.headers['charset'] = 'utf-8';
-      ret.headers['Access-Control-Allow-Origin'] = '*';
-      return ret
+      return system.add_headers(return_object)
    end
 end
 
