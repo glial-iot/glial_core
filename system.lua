@@ -93,6 +93,23 @@ function system.add_headers(return_object)
    return return_object
 end
 
+function system.concatenate_args(...)
+      local arguments = {...}
+      local msg = ""
+      for i = 1, #arguments do
+         local new_msg = arguments[i]
+         if (type(new_msg) == "table") then
+            new_msg = tostring(inspect(new_msg))
+         else
+            new_msg = tostring(new_msg)
+         end
+         if (new_msg ~= nil and new_msg ~= "" and type(new_msg) == "string" and type(msg) == "string") then
+            msg = msg.."\t"..new_msg
+         end
+      end
+      return msg
+   end
+
 
 function system.format_seconds(elapsed_seconds)
    local remainder, weeks, days, hours, minutes, seconds

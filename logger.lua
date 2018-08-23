@@ -113,23 +113,27 @@ end
 ------------------ Public functions ------------------
 
 
-function logger.generate_log_functions(uuid, name) --TODO: не принимают несколько аргументов, сделать.
-   local function log_error(msg)
+function logger.generate_log_functions(uuid, name)
+   local function log_error(msg, ...)
+      msg = system.concatenate_args(msg, ...)
       local trace = debug.traceback("", 2)
       logger.add_entry(logger.ERROR, name, msg, uuid, trace)
    end
 
-   local function log_info(msg)
+   local function log_info(msg, ...)
+      msg = system.concatenate_args(msg, ...)
       local trace = debug.traceback("", 2)
       logger.add_entry(logger.INFO, name, msg, uuid, trace)
    end
 
-   local function log_warning(msg)
+   local function log_warning(msg, ...)
+      msg = system.concatenate_args(msg, ...)
       local trace = debug.traceback("", 2)
       logger.add_entry(logger.WARNING, name, msg, uuid, trace)
    end
 
-   local function log_user(msg)
+   local function log_user(msg, ...)
+      msg = system.concatenate_args(msg, ...)
       local trace = debug.traceback("", 2)
       logger.add_entry(logger.USER, name, msg, uuid, trace)
    end
