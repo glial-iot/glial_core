@@ -53,14 +53,19 @@ function http_script_system.generate_callback_func(handler)
       local params = req:param()
       local ret
 
-      local result = handler(params, req)
-      if (result ~= nil) then
-         ret = req:render{ json = result }
+      local json_result, raw_result = handler(params, req)
+      if (json_result ~= nil) then
+         ret = req:render{ json = json_result }
       else
-         ret = req:render{ json = {} }
+         if (raw_result ~= nil) then
+            ret = raw_result
+         else
+            ret = req:render{ json = {} }
+         end
       end
 
       ret.headers = ret.headers or {}
+      ret.headers['charset'] = 'utf-8';
       ret.headers['Access-Control-Allow-Origin'] = '*';
       return ret
    end
