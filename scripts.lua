@@ -86,13 +86,16 @@ end
 function scripts_private.generate_init_body(type)
    if (type == scripts.type.WEB_EVENT) then
       return [[-- The generated script is filled with the default content --
-function http_callback(params)
+function http_callback(params, req)
 
    -- The script will receive parameters in the params table with this kind of query: /we/object?action=print_test
    if (params["action"] == "print_test") then
       return {print_text = "test"}
+      --return nil, "OK" --The direct output option without convert to json(see doc on http-tarantool)
+   else
+      return {no_data = "yes"}
    end
-   -- The table returned by the script will be given as json: { "print_text": "test" }
+   -- The table returned by the script will be given as json: { "print_text": "test" } or {"no_data": "yes"}
 
 end
 ]]
