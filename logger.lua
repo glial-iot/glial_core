@@ -139,19 +139,27 @@ end
 
 function logger.add_entry(level, source, entry, uuid_source, trace)
    local local_trace = trace or debug.traceback()
-   if (level == nil) then
-      return
-   end
+   local_trace = tostring(local_trace)
+
+   uuid_source = uuid_source or "No UUID"
+   source = source or "No source"
 
    if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER and level ~= logger.REBOOT) then
       return
    end
 
-   if (entry == nil or entry == "") then
+   if (type(entry) == "table") then
+      entry = tostring(inspect(entry))
+   else
+      entry = tostring(entry)
+   end
+
+   if (entry == nil) then
       return
    end
 
-   logger.storage:insert{logger_private.gen_id(), level, (source or ""), (uuid_source or "No UUID"), (tostring(entry) or ""), (tostring(local_trace) or "")}
+
+   logger.storage:insert{logger_private.gen_id(), level, source, uuid_source, entry, local_trace}
 
    if (level == logger.INFO) then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
