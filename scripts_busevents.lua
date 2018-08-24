@@ -13,8 +13,7 @@ local system = require 'system'
 local scripts = require 'scripts'
 local fiber = require 'fiber'
 
-local busevents_script_bodies = {}
-busevents.scripts = busevents_script_bodies
+local busevents_script_bodies_masks = {}
 
 local function log_busevent_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Bus-events subsystem", msg, uuid, "")
@@ -84,19 +83,16 @@ function busevents_private.load(uuid)
       return false
    end
 
-   busevents_script_bodies[script_params.object] = body
+   if (script_params.object ~= nil and type(script_params.object) == "string") then
+      busevents_script_bodies_masks[uuid] = nil
+      busevents_script_bodies_masks[uuid] = {}
+      busevents_script_bodies_masks[uuid][script_params.object] = body.event_handler
+   end
+
    log_busevent_info('Bus-event "'..script_params.name..'" active on topic '..(body.topic or ""), script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on topic '..(body.topic or "")})
 
    return true
-end
-
-function busevents_private.remove_body_by_uuid(uuid)
-   for topic, body in pairs(busevents_script_bodies) do
-      if (uuid == body._script_uuid) then
-         busevents_script_bodies[topic] = nil
-      end
-   end
 end
 
 function busevents_private.http_api(req)
@@ -104,7 +100,7 @@ function busevents_private.http_api(req)
    local return_object
    if (params["action"] == "reload") then
       if (params["uuid"] ~= nil or params["uuid"] ~= "") then
-         busevents_private.remove_body_by_uuid(params["uuid"])
+         busevents_script_bodies_masks[params["uuid"]] = nil
          busevents_private.load(params["uuid"])
          return_object = req:render{ json = {result = true} }
       else
@@ -121,24 +117,23 @@ end
 ------------------ Public functions ------------------
 
 function busevents.process(topic, value, source_uuid)
-   if (busevents_script_bodies[topic] ~= nil) then
-      local body = busevents_script_bodies[topic]
-      local script_params = scripts.get({uuid = body._script_uuid})
-      if (type(body) == "table" and
-          type(body.event_handler) == "function" and
-          script_params.status ~= scripts.statuses.ERROR) then
-
-         if (script_params.uuid == (source_uuid or "0")) then
-            return
-         end
-         local status, returned_data = pcall(body.event_handler, value, topic)
-         if (status ~= true) then
-            returned_data = tostring(returned_data)
-            log_busevent_error('Bus-event "'..body._script_name..'" generate error: '..(returned_data or "")..')', body._script_uuid)
-            scripts.update({uuid = body._script_uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
-         end
-         return returned_data
-
+   for uuid, scripts_bodies_table in pairs(busevents_script_bodies_masks) do
+      local script_params = scripts.get({uuid = uuid})
+      if (script_params.status == scripts.statuses.NORMAL and
+         script_params.active_flag == scripts.flag.ACTIVE and
+         script_params.uuid ~= (source_uuid or "0")) then
+            for mask, callback in pairs(scripts_bodies_table) do
+               if (string.find(topic, mask) ~= nil) then
+                  local body = callback
+                  local status, returned_data = pcall(body, value, topic)
+                  if (status ~= true) then
+                     returned_data = tostring(returned_data)
+                     log_busevent_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+                     scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
+                  end
+                  return returned_data
+               end
+            end
       end
    end
 end
