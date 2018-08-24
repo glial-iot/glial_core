@@ -96,7 +96,8 @@ end
 function system.concatenate_args(...)
       local arguments = {...}
       local msg = ""
-      for i = 1, #arguments do
+      local count_args = select("#", ...)
+      for i = 1, count_args do
          local new_msg = arguments[i]
          if (type(new_msg) == "table") then
             new_msg = tostring(inspect(new_msg))
