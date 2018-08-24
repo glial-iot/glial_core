@@ -124,7 +124,7 @@ end]]
 
    if (type == scripts.type.BUS_EVENT) then
       return [[-- The generated script is filled with the default content --
-function event_handler(value)
+function event_handler(value, topic)
     store.old_value = store.old_value or 0
     store.old_value = store.old_value + value
     log_info(store.old_value)
