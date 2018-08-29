@@ -26,7 +26,7 @@ end
 ------------------ Private functions ------------------
 
 
-function busevents_private.load(uuid)
+function busevents_private.load(uuid, run_once_flag)
    local body
    local script_params = scripts.get({uuid = uuid})
 
@@ -47,7 +47,7 @@ function busevents_private.load(uuid)
       return false
    end
 
-   if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
+   if ((script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) and run_once_flag ~= true) then
       log_busevent_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'}) -- TODO: не работает без перезагрузки
       return true
@@ -77,20 +77,22 @@ function busevents_private.load(uuid)
       return false
    end
 
-   if (script_params.object == nil or script_params.object == "") then
+   if ((script_params.object == nil or script_params.object == "") and type(script_params.object) == "string") then
       log_busevent_error('Bus-event "'..script_params.name..'" not start (mask not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: mask not found'})
       return false
    end
 
-   if (script_params.object ~= nil and type(script_params.object) == "string") then
+   if (run_once_flag == true) then
+      log_busevent_info('Bus-event "'..script_params.name..'" runned once', script_params.uuid)
+      body.event_handler(0, "once")
+   else
       busevents_script_bodies_masks[uuid] = nil
       busevents_script_bodies_masks[uuid] = {}
       busevents_script_bodies_masks[uuid][script_params.object] = body.event_handler
+      log_busevent_info('Bus-event "'..script_params.name..'" active on mask "'..(script_params.object or "")..'"', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask "'..(script_params.object or "")..'"'})
    end
-
-   log_busevent_info('Bus-event "'..script_params.name..'" active on mask "'..(script_params.object or "")..'"', script_params.uuid)
-   scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask "'..(script_params.object or "")..'"'})
 
    return true
 end
@@ -102,6 +104,15 @@ function busevents_private.http_api(req)
       if (params["uuid"] ~= nil and params["uuid"] ~= "") then
          busevents_script_bodies_masks[params["uuid"]] = nil
          busevents_private.load(params["uuid"])
+         return_object = req:render{ json = {result = true} }
+      else
+         return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
+      end
+   elseif (params["action"] == "run_once") then
+      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+         busevents_script_bodies_masks[params["uuid"]] = nil
+         busevents_private.load(params["uuid"], true)
+         busevents_script_bodies_masks[params["uuid"]] = nil
          return_object = req:render{ json = {result = true} }
       else
          return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
