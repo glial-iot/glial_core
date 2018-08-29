@@ -145,7 +145,7 @@ print(store.value) -- 5
 - **timer-event** 
 - **web-event**
 
-Timer-event и Web-event скрипты работают по следующему принципу: 
+Timer-event и Bus-event скрипты работают по следующему принципу: 
 ![Скрипты запускаемые по обновлению данных или таймеру](docs/images/eventAndTimerScripts.png "Скрипты запускаемые по обновлению данных или таймеру")
 
 ### Bus-event scripts  
