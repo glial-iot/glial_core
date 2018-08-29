@@ -33,8 +33,13 @@ end
 
 function bus_private.fifo_storage_worker()
    while true do
-      local topic, value = bus_private.get_value_from_fifo()
+      local topic, value, shadow_flag, source_uuid = bus_private.get_value_from_fifo()
       if (value ~= nil and topic ~= nil) then
+         if (shadow_flag == bus.TYPE.NORMAL) then
+            local new_value = scripts_busevents.process(topic, value, source_uuid)
+            value = new_value or value
+            scripts_drivers.process(topic, value, source_uuid)
+         end
          local timestamp = os.time()
          bus.storage:upsert({topic, value, timestamp, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp}})
          bus.bus_saved_rps = bus.bus_saved_rps + 1
@@ -60,13 +65,10 @@ end
 
 
 function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid)
-   if (topic ~= nil and value ~= nil) then
-      local new_value
-      if (shadow_flag == bus.TYPE.NORMAL) then
-         new_value = scripts_busevents.process(topic, value, source_uuid)
-         scripts_drivers.process(topic, value, source_uuid)
-      end
-      bus.fifo_storage:insert{bus_private.gen_fifo_id(), topic, tostring((new_value or value))}
+   if (topic ~= nil and value ~= nil and shadow_flag ~= nil and source_uuid ~= nil) then
+      value = tostring(value)
+      local id = bus_private.gen_fifo_id()
+      bus.fifo_storage:insert{id, topic, value, shadow_flag, source_uuid}
       bus.fifo_saved_rps = bus.fifo_saved_rps + 1
       return true
    end
@@ -79,7 +81,7 @@ function bus_private.get_value_from_fifo()
       bus.fifo_storage.index.timestamp:delete(tuple['timestamp'])
       local count = bus.fifo_storage.index.timestamp:count()
       if (count > bus.max_fifo_count) then bus.max_fifo_count = count end
-      return tuple['topic'], tuple["value"]
+      return tuple['topic'], tuple["value"], tuple['shadow_flag'], tuple["source_uuid"]
    end
 end
 
@@ -148,6 +150,8 @@ function bus.init()
       {name='timestamp',      type='number'},   --1
       {name='topic',          type='string'},   --2
       {name='value',          type='string'},   --3
+      {name='shadow_flag',    type='string'},   --4
+      {name='source_uuid',    type='string'},   --5
    }
    bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, format = fifo_format, id = config.id.bus_fifo})
    bus.fifo_storage:create_index('timestamp', {parts={'timestamp'}, if_not_exists = true})
