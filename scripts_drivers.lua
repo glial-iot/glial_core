@@ -81,7 +81,7 @@ function drivers_private.load(uuid)
       return false
    end
 
-   if (body.destroy == nil or type(body.init) ~= "function") then
+   if (body.destroy == nil or type(body.destroy) ~= "function") then
       log_driver_error('Driver "'..script_params.name..'" not start (destroy function not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function not found or no function'})
       return false
@@ -131,7 +131,7 @@ function drivers_private.unload(uuid)
       return false
    end
 
-   if (body.destroy == nil or type(body.init) ~= "function") then
+   if (body.destroy == nil or type(body.destroy) ~= "function") then
       log_driver_error('Driver "'..script_params.name..'" not stop (destroy function not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function not found or no function'})
       return false
