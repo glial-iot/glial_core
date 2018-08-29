@@ -89,8 +89,8 @@ function busevents_private.load(uuid)
       busevents_script_bodies_masks[uuid][script_params.object] = body.event_handler
    end
 
-   log_busevent_info('Bus-event "'..script_params.name..'" active on mask '..(script_params.object or ""), script_params.uuid)
-   scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask '..(script_params.object or "")})
+   log_busevent_info('Bus-event "'..script_params.name..'" active on mask "'..(script_params.object or "")..'"', script_params.uuid)
+   scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask "'..(script_params.object or "")..'"'})
 
    return true
 end
