@@ -135,7 +135,7 @@ function webevents_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      if (params["uuid"] ~= nil or params["uuid"] ~= "") then
+      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
          local data = scripts.get({uuid = params["uuid"]})
          if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
             local result = webevents_private.unload(params["uuid"])

@@ -99,7 +99,7 @@ function busevents_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      if (params["uuid"] ~= nil or params["uuid"] ~= "") then
+      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
          busevents_script_bodies_masks[params["uuid"]] = nil
          busevents_private.load(params["uuid"])
          return_object = req:render{ json = {result = true} }
