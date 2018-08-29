@@ -78,8 +78,8 @@ function busevents_private.load(uuid)
    end
 
    if (script_params.object == nil or script_params.object == "") then
-      log_busevent_error('Bus-event "'..script_params.name..'" not start (topic not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: topic not found'})
+      log_busevent_error('Bus-event "'..script_params.name..'" not start (mask not found)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: mask not found'})
       return false
    end
 
@@ -89,8 +89,8 @@ function busevents_private.load(uuid)
       busevents_script_bodies_masks[uuid][script_params.object] = body.event_handler
    end
 
-   log_busevent_info('Bus-event "'..script_params.name..'" active on topic '..(body.topic or ""), script_params.uuid)
-   scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on topic '..(body.topic or "")})
+   log_busevent_info('Bus-event "'..script_params.name..'" active on mask '..(script_params.object or ""), script_params.uuid)
+   scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask '..(script_params.object or "")})
 
    return true
 end
