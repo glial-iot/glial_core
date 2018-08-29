@@ -74,7 +74,6 @@ function settings.get(param, default_value)
 end
 
 function settings.set(param, value, description)
-   print("set:", param, value, description)
    if (param == nil or value == nil) then return end
    if (description == nil) then
       settings.settings_storage:upsert({param, value, ""}, {{"=", 2, value}})
