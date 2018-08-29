@@ -343,6 +343,7 @@ function scripts.generate_body(script_params, log_script_name)
    local body = setmetatable({}, {__index=_G})
    local uuid_related_update_value = bus.update_value_genarator(script_params.uuid)
    body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(script_params.uuid, log_script_name)
+   body.system_print = body.print
    body.log, body.print = body.log_user, body.log_user
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
