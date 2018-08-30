@@ -104,21 +104,26 @@ end
 
    if (type == scripts.type.DRIVER) then
       return [[-- The generated script is filled with the default content --
-local fiber_object
 
-local function main ()
+topics = {"/test/1", "/test/2"}
+
+local function main()
    while true do
-      print("test")
+      print("Test driver loop")
       fiber.sleep(600)
    end
 end
 
 function init()
-   fiber_object = fiber.create(main)
+   store.fiber_object = fiber.create(main)
 end
 
 function destroy()
-   fiber_object:cancel()
+   store.fiber_object:cancel()
+end
+
+function topic_update_callback(value, topic)
+   print("Test driver callback:", value, topic)
 end]]
    end
 
