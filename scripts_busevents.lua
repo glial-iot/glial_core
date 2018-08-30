@@ -144,8 +144,10 @@ function busevents.process(topic, value, source_uuid)
                   end
                   return returned_data
                end
+               fiber.yield()
             end
       end
+      fiber.yield()
    end
 end
 
@@ -159,6 +161,7 @@ function busevents.start_all()
 
    for _, busevent in pairs(list) do
       busevents_private.load(busevent.uuid)
+      fiber.yield()
    end
 end
 

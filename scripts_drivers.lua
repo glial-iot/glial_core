@@ -213,6 +213,7 @@ function drivers.process(topic, value, source_uuid)
             end
          end
       end
+      fiber.yield()
    end
 end
 
@@ -221,6 +222,7 @@ function drivers.start_all()
 
    for _, driver in pairs(list) do
       drivers_private.load(driver.uuid)
+      fiber.yield()
    end
 end
 

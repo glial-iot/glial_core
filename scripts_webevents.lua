@@ -169,6 +169,7 @@ function webevents.start_all()
 
    for _, webevent in pairs(list) do
       webevents_private.load(webevent.uuid)
+      fiber.yield()
    end
 end
 

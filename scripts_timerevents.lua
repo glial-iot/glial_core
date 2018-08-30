@@ -198,6 +198,7 @@ function timerevents_private.process()
             scripts_table.counter = scripts_table.counter - 1
          end
       end
+      fiber.yield()
    end
 end
 
@@ -254,6 +255,7 @@ function timerevents.start_all()
 
    for _, timerevent in pairs(list) do
       timerevents_private.load(timerevent.uuid)
+      fiber.yield()
    end
 end
 

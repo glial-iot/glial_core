@@ -41,6 +41,7 @@ function backup_restore_private.remove_space_files()
             return false, "delete space file("..filename..") failed"
          end
       end
+      fiber.yield()
    end
    return true
 end
@@ -101,6 +102,7 @@ function backup_restore.remove_old_files()
                logger.add_entry(logger.ERROR, "Backup-restore system", "Delete old backup file("..filename..") failed")
             end
          end
+         fiber.yield()
       end
    end
 end
