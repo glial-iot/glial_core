@@ -340,7 +340,7 @@ function scripts.generate_fibercreate(uuid, name)
    local error_handler = generate_fiber_error_handler(uuid, name)
 
    local function fiber_create_modifed(f_function, ...)
-      fiber.create(function(...) return xpcall(f_function, error_handler, ...) end, ...)
+      return fiber.create(function(...) return xpcall(f_function, error_handler, ...) end, ...)
    end
    return fiber_create_modifed
 end
