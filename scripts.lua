@@ -119,7 +119,9 @@ function init()
 end
 
 function destroy()
-   store.fiber_object:cancel()
+   if (store.fiber_object:status() ~= "dead") then
+      store.fiber_object:cancel()
+   end
 end
 
 function topic_update_callback(value, topic)
