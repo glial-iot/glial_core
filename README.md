@@ -1,20 +1,25 @@
-# Start
+# Как запустить Glue?
 
-1. Install Tarantool
-1. Clone: ```git clone https://github.com/vvzvlad/glue.git && cd glue```
-1. Install http: ```sudo tarantoolctl rocks install http```
-1. Install mqtt: ```sudo tarantoolctl rocks install mqtt```
-1. Install dump: ```sudo tarantoolctl rocks install dump```
-1. Start: ```./glue.lua```
-1. Install and start [Glue Webapp](https://github.com/vvzvlad/glue_web_app) on localhost:8080
+1. Установите [Tarantool](https://www.tarantool.io/en/download/)
+1. Клонируйте репозиторий: ```git clone https://github.com/vvzvlad/glue.git && cd glue```
+1. Установите http: ```sudo tarantoolctl rocks install http```
+1. Установите mqtt: ```sudo tarantoolctl rocks install mqtt```
+1. Установите dump: ```sudo tarantoolctl rocks install dump```
+1. Запустите серверную часть: ```./glue.lua``` (запустится HTTP сервер на порту 8080)
+1. Установите и запустите панель управления [Glue Webapp](https://github.com/vvzvlad/glue_web_app)
+1. При необходимости, укажите адрес HTTP сервера Tarantool на странице настроек в панели управления, если он отличается от localhost:8080
 
-# What is it?
+# Что это?
+- 
+Glue — это система управления IoT-устройствами, предоставляющая:
+- интерфейс для разработки драйверов, которые получают и конвертируют данные с устройств
+- интерфейс для разработки скриптов, которые обеспечивают взаимодействие устройств между собой
+- центральную шину данных для хранения текущих данных подключенных устройств
+- панель управления для визуализации данных, просмотра логов и настройки системы
 
-The control system of devices of the Internet of things
+# Документация
 
-# Documentation?
-
-Only in Russian: DOCUMENTATION.md
+Русская версия: DOCUMENTATION.md
 
 # Введение
 Устройства интернета вещей — весьма различны в своих возможностях и характеристиках. Из-за физических ограничений они оперируют множеством протоколов и стандартов: modbus, ethernet, knx, 6lowpan, zigbee, LoRa, и многими другими. 
