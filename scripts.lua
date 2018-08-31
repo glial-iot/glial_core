@@ -354,9 +354,6 @@ end
 
 function scripts.generate_body(script_params, log_script_name)
    local bus = require 'bus'
-   local mqtt = require 'mqtt'
-   local json = require 'json'
-   local socket = require 'socket'
    local body = setmetatable({}, {__index=_G})
    local uuid_related_update_value = bus.update_value_genarator(script_params.uuid)
    body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(script_params.uuid, log_script_name)
@@ -368,12 +365,12 @@ function scripts.generate_body(script_params, log_script_name)
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(script_params.uuid, log_script_name)
    body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
-   body.http_client = http_client
+   body.http_client = require('http.client').new({1})
    scripts.store[script_params.uuid] = scripts.store[script_params.uuid] or {}
    body.store = scripts.store[script_params.uuid]
-   body.mqtt = mqtt
-   body.json = json
-   body.socket = socket
+   body.mqtt = require 'mqtt'
+   body.json = require 'json'
+   body.socket = require 'socket'
    return body
 end
 
