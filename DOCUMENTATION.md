@@ -81,8 +81,8 @@ Glue может работать в нескольких режимах.
 Скрипты бывают нескольких видов: 
 - **drivers**
 - **bus-event**
-- **timer-event** 
 - **web-event**
+- **timer-event** 
 
 Cкрипты работают по следующему принципу: 
 ![Скрипты](docs/images/eventAndTimerScripts.png "Скрипты")
