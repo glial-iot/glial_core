@@ -179,12 +179,12 @@ end
 
 
 function bus.update_value(topic, value)
-   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL)
+   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, "0")
    return result
 end
 
 function bus.shadow_update_value(topic, value)
-   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW)
+   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW, "0")
    return result
 end
 
