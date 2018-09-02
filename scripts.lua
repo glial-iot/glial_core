@@ -139,7 +139,14 @@ function event_handler(value, topic)
 end]]
    end
 
-      if (type == scripts.type.TIMER_EVENT) then
+   if (type == scripts.type.TIMER_EVENT) then
+      return [[-- The generated script is filled with the default content --
+function event_handler()
+
+end]]
+   end
+
+   if (type == scripts.type.SHEDULE_EVENT) then
       return [[-- The generated script is filled with the default content --
 function event_handler()
 
