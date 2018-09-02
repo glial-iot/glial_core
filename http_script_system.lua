@@ -41,10 +41,6 @@ function http_script_system_private.main_handler(req)
    return system.add_headers(return_object)
 end
 
-function http_script_system.init_client()
-   http_script_system.client = require('http.client')
-end
-
 function http_script_system.endpoint_config(path, handler)
    http_script_system.server:route({ path = path }, handler)
 end

@@ -6,8 +6,6 @@ local box = box
 local uuid_lib = require('uuid')
 local digest = require 'digest'
 local fiber = require 'fiber'
-local http_client = require('http.client').new({50})
-
 
 local inspect = require 'libs/inspect'
 
