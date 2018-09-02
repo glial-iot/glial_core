@@ -216,11 +216,13 @@ end
 
 function scripts_private.http_api_create(params, req)
    if (params["name"] ~= nil and params["name"] ~= "" and params["type"] ~= nil and scripts.type[params["type"]] ~= nil) then
+      local new_object
+      if (params["object"] ~= nil) then new_object = string.gsub(params["object"], "+", " ") end
       local table = scripts_private.create({type = params["type"],
-                                            name = params["name"],
+                                            name = string.gsub(params["name"], "+", " "),
                                             status = params["status"],
                                             status_msg = params["status_msg"],
-                                            object = params["object"],
+                                            object = new_object,
                                             body = scripts_private.generate_init_body(params["type"])
                                           })
       return req:render{ json = table }
@@ -263,9 +265,9 @@ function scripts_private.http_api_update(params, req)
       if (scripts_private.get({uuid = params["uuid"]}) ~= nil) then
          local data = {}
          data.uuid = params["uuid"]
-         data.name = params["name"]
+         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
          data.active_flag = params["active_flag"]
-         data.object = params["object"]
+         if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
          local table = scripts_private.update(data)
          return req:render{ json = table }
       else
