@@ -93,7 +93,7 @@ function webevents_private.load(uuid)
 
    local callback = http_script_system.generate_callback_func(webevents_script_bodies[uuid].http_callback)
 
-   local attach_result = http_script_system.attach_path(script_params.object, callback)
+   local attach_result = http_script_system.attach_path(script_params.object, callback, uuid)
 
    if (attach_result == false) then
       log_web_events_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'"', script_params.uuid)
