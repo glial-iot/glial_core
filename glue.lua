@@ -32,7 +32,6 @@ local function box_config()
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
-
 system.dir_check(config.dir.DATABASE)
 system.dir_check(config.dir.BACKUP)
 system.dir_check(config.dir.DUMP_FILES)
@@ -51,12 +50,15 @@ require('system_webevent').init()
 settings.init()
 logger.add_entry(logger.INFO, "System", "Settings database initialized")
 
-
 bus.init()
 logger.add_entry(logger.INFO, "System", "Bus and FIFO worker initialized")
 
 logger.add_entry(logger.INFO, "System", "Starting script subsystem...")
 scripts.init()
+
+if (os.getenv('GLUE_SAFEMODE') == 1 and tonumber(os.getenv('TARANTOOL_CONSOLE')) ~= 1) then
+   scripts.safe_mode_error_all()
+end
 
 logger.add_entry(logger.INFO, "System", "Starting web-events...")
 http_script_system.init()
@@ -84,7 +86,7 @@ logger.add_entry(logger.INFO, "System", "Export modules started")
 
 logger.add_entry(logger.INFO, "System", "System started")
 
-if tonumber(os.getenv('TARANTOOL_CONSOLE')) == 1 then
+if (tonumber(os.getenv('TARANTOOL_CONSOLE')) == 1) then
    logger.add_entry(logger.INFO, "System", "Console active")
     if pcall(require('console').start) then
         os.exit(0)

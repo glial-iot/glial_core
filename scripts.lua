@@ -383,6 +383,15 @@ function scripts.generate_body(script_params, log_script_name)
    return body
 end
 
+function scripts.safe_mode_error_all()
+   local list = scripts_private.get_list({type = nil})
+
+   for _, current_script in pairs(list) do
+      logger.add_entry(logger.ERROR, "Script subsystem", 'Script "'..current_script.name..'" not start (safe mode)')
+      scripts.update({uuid = current_script.uuid, status = scripts.statuses.ERROR, status_msg = 'Start: safe mode'})
+      fiber.yield()
+   end
+end
 
 function scripts.init()
    scripts_private.storage_init()
