@@ -52,14 +52,15 @@ function bus_private.fifo_storage_worker()
 end
 
 function bus_private.bus_rps_stat_worker()
+   fiber.sleep(2)
    while true do
-      if (bus.bus_saved_rps >= 3) then bus.bus_saved_rps = bus.bus_saved_rps - 3 end
-      bus.update_value("/glue/bus/fifo_saved", bus.fifo_saved_rps)
-      bus.update_value("/glue/bus/bus_saved", bus.bus_saved_rps)
+      if (bus.bus_saved_rps >= 15) then bus.bus_saved_rps = bus.bus_saved_rps - 15 end
+      bus.update_value("/glue/bus/fifo_saved", bus.fifo_saved_rps/5)
+      bus.update_value("/glue/bus/bus_saved", bus.bus_saved_rps/5)
       bus.update_value("/glue/bus/fifo_max", bus.max_fifo_count)
       bus.fifo_saved_rps = 0
       bus.bus_saved_rps = 0
-      fiber.sleep(1)
+      fiber.sleep(5)
    end
 end
 
