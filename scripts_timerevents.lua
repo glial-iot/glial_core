@@ -190,7 +190,7 @@ function timerevents_private.process()
                if (status ~= true) then
                   returned_data = tostring(returned_data)
                   log_timer_events_error('Timer-event script event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
-                  scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver-event: error: '..(returned_data or "")})
+                  scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Shedule-event script error: '..(returned_data or "")})
                end
             end
             scripts_table.counter = scripts_table.period
