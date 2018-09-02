@@ -21,6 +21,7 @@ function private.system_action_http_api(req)
       return_object = req:render{ json = { version = system.git_version() } }
    elseif (params["action"] == "update") then
       local old_version = system.git_version(true)
+      system.os_command("git reset --hard origin/master 2>&1")
       local emessage = system.os_command("git pull 2>&1")
       local new_version = system.git_version(true)
       logger.add_entry(logger.INFO, "Action events", 'System update: '..(old_version or "").." -> "..(new_version or "").." and will be stopped")
