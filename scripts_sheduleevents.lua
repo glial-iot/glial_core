@@ -187,7 +187,7 @@ function shedule_events_private.recalc_counts(uuid)
          script_params.active_flag == scripts.flag.ACTIVE) then
       if (type(scripts_table.shedule) == "string") then
          local expr = cron.parse(scripts_table.shedule)
-         print("recalc_counts", scripts_table.shedule, cron.next(expr), cron.next(expr)-os.time())
+         --print("recalc_counts", scripts_table.shedule, cron.next(expr), cron.next(expr)-os.time())
          if (expr ~= nil) then
             scripts_table.next_time = cron.next(expr) + 1
          else
@@ -204,10 +204,10 @@ function shedule_events_private.time_test()
       if (script_params.status == scripts.statuses.NORMAL and
           script_params.active_flag == scripts.flag.ACTIVE and
           type(scripts_table.next_time) == "number") then
-         print("counts_update", scripts_table.body._script_name, scripts_table.next_time - os.time(), scripts_table.shedule)
+         --print("counts_update", scripts_table.body._script_name, scripts_table.next_time - os.time(), scripts_table.shedule)
          if (scripts_table.next_time - os.time() <= 1) then
             if (type(scripts_table.body.event_handler) == "function") then
-               print("counts_start")
+               --print("counts_start")
                local status, returned_data = pcall(scripts_table.body.event_handler)
                if (status ~= true) then
                   returned_data = tostring(returned_data)
