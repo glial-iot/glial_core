@@ -19,15 +19,15 @@ webevents.bodies = webevents_script_bodies
 
 ------------------ Private functions ------------------
 
-local function log_webevent_error(msg, uuid)
+local function log_web_events_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Web-events subsystem", msg, uuid, "")
 end
 
-local function log_webevent_warning(msg, uuid)
+local function log_web_events_warning(msg, uuid)
    logger.add_entry(logger.WARNING, "Web-events subsystem", msg, uuid, "")
 end
 
-local function log_webevent_info(msg, uuid)
+local function log_web_events_info(msg, uuid)
    logger.add_entry(logger.INFO, "Web-events subsystem", msg, uuid, "")
 end
 
@@ -36,24 +36,24 @@ function webevents_private.load(uuid)
    local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.WEB_EVENT) then
-      log_webevent_error('Attempt to start non-webevent script "'..script_params.name..'"', script_params.uuid)
+      log_web_events_error('Attempt to start non-webevent script "'..script_params.name..'"', script_params.uuid)
       return false
    end
 
    if (script_params.uuid == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (not found)', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
       return false
    end
 
    if (script_params.body == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (body nil)', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (body nil)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: No body'})
       return false
    end
 
    if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
-      log_webevent_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
+      log_web_events_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'})
       return true
    end
@@ -61,7 +61,7 @@ function webevents_private.load(uuid)
    local current_func, error_msg = loadstring(script_params.body, script_params.name)
 
    if (current_func == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Body load error: '..(error_msg or "")})
       return false
    end
@@ -71,19 +71,19 @@ function webevents_private.load(uuid)
 
    local status, returned_data = pcall(setfenv(current_func, body))
    if (status ~= true) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (load error: '..(returned_data or "")..')', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (load error: '..(returned_data or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: pcall error: '..(returned_data or "")})
       return false
    end
 
    if (body.http_callback == nil or type(body.http_callback) ~= "function") then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (http_callback function not found or no function)', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (http_callback function not found or no function)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: http_callback function not found or no function'})
       return false
    end
 
    if (script_params.object == nil or script_params.object == "") then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (endpoint not found)', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (endpoint not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: endpoint not found'})
       return false
    end
@@ -96,10 +96,10 @@ function webevents_private.load(uuid)
    local attach_result = http_script_system.attach_path(script_params.object, callback)
 
    if (attach_result == false) then
-      log_webevent_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'"', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'"', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: duplicate path'})
    else
-      log_webevent_info('Web-event "'..script_params.name..'" started and attached path "'..(script_params.object or '')..'"', script_params.uuid)
+      log_web_events_info('Web-event "'..script_params.name..'" started and attached path "'..(script_params.object or '')..'"', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Started'})
    end
 
@@ -111,19 +111,19 @@ function webevents_private.unload(uuid)
    local script_params = scripts.get({uuid=uuid})
 
    if (script_params.type ~= scripts.type.WEB_EVENT) then
-      log_webevent_error('Attempt to stop non-webevent script "'..script_params.name..'"', script_params.uuid)
+      log_web_events_error('Attempt to stop non-webevent script "'..script_params.name..'"', script_params.uuid)
       return false
    end
 
    if (body == nil) then
-      log_webevent_error('Web-event "'..script_params.name..'" not stop (script body error)', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not stop (script body error)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: script body error'})
       return false
    end
 
    http_script_system.remove_path(script_params.object)
 
-   log_webevent_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)
+   log_web_events_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Stopped'})
    webevents_script_bodies[uuid] = nil
    return true

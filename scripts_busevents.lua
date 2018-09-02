@@ -15,11 +15,11 @@ local fiber = require 'fiber'
 
 local busevents_script_bodies_masks = {}
 
-local function log_busevent_error(msg, uuid)
+local function log_bus_event_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Bus-events subsystem", msg, uuid, "")
 end
 
-local function log_busevent_info(msg, uuid)
+local function log_bus_event_info(msg, uuid)
    logger.add_entry(logger.INFO, "Bus-events subsystem", msg, uuid, "")
 end
 
@@ -31,24 +31,24 @@ function busevents_private.load(uuid, run_once_flag)
    local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.BUS_EVENT) then
-      log_busevent_error('Attempt to start non-busevent script "'..script_params.name..'"', script_params.uuid)
+      log_bus_event_error('Attempt to start non-busevent script "'..script_params.name..'"', script_params.uuid)
       return false
    end
 
    if (script_params.uuid == nil) then
-      log_busevent_error('Web-event "'..script_params.name..'" not start (not found)', script_params.uuid)
+      log_bus_event_error('Web-event "'..script_params.name..'" not start (not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
       return false
    end
 
    if (script_params.body == nil) then
-      log_busevent_error('Web-event "'..script_params.name..'" not start (body nil)', script_params.uuid)
+      log_bus_event_error('Web-event "'..script_params.name..'" not start (body nil)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: No body'})
       return false
    end
 
    if ((script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) and run_once_flag ~= true) then
-      log_busevent_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
+      log_bus_event_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'}) -- TODO: не работает без перезагрузки
       return true
    end
@@ -56,7 +56,7 @@ function busevents_private.load(uuid, run_once_flag)
    local current_func, error_msg = loadstring(script_params.body, script_params.name)
 
    if (current_func == nil) then
-      log_busevent_error('Web-event "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
+      log_bus_event_error('Web-event "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Body load error: '..(error_msg or "")})
       return false
    end
@@ -66,31 +66,31 @@ function busevents_private.load(uuid, run_once_flag)
 
    local status, err_msg = pcall(setfenv(current_func, body))
    if (status ~= true) then
-      log_busevent_error('Bus-event "'..script_params.name..'" not start (load error: '..(err_msg or "")..')', script_params.uuid)
+      log_bus_event_error('Bus-event "'..script_params.name..'" not start (load error: '..(err_msg or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: pcall error: '..(err_msg or "")})
       return false
    end
 
    if (body.event_handler == nil or type(body.event_handler) ~= "function") then
-      log_busevent_error('Bus-event "'..script_params.name..'" not start ("event_handler" function not found or no function)', script_params.uuid)
+      log_bus_event_error('Bus-event "'..script_params.name..'" not start ("event_handler" function not found or no function)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: "event_handler" function not found or no function'})
       return false
    end
 
    if ((script_params.object == nil or script_params.object == "") and type(script_params.object) == "string") then
-      log_busevent_error('Bus-event "'..script_params.name..'" not start (mask not found)', script_params.uuid)
+      log_bus_event_error('Bus-event "'..script_params.name..'" not start (mask not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: mask not found'})
       return false
    end
 
    if (run_once_flag == true) then
-      log_busevent_info('Bus-event "'..script_params.name..'" runned once', script_params.uuid)
+      log_bus_event_info('Bus-event "'..script_params.name..'" runned once', script_params.uuid)
       body.event_handler(0, "once")
    else
       busevents_script_bodies_masks[uuid] = nil
       busevents_script_bodies_masks[uuid] = {}
       busevents_script_bodies_masks[uuid][script_params.object] = body.event_handler
-      log_busevent_info('Bus-event "'..script_params.name..'" active on mask "'..(script_params.object or "")..'"', script_params.uuid)
+      log_bus_event_info('Bus-event "'..script_params.name..'" active on mask "'..(script_params.object or "")..'"', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask "'..(script_params.object or "")..'"'})
    end
 
@@ -139,7 +139,7 @@ function busevents.process(topic, value, source_uuid)
                   local status, returned_data = pcall(body, value, topic)
                   if (status ~= true) then
                      returned_data = tostring(returned_data)
-                     log_busevent_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+                     log_bus_event_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
                      scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
                   end
                   return returned_data
