@@ -98,14 +98,6 @@ function timerevents_private.load(uuid)
       end
    end
 
-   if (body.destroy ~= nil) then
-      if (type(body.destroy) ~= "function") then
-         log_timer_events_error('Timer-event script "'..script_params.name..'" not start (destroy not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy not function'})
-         return false
-      end
-   end
-
    if (body.event_handler == nil or type(body.event_handler) ~= "function") then
       log_timer_events_error('Timer-event "'..script_params.name..'" not start ("event_handler" function not found or no function)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: "event_handler" function not found or no function'})

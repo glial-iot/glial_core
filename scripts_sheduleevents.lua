@@ -101,20 +101,11 @@ function shedule_events_private.load(uuid)
       end
    end
 
-   if (body.destroy ~= nil) then
-      if (type(body.destroy) ~= "function") then
-         log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (destroy not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy not function'})
-         return false
-      end
-   end
-
    if (body.event_handler == nil or type(body.event_handler) ~= "function") then
       log_shedule_events_error('Shedule-event "'..script_params.name..'" not start ("event_handler" function not found or no function)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: "event_handler" function not found or no function'})
       return false
    end
-
 
    if (script_params.object == nil) then
       log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (shedule not found)', script_params.uuid)
