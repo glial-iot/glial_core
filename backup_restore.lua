@@ -116,18 +116,21 @@ function backup_restore.create_backup(comment)
       logger.add_entry(logger.ERROR, "Backup-restore system", message)
       return false, message
    end
+   fiber.yield()
    result, msg = backup_restore_private.dump()
    if (result == false) then
       local message = "Backup failed on dump stage: "..(msg or "")
       logger.add_entry(logger.ERROR, "Backup-restore system", message)
       return false, message
    end
+   fiber.yield()
    result = backup_restore_private.archive_dump_files(comment)
    if (result == false) then
       local message = "Backup failed on archive stage"
       logger.add_entry(logger.ERROR, "Backup-restore system", message)
       return false, message
    end
+   fiber.yield()
    backup_restore_private.remove_dump_files()
    return true
 end
@@ -139,24 +142,28 @@ function backup_restore.restore_backup(filename)
    end
 
    local result, count, msg
+   fiber.yield()
    result = backup_restore_private.remove_dump_files()
    if (result == false) then
       local message = "Restore failed on clear stage"
       logger.add_entry(logger.ERROR, "Backup-restore system", message)
       return false, message
    end
+   fiber.yield()
    result = backup_restore_private.unarchive_dump_files(filename)
    if (result == false) then
       local message = "Restore failed on dump stage"
       logger.add_entry(logger.ERROR, "Backup-restore system", message)
       return false, message
    end
+   fiber.yield()
    result, msg = backup_restore_private.remove_space_files()
    if (result == false) then
       local message = "Restore failed on space-clean stage: "..(msg or "")
       logger.add_entry(logger.ERROR, "Backup-restore system", message)
       return false, message
    end
+   fiber.yield()
    result, count = backup_restore_private.restore()
    if (result == false) then
       local message = "Restore failed on restore stage: "..(count or 0).." count"
@@ -188,6 +195,7 @@ function backup_restore.http_api(req)
          local time_text = os.date("%Y-%m-%d, %H:%M:%S", time_epoch).." ("..(diff_time_text)..")"
          local size = system.round((fio.lstat(filename).size / 1000), 1)
          table.insert(processed_table, {filename = filename, time = time_epoch, time_text = time_text, comment = comment, size = size})
+         fiber.yield()
       end
       return_object = req:render{ json = processed_table }
    elseif (params["action"] == "restore" and params["filename"] ~= nil and params["filename"] ~= "") then
