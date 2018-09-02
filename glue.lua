@@ -56,25 +56,26 @@ logger.add_entry(logger.INFO, "System", "Bus and FIFO worker initialized")
 logger.add_entry(logger.INFO, "System", "Starting script subsystem...")
 scripts.init()
 
-if (os.getenv('GLUE_SAFEMODE') == 1 and tonumber(os.getenv('TARANTOOL_CONSOLE')) ~= 1) then
+if (tonumber(os.getenv('GLUE_SAFEMODE')) == 1 and tonumber(os.getenv('TARANTOOL_CONSOLE')) ~= 1) then
    scripts.safe_mode_error_all()
+else
+   logger.add_entry(logger.INFO, "System", "Starting web-events...")
+   http_script_system.init()
+   scripts_webevents.init()
+
+   logger.add_entry(logger.INFO, "System", "Starting bus-events...")
+   scripts_busevents.init()
+
+   logger.add_entry(logger.INFO, "System", "Starting timer-events...")
+   scripts_timerevents.init()
+
+   logger.add_entry(logger.INFO, "System", "Starting shedule-events...")
+   scripts_sheduleevents.init()
+
+   logger.add_entry(logger.INFO, "System", "Starting drivers...")
+   scripts_drivers.init()
 end
 
-logger.add_entry(logger.INFO, "System", "Starting web-events...")
-http_script_system.init()
-scripts_webevents.init()
-
-logger.add_entry(logger.INFO, "System", "Starting bus-events...")
-scripts_busevents.init()
-
-logger.add_entry(logger.INFO, "System", "Starting timer-events...")
-scripts_timerevents.init()
-
-logger.add_entry(logger.INFO, "System", "Starting shedule-events...")
-scripts_sheduleevents.init()
-
-logger.add_entry(logger.INFO, "System", "Starting drivers...")
-scripts_drivers.init()
 
 backup_restore.init()
 backup_restore.create_backup("Backup after start")
