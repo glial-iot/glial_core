@@ -133,10 +133,10 @@ end
 
 function shedule_events_private.unload(uuid)
    local body = shedule_event_script_bodies[uuid]
-   local script_params = scripts.get({uuid=uuid})
+   local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.SHEDULE_EVENT) then
-      log_shedule_events_error('Attempt to stop non-Shedule-event script "'..script_params.name..'"', script_params.uuid)
+      log_shedule_events_error('Attempt to stop non-shedule-event script "'..script_params.name..'"', script_params.uuid)
       return false
    end
 

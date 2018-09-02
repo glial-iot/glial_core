@@ -131,7 +131,7 @@ end
 
 function timerevents_private.unload(uuid)
    local body = timer_event_script_bodies[uuid]
-   local script_params = scripts.get({uuid=uuid})
+   local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.TIMER_EVENT) then
       log_timer_events_error('Attempt to stop non-timer-event script "'..script_params.name..'"', script_params.uuid)

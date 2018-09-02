@@ -108,7 +108,7 @@ end
 
 function webevents_private.unload(uuid)
    local body = webevents_script_bodies[uuid]
-   local script_params = scripts.get({uuid=uuid})
+   local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.WEB_EVENT) then
       log_web_events_error('Attempt to stop non-webevent script "'..script_params.name..'"', script_params.uuid)

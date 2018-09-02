@@ -112,7 +112,7 @@ end
 
 function drivers_private.unload(uuid)
    local body = drivers_script_bodies[uuid]
-   local script_params = scripts.get({uuid=uuid})
+   local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.DRIVER) then
       log_driver_error('Attempt to stop non-driver script "'..script_params.name..'"', script_params.uuid)
