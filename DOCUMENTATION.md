@@ -231,7 +231,7 @@ end
 
 ![Schedule script](docs/images/scheduleScript.png "Schedule script")  
 
-Для создания скрипта, укажите его название и расписание в формате [cron format](http://www.nncron.ru/help/EN/working/cron-format.htm).  
+Для создания скрипта, укажите его название и расписание в формате [cron format](https://en.wikipedia.org/wiki/Cron).  
 Формат был дополнен возможностью указания секунд в интервале (первый символ).  
 
 ```
@@ -245,6 +245,8 @@ end
 # │ │ │ │ │ │
 # * * * * * *
 ```  
+
+Также, доступны @monthly, @weekly, @daily, @hourly.
 
 К примеру, с такими настройками расписания, скрипт будет запускаться по четвергам в 13:45:15
 
