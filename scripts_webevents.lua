@@ -1,5 +1,5 @@
 #!/usr/bin/env tarantool
-local webevents = {}
+local webevents = {} -- TODO: переименовать в соотвествии с остальными
 local webevents_private = {}
 
 local box = box

@@ -1,5 +1,5 @@
 #!/usr/bin/env tarantool
-local timerevents = {}
+local timerevents = {} -- TODO: переименовать в соотвествии с остальными
 local timerevents_private = {}
 
 local box = box

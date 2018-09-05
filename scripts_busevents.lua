@@ -1,5 +1,5 @@
 #!/usr/bin/env tarantool
-local busevents = {}
+local busevents = {} -- TODO: переименовать в соотвествии с остальными
 local busevents_private = {}
 
 local box = box
