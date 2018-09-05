@@ -194,7 +194,7 @@ function bus.get_value(topic)
    local tuple = bus.storage.index.topic:get(topic)
 
    if (tuple ~= nil) then
-      return tuple["value"]
+      return tuple["value"], tuple["update_time"], tuple["type"], tuple["tags"]
    else
       return nil
    end
