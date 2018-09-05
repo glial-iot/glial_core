@@ -183,35 +183,50 @@ function busevents_private.unload(uuid)
    return true
 end
 
+------------------ HTTP API functions ------------------
 
+function busevents_private.http_api_get_list(params, req)
+   local table = scripts.get_list(scripts.type.BUS_EVENT)
+   return req:render{ json = table }
+end
+
+function busevents_private.http_api_reload(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      local data = scripts.get({uuid = params["uuid"]})
+      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+         local result = busevents_private.unload(params["uuid"])
+         if (result == true) then
+            busevents_private.load(params["uuid"], false)
+         end
+      else
+         busevents_private.load(params["uuid"], false)
+      end
+      return req:render{ json = {result = true} }
+   else
+      return req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
+   end
+end
+
+function busevents_private.http_api_run_once(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      busevents_main_scripts_table[params["uuid"]] = nil
+      busevents_private.load(params["uuid"], true)
+      busevents_main_scripts_table[params["uuid"]] = nil
+      return req:render{ json = {result = true} }
+   else
+      return req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
+   end
+end
 
 function busevents_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-         local data = scripts.get({uuid = params["uuid"]})
-         if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-            local result = busevents_private.unload(params["uuid"])
-            if (result == true) then
-               busevents_private.load(params["uuid"], false)
-            end
-         else
-            busevents_private.load(params["uuid"], false)
-         end
-         return_object = req:render{ json = {result = true} }
-      else
-         return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
-      end
+      return_object = busevents_private.http_api_reload(params, req)
+   elseif (params["action"] == "get_list") then
+      return_object = busevents_private.http_api_get_list(params, req)
    elseif (params["action"] == "run_once") then
-      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-         busevents_main_scripts_table[params["uuid"]] = nil
-         busevents_private.load(params["uuid"], true)
-         busevents_main_scripts_table[params["uuid"]] = nil
-         return_object = req:render{ json = {result = true} }
-      else
-         return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
-      end
+      return_object = busevents_private.http_api_run_once(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid action"} }
    end

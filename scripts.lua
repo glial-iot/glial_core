@@ -401,6 +401,10 @@ function scripts.get(data)
    return scripts_private.get({uuid = data.uuid})
 end
 
+function scripts.get_list(type)
+   return scripts_private.get_list({type = type})
+end
+
 function scripts.update(data)
    return scripts_private.update(data)
 end
