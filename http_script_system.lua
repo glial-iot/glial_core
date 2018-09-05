@@ -16,7 +16,6 @@ http_script_system_private.main_path = "/we/:name"
 
 ------------------ Private functions ------------------
 
-
 function http_script_system_private.main_handler(req)
    local name = req:stash('name')
    local return_object

@@ -162,25 +162,35 @@ end
 
 ------------------ HTTP API functions ------------------
 
+function drivers_private.http_api_get_list(params, req)
+   local table = scripts.get_list(scripts.type.DRIVER)
+   return req:render{ json = table }
+end
+
+function drivers_private.http_api_reload(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      local data = scripts.get({uuid = params["uuid"]})
+      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+         local result = drivers_private.unload(params["uuid"])
+         if (result == true) then
+            drivers_private.load(params["uuid"])
+         end
+      else
+         drivers_private.load(params["uuid"])
+      end
+      return req:render{ json = {result = true} }
+   else
+      return req:render{ json = {result = false, error_msg = "Drivers API: No valid UUID"} }
+   end
+end
+
 function drivers_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-         local data = scripts.get({uuid = params["uuid"]})
-         if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-            local result = drivers_private.unload(params["uuid"])
-            if (result == true) then
-               drivers_private.load(params["uuid"])
-            end
-         else
-            drivers_private.load(params["uuid"])
-         end
-         return_object = req:render{ json = {result = true} }
-      else
-         return_object = req:render{ json = {result = false, error_msg = "Drivers API: No valid UUID"} }
-      end
-   --elseif (params["action"] == "create") then
+      return_object = drivers_private.http_api_reload(params, req)
+   elseif (params["action"] == "get_list") then
+      return_object = drivers_private.http_api_get_list(params, req)
 
    else
       return_object = req:render{ json = {result = false, error_msg = "Drivers API: No valid action"} }

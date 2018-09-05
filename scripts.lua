@@ -212,13 +212,6 @@ end
 
 ------------------ HTTP API functions ------------------
 
-
-function scripts_private.http_api_get_list(params, req)
-   local table = scripts_private.get_list({type = params["type"]})
-   return req:render{ json = table }
-end
-
-
 function scripts_private.http_api_create(params, req)
    if (params["name"] ~= nil and params["name"] ~= "" and params["type"] ~= nil and scripts.type[params["type"]] ~= nil) then
       local new_object
@@ -317,10 +310,8 @@ end
 function scripts_private.http_api(req)
    local params = req:param()
    local return_object
-   if (params["action"] == "get_list") then
-      return_object = scripts_private.http_api_get_list(params, req)
 
-   elseif (params["action"] == "create") then
+   if (params["action"] == "create") then
       return_object = scripts_private.http_api_create(params, req)
 
    elseif (params["action"] == "delete") then
@@ -399,6 +390,10 @@ end
 
 function scripts.get(data)
    return scripts_private.get({uuid = data.uuid})
+end
+
+function scripts.get_list(type)
+   return scripts_private.get_list({type = type})
 end
 
 function scripts.update(data)

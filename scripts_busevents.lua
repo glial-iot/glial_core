@@ -1,5 +1,5 @@
 #!/usr/bin/env tarantool
-local busevents = {}
+local busevents = {} -- TODO: переименовать в соотвествии с остальными
 local busevents_private = {}
 
 local box = box
@@ -113,7 +113,14 @@ function busevents_private.load(uuid, run_once_flag)
 
    if (run_once_flag == true) then
       log_bus_event_info('Bus-event "'..script_params.name..'" runned once', script_params.uuid)
-      body.event_handler(0, "once")
+      local value = 0
+      local topic = "once"
+      local pcall_status, returned_data = pcall(body.event_handler, value, topic)
+      if (pcall_status ~= true) then
+         returned_data = tostring(returned_data)
+         log_bus_event_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+         scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
+      end
    else
       busevents_main_scripts_table[uuid] = nil
       busevents_main_scripts_table[uuid] = {}
@@ -176,35 +183,50 @@ function busevents_private.unload(uuid)
    return true
 end
 
+------------------ HTTP API functions ------------------
 
+function busevents_private.http_api_get_list(params, req)
+   local table = scripts.get_list(scripts.type.BUS_EVENT)
+   return req:render{ json = table }
+end
+
+function busevents_private.http_api_reload(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      local data = scripts.get({uuid = params["uuid"]})
+      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+         local result = busevents_private.unload(params["uuid"])
+         if (result == true) then
+            busevents_private.load(params["uuid"], false)
+         end
+      else
+         busevents_private.load(params["uuid"], false)
+      end
+      return req:render{ json = {result = true} }
+   else
+      return req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
+   end
+end
+
+function busevents_private.http_api_run_once(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      busevents_main_scripts_table[params["uuid"]] = nil
+      busevents_private.load(params["uuid"], true)
+      busevents_main_scripts_table[params["uuid"]] = nil
+      return req:render{ json = {result = true} }
+   else
+      return req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
+   end
+end
 
 function busevents_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-         local data = scripts.get({uuid = params["uuid"]})
-         if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-            local result = busevents_private.unload(params["uuid"])
-            if (result == true) then
-               busevents_private.load(params["uuid"], false)
-            end
-         else
-            busevents_private.load(params["uuid"], false)
-         end
-         return_object = req:render{ json = {result = true} }
-      else
-         return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
-      end
+      return_object = busevents_private.http_api_reload(params, req)
+   elseif (params["action"] == "get_list") then
+      return_object = busevents_private.http_api_get_list(params, req)
    elseif (params["action"] == "run_once") then
-      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-         busevents_main_scripts_table[params["uuid"]] = nil
-         busevents_private.load(params["uuid"], true)
-         busevents_main_scripts_table[params["uuid"]] = nil
-         return_object = req:render{ json = {result = true} }
-      else
-         return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
-      end
+      return_object = busevents_private.http_api_run_once(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid action"} }
    end

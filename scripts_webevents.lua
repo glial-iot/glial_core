@@ -1,5 +1,5 @@
 #!/usr/bin/env tarantool
-local webevents = {}
+local webevents = {} -- TODO: переименовать в соотвествии с остальными
 local webevents_private = {}
 
 local box = box
@@ -131,24 +131,35 @@ end
 
 ------------------ HTTP API functions ------------------
 
+function webevents_private.http_api_reload(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      local data = scripts.get({uuid = params["uuid"]})
+      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+         local result = webevents_private.unload(params["uuid"])
+         if (result == true) then
+            webevents_private.load(params["uuid"])
+         end
+      else
+         webevents_private.load(params["uuid"])
+      end
+      return req:render{ json = {result = true} }
+   else
+      return req:render{ json = {result = false, error_msg = "Webevents API: No valid UUID"} }
+   end
+end
+
+function webevents_private.http_api_get_list(params, req)
+   local table = scripts.get_list(scripts.type.WEB_EVENT)
+   return req:render{ json = table }
+end
+
 function webevents_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-         local data = scripts.get({uuid = params["uuid"]})
-         if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-            local result = webevents_private.unload(params["uuid"])
-            if (result == true) then
-               webevents_private.load(params["uuid"])
-            end
-         else
-            webevents_private.load(params["uuid"])
-         end
-         return_object = req:render{ json = {result = true} }
-      else
-         return_object = req:render{ json = {result = false, error_msg = "Webevents API: No valid UUID"} }
-      end
+      return_object = webevents_private.http_api_reload(params, req)
+   elseif (params["action"] == "get_list") then
+      return_object = webevents_private.http_api_get_list(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Webevents API: No valid action"} }
    end
