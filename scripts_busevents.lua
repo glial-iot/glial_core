@@ -113,7 +113,14 @@ function busevents_private.load(uuid, run_once_flag)
 
    if (run_once_flag == true) then
       log_bus_event_info('Bus-event "'..script_params.name..'" runned once', script_params.uuid)
-      body.event_handler(0, "once")
+      local value = 0
+      local topic = "once"
+      local pcall_status, returned_data = pcall(body.event_handler, value, topic)
+      if (pcall_status ~= true) then
+         returned_data = tostring(returned_data)
+         log_bus_event_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+         scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
+      end
    else
       busevents_main_scripts_table[uuid] = nil
       busevents_main_scripts_table[uuid] = {}
