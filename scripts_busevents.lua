@@ -195,6 +195,32 @@ function busevents_private.http_api_create(params, req)
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
+function busevents_private.http_api_delete(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
+         local table = scripts.delete({uuid = params["uuid"]})
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Busevents API Delete: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Busevents API Delete: no UUID"} }
+   end
+end
+
+function busevents_private.http_api_get(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      local table = scripts.get({uuid = params["uuid"]})
+      if (table ~= nil) then
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Busevents API Get: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Busevents API Get: no UUID"} }
+   end
+end
+
 function busevents_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local data = scripts.get({uuid = params["uuid"]})
@@ -208,7 +234,7 @@ function busevents_private.http_api_reload(params, req)
       end
       return req:render{ json = {result = true} }
    else
-      return req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
+      return req:render{ json = {result = false, error_msg = "Busevents API reload: No valid UUID"} }
    end
 end
 
@@ -234,6 +260,10 @@ function busevents_private.http_api(req)
       return_object = busevents_private.http_api_run_once(params, req)
    elseif (params["action"] == "create") then
       return_object = busevents_private.http_api_create(params, req)
+   elseif (params["action"] == "delete") then
+      return_object = busevents_private.http_api_delete(params, req)
+   elseif (params["action"] == "get") then
+      return_object = busevents_private.http_api_get(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Busevents API: No valid action"} }
    end

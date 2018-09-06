@@ -172,6 +172,33 @@ function drivers_private.http_api_create(params, req)
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
+function drivers_private.http_api_delete(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
+         local table = scripts.delete({uuid = params["uuid"]})
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Drivers API Delete: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Drivers API Delete: no UUID"} }
+   end
+end
+
+
+function drivers_private.http_api_get(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      local table = scripts.get({uuid = params["uuid"]})
+      if (table ~= nil) then
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Drivers API Get: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Drivers API Get: no UUID"} }
+   end
+end
+
 function drivers_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local data = scripts.get({uuid = params["uuid"]})
@@ -198,6 +225,10 @@ function drivers_private.http_api(req)
       return_object = drivers_private.http_api_get_list(params, req)
    elseif (params["action"] == "create") then
       return_object = drivers_private.http_api_create(params, req)
+   elseif (params["action"] == "delete") then
+      return_object = drivers_private.http_api_delete(params, req)
+   elseif (params["action"] == "get") then
+      return_object = drivers_private.http_api_get(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Drivers API: No valid action"} }
    end

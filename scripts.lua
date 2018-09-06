@@ -212,33 +212,15 @@ end
 
 ------------------ HTTP API functions ------------------
 
-function scripts_private.http_api_delete(params, req)
-   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      if (scripts_private.get({uuid = params["uuid"]}) ~= nil) then
-         local table = scripts_private.delete({uuid = params["uuid"]})
-         return req:render{ json = table }
-      else
-         return req:render{ json = {result = false, error_msg = "Script API Delete: UUID not found"} }
-      end
-   else
-      return req:render{ json = {result = false, error_msg = "Script API Delete: no UUID"} }
-   end
-end
-
-
-function scripts_private.http_api_get(params, req)
-   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      local table = scripts_private.get({uuid = params["uuid"]})
-      if (table ~= nil) then
-         return req:render{ json = table }
-      else
-         return req:render{ json = {result = false, error_msg = "UUID not found"} }
-      end
-   else
-      return req:render{ json = {result = false, error_msg = "Script API Get: no UUID"} }
-   end
-end
-
+--Entrypoints:
+--scripts_body(autorestart)
+--*get_list
+--*create
+--*delete
+--*get
+--update(autorestart)
+--*reload
+--*run_once
 
 function scripts_private.http_api_update(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
@@ -293,13 +275,7 @@ function scripts_private.http_api(req)
    local params = req:param()
    local return_object
 
-   if (params["action"] == "delete") then
-      return_object = scripts_private.http_api_delete(params, req)
-
-   elseif (params["action"] == "get") then
-      return_object = scripts_private.http_api_get(params, req)
-
-   elseif (params["action"] == "update") then
+   if (params["action"] == "update") then
       return_object = scripts_private.http_api_update(params, req)
 
    else
@@ -369,6 +345,10 @@ end
 
 function scripts.get(data)
    return scripts_private.get({uuid = data.uuid})
+end
+
+function scripts.delete(data)
+   return scripts_private.delete({uuid = data.uuid})
 end
 
 function scripts.get_list(type)

@@ -131,6 +131,43 @@ end
 
 ------------------ HTTP API functions ------------------
 
+function webevents_private.http_api_get_list(params, req)
+   local table = scripts.get_list(scripts.type.WEB_EVENT)
+   return req:render{ json = table }
+end
+
+function webevents_private.http_api_create(params, req)
+   local status, table, err_msg = scripts.create(params["name"], scripts.type.WEB_EVENT, params["object"])
+   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
+end
+
+function webevents_private.http_api_delete(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
+         local table = scripts.delete({uuid = params["uuid"]})
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Webevents API Delete: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Webevents API Delete: no UUID"} }
+   end
+end
+
+
+function webevents_private.http_api_get(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      local table = scripts.get({uuid = params["uuid"]})
+      if (table ~= nil) then
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Webevents API Get: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Webevents API Get: no UUID"} }
+   end
+end
+
 function webevents_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local data = scripts.get({uuid = params["uuid"]})
@@ -148,16 +185,6 @@ function webevents_private.http_api_reload(params, req)
    end
 end
 
-function webevents_private.http_api_get_list(params, req)
-   local table = scripts.get_list(scripts.type.WEB_EVENT)
-   return req:render{ json = table }
-end
-
-function webevents_private.http_api_create(params, req)
-   local status, table, err_msg = scripts.create(params["name"], scripts.type.WEB_EVENT, params["object"])
-   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
-end
-
 function webevents_private.http_api(req)
    local params = req:param()
    local return_object
@@ -167,6 +194,10 @@ function webevents_private.http_api(req)
       return_object = webevents_private.http_api_get_list(params, req)
    elseif (params["action"] == "create") then
       return_object = webevents_private.http_api_create(params, req)
+   elseif (params["action"] == "delete") then
+      return_object = webevents_private.http_api_delete(params, req)
+   elseif (params["action"] == "get") then
+      return_object = webevents_private.http_api_get(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Webevents API: No valid action"} }
    end
