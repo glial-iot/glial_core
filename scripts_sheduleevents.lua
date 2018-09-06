@@ -227,6 +227,11 @@ function shedule_events_private.http_api_get_list(params, req)
    return req:render{ json = table }
 end
 
+function shedule_events_private.http_api_create(params, req)
+   local status, table, err_msg = scripts.create(params["name"], scripts.type.SHEDULE_EVENT, params["object"])
+   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
+end
+
 function shedule_events_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local data = scripts.get({uuid = params["uuid"]})
@@ -251,6 +256,8 @@ function shedule_events_private.http_api(req)
       return_object = shedule_events_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = shedule_events_private.http_api_get_list(params, req)
+   elseif (params["action"] == "create") then
+      return_object = shedule_events_private.http_api_create(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Shedule event API: No valid action"} }
    end

@@ -212,24 +212,6 @@ end
 
 ------------------ HTTP API functions ------------------
 
-function scripts_private.http_api_create(params, req)
-   if (params["name"] ~= nil and params["name"] ~= "" and params["type"] ~= nil and scripts.type[params["type"]] ~= nil) then
-      local new_object
-      if (params["object"] ~= nil) then new_object = string.gsub(params["object"], "+", " ") end
-      local table = scripts_private.create({type = params["type"],
-                                            name = string.gsub(params["name"], "+", " "),
-                                            status = params["status"],
-                                            status_msg = params["status_msg"],
-                                            object = new_object,
-                                            body = scripts_private.generate_init_body(params["type"])
-                                          })
-      return req:render{ json = table }
-   else
-      return req:render{ json = {result = false, error_msg = "Script API Create: no name or type"} }
-   end
-end
-
-
 function scripts_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       if (scripts_private.get({uuid = params["uuid"]}) ~= nil) then
@@ -311,10 +293,7 @@ function scripts_private.http_api(req)
    local params = req:param()
    local return_object
 
-   if (params["action"] == "create") then
-      return_object = scripts_private.http_api_create(params, req)
-
-   elseif (params["action"] == "delete") then
+   if (params["action"] == "delete") then
       return_object = scripts_private.http_api_delete(params, req)
 
    elseif (params["action"] == "get") then
@@ -394,6 +373,21 @@ end
 
 function scripts.get_list(type)
    return scripts_private.get_list({type = type})
+end
+
+function scripts.create(name, type, object)
+   if (name ~= nil and name ~= "" and type ~= nil and scripts.type[type] ~= nil) then
+      local new_object
+      if (object ~= nil) then new_object = string.gsub(object, "+", " ") end
+      local table = scripts_private.create({type = type,
+                                            name = string.gsub(name, "+", " "),
+                                            object = new_object,
+                                            body = scripts_private.generate_init_body(type)
+                                          })
+      return true, table
+   else
+      return false, nil, "Script API Create: no name or type"
+   end
 end
 
 function scripts.update(data)

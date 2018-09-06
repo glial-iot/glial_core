@@ -153,6 +153,11 @@ function webevents_private.http_api_get_list(params, req)
    return req:render{ json = table }
 end
 
+function webevents_private.http_api_create(params, req)
+   local status, table, err_msg = scripts.create(params["name"], scripts.type.WEB_EVENT, params["object"])
+   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
+end
+
 function webevents_private.http_api(req)
    local params = req:param()
    local return_object
@@ -160,6 +165,8 @@ function webevents_private.http_api(req)
       return_object = webevents_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = webevents_private.http_api_get_list(params, req)
+   elseif (params["action"] == "create") then
+      return_object = webevents_private.http_api_create(params, req)
    else
       return_object = req:render{ json = {result = false, error_msg = "Webevents API: No valid action"} }
    end
