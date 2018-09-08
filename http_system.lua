@@ -12,7 +12,7 @@ function http_system.init()
 end
 
 function http_system.init_server()
-   http_system.server = require('http.server').new(nil, config.HTTP_PORT, {charset = "application/json"})
+   http_system.server = require('http.server').new(nil, config.HTTP_PORT, {charset = "utf-8"})
    http_system.server:start()
 end
 
