@@ -322,6 +322,7 @@ function scripts.generate_body(script_params, log_script_name)
    body.http_client = require('http.client').new({1})
    scripts.store[script_params.uuid] = scripts.store[script_params.uuid] or {}
    body.store = scripts.store[script_params.uuid]
+   body.main_store = scripts.store
    body.mqtt = require 'mqtt'
    body.json = require 'json'
    body.socket = require 'socket'
