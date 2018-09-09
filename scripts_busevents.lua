@@ -289,7 +289,7 @@ function busevents.process(topic, value, source_uuid)
                log_bus_event_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
                scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
             end
-            --return returned_data --либо не возвразать значение для записи, либо переработать механику цикла, чтобы он не прерывался
+            --return returned_data --либо не возвращать значение для записи, либо переработать механику цикла, чтобы он не прерывался
          end
          fiber.yield()
       end
