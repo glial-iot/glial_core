@@ -55,9 +55,9 @@ function bus_private.bus_rps_stat_worker()
    fiber.sleep(2)
    while true do
       if (bus.bus_saved_rps >= 15) then bus.bus_saved_rps = bus.bus_saved_rps - 15 end
-      bus.update_value("/glue/bus/fifo_saved", bus.fifo_saved_rps/5)
-      bus.update_value("/glue/bus/bus_saved", bus.bus_saved_rps/5)
-      bus.update_value("/glue/bus/fifo_max", bus.max_fifo_count)
+      bus.set_value("/glue/bus/fifo_saved", bus.fifo_saved_rps/5)
+      bus.set_value("/glue/bus/bus_saved", bus.bus_saved_rps/5)
+      bus.set_value("/glue/bus/fifo_max", bus.max_fifo_count)
       bus.fifo_saved_rps = 0
       bus.bus_saved_rps = 0
       fiber.sleep(5)
@@ -169,24 +169,24 @@ function bus.init()
    bus.storage:upsert({"/glue/bus/fifo_max", "0", os.time(), "records", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
 end
 
-function bus.update_value_genarator(uuid)
    local function update_value(topic, value)
       local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid)
       return result
+function bus.set_value_generator(uuid)
    end
 
    return update_value
 end
 
 
-function bus.update_value(topic, value)
    local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, "0")
    return result
+function bus.set_value(topic, value)
 end
 
-function bus.shadow_update_value(topic, value)
    local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW, "0")
    return result
+function bus.shadow_set_value(topic, value)
 end
 
 
@@ -276,7 +276,7 @@ function bus.http_api_handler(req)
       if (params["topic"] == nil or params["value"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or value" } }
       else
-         local result = bus.update_value(params["topic"], params["value"])
+         local result = bus.set_value(params["topic"], params["value"])
          return_object = req:render{ json = { result = result } }
       end
 

@@ -61,7 +61,7 @@ end
 function influx.rps_stat_worker()
    local bus = require 'bus'
    while true do
-      bus.update_value("/glue/export/influx_count", influx.count)
+      bus.set_value("/glue/export/influx_count", influx.count)
       fiber.sleep(10)
    end
 end

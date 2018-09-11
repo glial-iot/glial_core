@@ -77,7 +77,7 @@ end
 function impact.rps_stat_worker()
    local bus = require 'bus'
    while true do
-      bus.update_value("/glue/export/impact_count", impact.count)
+      bus.set_value("/glue/export/impact_count", impact.count)
       fiber.sleep(10)
    end
 end
