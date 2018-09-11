@@ -115,7 +115,7 @@ function timerevents_private.load(uuid)
    timer_event_script_bodies[uuid] = nil
    timer_event_script_bodies[uuid] = {}
    timer_event_script_bodies[uuid].body = body
-   timer_event_script_bodies[uuid].counter = sec_counter
+   timer_event_script_bodies[uuid].counter = 0
    timer_event_script_bodies[uuid].period = sec_counter
    log_timer_events_info('Timer-event script "'..script_params.name..'" active', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active'})
