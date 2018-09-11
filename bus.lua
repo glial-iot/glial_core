@@ -15,6 +15,7 @@ local logger = require 'logger'
 local config = require 'config'
 
 bus.TYPE = {SHADOW = "SHADOW", NORMAL = "NORMAL"}
+bus.check_flag = {CHECK_VALUE = "CHECK_VALUE"}
 
 bus.fifo_saved_rps = 0
 bus.bus_saved_rps = 0
@@ -169,26 +170,21 @@ function bus.init()
    bus.storage:upsert({"/glue/bus/fifo_max", "0", os.time(), "records", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
 end
 
-   local function update_value(topic, value)
-      local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid)
-      return result
 function bus.set_value_generator(uuid)
+   return function(topic, value, check_flag)
+      if (check_flag == bus.check_flag.CHECK_VALUE and bus.get_value(topic) ~= tostring(value)) then
+         return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid)
+      end
    end
-
-   return update_value
 end
 
-
-   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, "0")
-   return result
 function bus.set_value(topic, value)
+   return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, "0")
 end
 
-   local result = bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW, "0")
-   return result
 function bus.shadow_set_value(topic, value)
+   return bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW, "0")
 end
-
 
 function bus.get_value(topic)
    local tuple = bus.storage.index.topic:get(topic)
