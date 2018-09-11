@@ -66,10 +66,10 @@ function bus_private.bus_rps_stat_worker()
 end
 
 
-function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid)
+function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid, update_time)
    if (topic ~= nil and value ~= nil and shadow_flag ~= nil and source_uuid ~= nil) then
       value = tostring(value)
-      local id = bus_private.gen_fifo_id()
+      local id = bus_private.gen_fifo_id(update_time)
       bus.fifo_storage:insert{id, topic, value, shadow_flag, source_uuid}
       bus.fifo_saved_rps = bus.fifo_saved_rps + 1
       return true
@@ -123,8 +123,9 @@ function bus_private.delete_topics(topic)
    return false
 end
 
-function bus_private.gen_fifo_id()
-   local new_id = clock.realtime()*10000
+function bus_private.gen_fifo_id(update_time)
+   local current_time = update_time or clock.realtime()
+   local new_id = current_time*10000
    while bus.fifo_storage.index.timestamp:get(new_id) do
       new_id = new_id + 1
    end
@@ -171,9 +172,9 @@ function bus.init()
 end
 
 function bus.set_value_generator(uuid)
-   return function(topic, value, check_flag)
+   return function(topic, value, check_flag, update_time)
       if (check_flag == bus.check_flag.CHECK_VALUE and bus.get_value(topic) ~= tostring(value)) then
-         return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid)
+         return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid, update_time)
       end
    end
 end
