@@ -303,9 +303,7 @@ function bus.http_api_handler(req)
 
    elseif (params["action"] == "get_bus") then
       local data_object = {}
-      local current_time = os.time()
       for _, tuple in bus.storage.index.topic:pairs() do
-         local text_time
          local topic = tuple["topic"]
          local time = tuple["update_time"]
          local value = tuple["value"]
@@ -313,15 +311,7 @@ function bus.http_api_handler(req)
          if (tuple["tsdb"] == "true") then tsdb = true else tsdb = false end
          local type = tuple["type"]
          local tags = tuple["tags"]
-         local diff_time = current_time - time
-         local diff_time_text = system.format_seconds(diff_time)
-
-         if (diff_time > 1) then
-            text_time = os.date("%Y-%m-%d, %H:%M:%S", time).." ("..(diff_time_text).." ago)"
-         else
-            text_time = os.date("%Y-%m-%d, %H:%M:%S", time)
-         end
-         table.insert(data_object, {topic = topic, text_time = text_time, time = time, value = value, tsdb = tsdb, type = type, tags = tags})
+         table.insert(data_object, {topic = topic, time = time, value = value, tsdb = tsdb, type = type, tags = tags})
          if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
       end
 
