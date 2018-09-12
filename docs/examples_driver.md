@@ -1,8 +1,8 @@
-# Примеры рабочих драйверов  
+# Примеры драйверов
 
-##Пример драйвера, работающего через HTTP
+## Пример драйвера, работающего через HTTP
 
-Пример рабочего драйвера, который получает значения о качестве воздуха с сервера в JSON и отправляет в шину. Проверки на корректность данных и http-код ответа опущены.  
+Пример драйвера, который получает значения о качестве воздуха с сервера в JSON и отправляет в шину. Проверки на корректность данных и http-код ответа опущены.
 
 ```lua
 local function get_values()
@@ -10,8 +10,8 @@ local function get_values()
    local http_result = client:post('http://exapble.com/sensors/pm/last.php')
    local decoded_data = require('json').decode(http_result.body)
 
-   update_value("/air/pm25", decoded_data.pm25)
-   update_value("/air/pm10", decoded_data.pm10)
+   set_value("/air/pm25", decoded_data.pm25)
+   set_value("/air/pm10", decoded_data.pm10)
 end
 
 local function main_loop()
@@ -32,7 +32,9 @@ function destroy()
 end
 ```
 
-Пример рабочего драйвера c MQTT и обратным распространением данных: при изменении значения топика "/ud/1674/lora/commands" в bus, будет отправлено сообщение в MQTT.  
+## Пример драйвера, работающего через MQTT с обратным распространением данных
+
+Пример драйвера c MQTT и обратным распространением данных: при изменении значения топика "/ud/1674/lora/commands" в bus, будет отправлено сообщение в MQTT.
 
 ```lua
 local mqtt_host = "mosquitto"
@@ -49,9 +51,9 @@ local function driver_mqtt_callback(message_id, topic, payload, qos, retain)
    if (data == nil or data.data == nil or data.status == nil) then return end
    if (lora_data.serial == nil or lora_data.device_type == nil) then return end
 
-   update_value("/ud/1674/lora/"..lora_data.serial.."/".."temperature/1", tonumber(data.data.s1))
-   update_value("/ud/1674/lora/"..lora_data.serial.."/".."rssi", tonumber(data.status.rssi))
-   update_value("/ud/1674/lora/"..lora_data.serial.."/".."battery", tonumber(data.status.battery))
+   set_value("/ud/1674/lora/"..lora_data.serial.."/".."temperature/1", tonumber(data.data.s1))
+   set_value("/ud/1674/lora/"..lora_data.serial.."/".."rssi", tonumber(data.status.rssi))
+   set_value("/ud/1674/lora/"..lora_data.serial.."/".."battery", tonumber(data.status.battery))
 
 end
 
@@ -72,7 +74,7 @@ function init()
    end
 end
 
-function topic_update_callback(value, topic) 
+function topic_update_callback(value, topic)
    mqtt_object:publish('devices/lora/commands', value, mqtt.QOS_0, mqtt.RETAIN)
 end
 
