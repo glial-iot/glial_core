@@ -10,6 +10,12 @@
 store.value = 5
 print(store.value) -- 5
 ```
+`main_store` - таблица, в которой находятся хранилища всех запущенных с момента запуска системы скриптов. Первый уровень таблицы — UUID скриптов. Второй уровень — store каждого скрипта. UUID скрипта можно узнать, нажав на значок "i". С помощью этой таблицы можно получать доступ к хранилищам других скриптов:
+```lua
+store.table = {1,2,3,4,5}
+print(main_store["8d72fe2f-801e-48d1-ac1a-526f3e2622c0"].table) -- { 1, 2, 3, 4, 5 }
+```
+Например, это позволяет передавать между скриптами функции или таблицы, которые нельзя напрямую передать через BUS. 
 
 ### Функции для работы с логами
 
@@ -78,49 +84,32 @@ set_value("/test/device", "5", "CHECK_VALUE", os.time()-60*60*2)
 
 ### Встроенные библиотеки
 Для использования этих библиотек не нужно делать require, они уже есть в области видимости каждого скрипта:  
-`HTTP Client` (доступна через http_client.xxx) [Документация по библиотеке HTTP Client](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/http/). Уже созданный экземпляр доступен через http_client, т.е. для метода request() нужно вызвать http_client.request()) 
-`MQTT` (доступна через mqtt.xxx) [Документация по библиотеке MQTT](https://github.com/tarantool/mqtt)  
-`JSON` (доступна через json.xxx) [Документация по библиотеке JSON](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/json/)  
-`SOCKET` (доступна через socket.xxx) [Документация по библиотеке SOCKET](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/socket/)  
-`FIBER` (доступна через fiber.xxx) [Документация по библиотеке FIBER](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/fiber/)
+* `HTTP Client` (доступна через http_client.xxx) [Документация по библиотеке HTTP Client](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/http/). Уже созданный экземпляр доступен через http_client, т.е. для метода request() нужно вызвать http_client.request()) 
+* `MQTT` (доступна через mqtt.xxx) [Документация по библиотеке MQTT](https://github.com/tarantool/mqtt)  
+* `JSON` (доступна через json.xxx) [Документация по библиотеке JSON](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/json/)  
+* `SOCKET` (доступна через socket.xxx) [Документация по библиотеке SOCKET](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/socket/)  
+* `FIBER` (доступна через fiber.xxx) [Документация по библиотеке FIBER](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/fiber/)
 >Не стоит подключать библиотеку fiber вручную, т.е. делать "local fiber = require 'fiber'".  
 >В этом случае, ошибки внутри тредов fiber не попадут в лог конкретного скрипта и не сгенерируют ошибку, что усложняет отладку. 
 >В библиотеке доступны методы `fiber.sleep()`, `fiber.create()`, `fiber.kill()`, `fiber.yield()`, `fiber.self()`, `fiber.status()`. Для остальных нужно делать require и оборачивать функции, которые запускаются через `fiber.create()` в `pcall()`/`xpcall()`.  
-
-Скрипты могут находиться в активном и неактивном состоянии.  
-Скрипт, находящийся в активном состоянии, Glue будет пытаться включить непосредственно в момент активации и каждый раз при перезапуске. Скрипт можно принудительно перезапустить, если это необходимо.  
-Неактивные скрипты никак не участвуют в работе системы до момента их активации.  
-
-При успешном запуске скрипта, его статус изменяется на "Started". В случае, если возникли какие-либо ошибки, это будет отображено в его статусе, а в логах будет указана причина ошибки.  
-
-![Статусы скриптов](images/scriptStatuses.png "Статусы скриптов")
 
 ## Информация о скриптах и драйверах
 
 ### Drivers
 Драйвера — это скрипты на Lua, которые реализуют тот или иной протокол(часто с привлечением сторонних библиотек) для связи с устройством, конвертируя данные приходящие с каждого устройства в единый формат. Они работают в качестве транслятора между "языком" устройства и "языком" общей шины.  
 
-Используя встроенный в Glue Panel редактор скриптов, вы можете создавать, тестировать и запускать скрипты драйверов на языке Lua.  
-
-![Список драйверов](images/driversList.png "Список драйверов")  
-
-Скрипты можно создавать, редактировать, включать/отключать, перезапускать и удалять.  
-
-![Редактирование скриптов драйвера](images/driverEdit.png "Редактирование скриптов драйвера")  
-
 [Примеры драйверов](examples_driver.md)
-
 
 ### Bus-event scripts
 
 Этот тип скриптов выполняется для каждого устройства из группы устройств, определяемых маской, при обновлении их данных на центральной шине.
 ![Bus-event scripts](images/busEventScriptList.png "Bus-event scripts")  
 
-При создании скрипта, необходимо использовать функцию `event_handler()`, в которую можно передать значение "value" и название топика соответствующего события на шине.  
+При создании скрипта, необходимо использовать функцию `event_handler()`, в которую будет передано значение измененного топика и его адрес:
 
 ```lua
 function event_handler(value, topic)
-   --Bus-event code
+   print(value, topic) --"5 /test/device"
 end
 ```
 [Примеры bus-event скриптов](examples_bus_event.md)
@@ -143,11 +132,9 @@ end
 - `params` - массив с параметрами запроса  
 - `req` - объект запроса [HTTP сервера Tarantool](https://github.com/tarantool/http)  
 
-![Web-event script](images/webScript.png "Web-event script")
-
 ```lua
 function http_callback(params, req)
-   --Wev-event code
+   return {data=params}
 end
 ```
 
@@ -168,7 +155,7 @@ end
 
 ```lua
 function event_handler()
-   --Timer-event code
+   print("Timer event start")
 end
 ```
 
@@ -205,6 +192,6 @@ end
 
 ```lua
 function event_handler()
-   --Shedule-event code
+   print("Shedule event start")
 end
 ```

@@ -23,12 +23,14 @@ module.exports = {
                { text: 'Bus-event скрипты', link: '/examples_bus_event.html' },
                { text: 'Web-event скрипты', link: '/examples_web_event.html' },
                { text: 'Timer-event скрипты', link: '/examples_timer_event.html' },
-               { text: 'Shedule-event скрипты', link: '/examples_shedsule_event.html' }
+               { text: 'Shedule-event скрипты', link: '/examples_shedule_event.html' }
             ]
          }
       ],
       sidebar: "auto",
+      sidebarDepth: 2,
       displayAllHeaders: true,
+      lastUpdated: 'Last Updated',
       logo: '/logo.png'
    }
 }
