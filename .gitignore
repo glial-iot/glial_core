@@ -14,3 +14,7 @@
 /backup
 /glue.code-workspace
 /dump
+/docs/package-lock.json
+/docs/node_modules
+/docs/dist
+/docs/.vuepress/dist

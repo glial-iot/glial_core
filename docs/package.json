@@ -1,0 +1,15 @@
+{
+   "name": "glue-docs",
+   "version": "1.0.0",
+   "description": "Documetation for glue-system",
+   "main": "index.js",
+   "scripts": {
+      "build": "npx vuepress build && rm -rf ./dist/ ; mv .vuepress/dist ./ &&  cp logo.png ./dist/ &&  cp -R images ./dist/ && http-server ./dist/"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+   "dependencies": {
+      "vuepress": "^0.14.2"
+   }
+}
