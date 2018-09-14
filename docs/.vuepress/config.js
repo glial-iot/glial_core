@@ -1,4 +1,5 @@
 module.exports = {
+   theme: 'custom',
    themeConfig: {
       nav: [
          {
