@@ -183,7 +183,11 @@ end
 
 function bus.set_value_generator(uuid)
    return function(topic, value, check_flag, update_time)
-      if (check_flag == bus.check_flag.CHECK_VALUE and bus.get_value(topic) ~= tostring(value)) then
+      if (check_flag == bus.check_flag.CHECK_VALUE) then
+         if (bus.get_value(topic) ~= tostring(value)) then
+            return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid, update_time)
+         end
+      else
          return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid, update_time)
       end
    end
