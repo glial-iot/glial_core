@@ -4,6 +4,7 @@ local bus_private = {}
 
 local inspect = require 'libs/inspect'
 local clock = require 'clock'
+local json = require 'json'
 local box = box
 
 local scripts_busevents = require 'scripts_busevents'
@@ -105,6 +106,15 @@ end
 function bus_private.update_type(topic, type)
    if (topic ~= nil and type ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
       bus.storage.index.topic:update(topic, {{"=", 4, type}})
+      return true
+   else
+      return false
+   end
+end
+
+function bus_private.update_tags(topic, tags)
+   if (topic ~= nil and tags ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
+      bus.storage.index.topic:update(topic, {{"=", 5, tags}})
       return true
    else
       return false
@@ -282,6 +292,16 @@ function bus.http_api_handler(req)
          return_object = req:render{ json = { result = false, msg = "No valid param topic or type" } }
       else
          local result = bus_private.update_type(params["topic"], params["type"])
+         return_object = req:render{ json = { result = result } }
+      end
+
+   elseif (params["action"] == "update_tags") then
+      if (params["topic"] == nil or params["tags"] == nil) then
+         return_object = req:render{ json = { result = false, msg = "No valid param topic or tags" } }
+      else
+         local tags = json.decode(params["tags"])
+         tags = setmetatable(tags, {__serialize = 'array'})
+         local result = bus_private.update_tags(params["topic"], tags)
          return_object = req:render{ json = { result = result } }
       end
 
