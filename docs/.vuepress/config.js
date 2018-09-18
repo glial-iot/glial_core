@@ -31,7 +31,7 @@ module.exports = {
          }
       ],
       sidebar: "auto",
-      sidebarDepth: 2,
+      sidebarDepth: 3,
       displayAllHeaders: true,
       lastUpdated: 'Last Updated',
       logo: '/logo.png'
