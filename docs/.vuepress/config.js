@@ -1,10 +1,12 @@
 module.exports = {
+   theme: 'custom',
    themeConfig: {
       nav: [
          {
             text: 'Основная информация', items: [
                { text: 'Что такое GLUE', link: '/what_glue.html' },
                { text: 'Запуск системы', link: '/start.html' },
+               { text: 'Панель управления', link: '/panel.html' },
                { text: 'Скрипты и драйвера', link: '/scripts_and_drivers.html' },
                { text: 'Система логов', link: '/logs.html' },
                { text: 'Общая шина', link: '/bus.html' }
@@ -14,7 +16,8 @@ module.exports = {
             text: 'Документация', items: [
                { text: 'Панель управления', link: '/panel.html' },
                { text: 'Руководство разработчика', link: '/developers.html' },
-               { text: 'Внутренности системы', link: '/inside.html' }
+               { text: 'Внутренности системы', link: '/inside.html' },
+               { text: 'История изменений', link: '/changelog.html' }
             ]
          },
          {
