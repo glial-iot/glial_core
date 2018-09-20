@@ -9,7 +9,8 @@ module.exports = {
                { text: 'Панель управления', link: '/panel.html' },
                { text: 'Скрипты и драйвера', link: '/scripts_and_drivers.html' },
                { text: 'Система логов', link: '/logs.html' },
-               { text: 'Общая шина', link: '/bus.html' }
+               { text: 'Общая шина', link: '/bus.html' },
+               { text: 'Язык Lua', link: '/lua.html' }
             ]
          },
          {
