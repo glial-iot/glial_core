@@ -29,7 +29,7 @@ function system.deepcopy(orig)
             copy[system.deepcopy(orig_key)] = system.deepcopy(orig_value)
         end
         setmetatable(copy, system.deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
+    else
         copy = orig
     end
     return copy
