@@ -250,6 +250,7 @@ function scripts.generate_body(script_params, log_script_name)
    body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(script_params.uuid, log_script_name)
    body.system_print = body.print
    body.log, body.print = body.log_user, body.log_user
+   body.round, body.deepcopy = system.round, system.deepcopy
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
    body.set_value, body.shadow_set_value = uuid_related_set_value, bus.shadow_set_value

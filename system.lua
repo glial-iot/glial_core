@@ -20,6 +20,21 @@ function system.round(value, rounds)
    return tonumber(string.format("%."..(tostring(rounds or 2)).."f", value))
 end
 
+function system.deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[system.deepcopy(orig_key)] = system.deepcopy(orig_value)
+        end
+        setmetatable(copy, system.deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 function system.random_string()
    local digest = require 'digest'
    local rand = digest.urandom(10)
