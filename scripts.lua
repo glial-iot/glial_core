@@ -184,7 +184,9 @@ function scripts_private.create(data)
 end
 
 function scripts_private.delete(data)
-   return scripts_private.storage.index.uuid:delete(data.uuid)
+   local script_table = scripts_private.storage.index.uuid:delete(data.uuid)
+   script_table.deleted_status = true
+   return script_table
 end
 
 function scripts_private.storage_init()
