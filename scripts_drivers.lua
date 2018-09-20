@@ -161,6 +161,21 @@ function drivers_private.unload(uuid)
    return true
 end
 
+
+function drivers_private.reload(uuid)
+   local data = scripts.get({uuid = uuid})
+   if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+      local result = drivers_private.unload(uuid)
+      if (result == true) then
+         return drivers_private.load(uuid, false)
+      else
+         return false
+      end
+   else
+      return drivers_private.load(uuid, false)
+   end
+end
+
 ------------------↓ HTTP API functions ↓------------------
 
 function drivers_private.http_api_get_list(params, req)
@@ -175,8 +190,16 @@ end
 
 function drivers_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
-         local table = scripts.delete({uuid = params["uuid"]})
+      local script_table = scripts.get({uuid = params["uuid"]})
+      if (script_table ~= nil) then
+         local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
+         table.unload_result = drivers_private.unload(params["uuid"])
+         if (table.unload_result == true) then
+            table = scripts.delete({uuid = params["uuid"]})
+         else
+            log_driver_warning('Driver "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
+            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+         end
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Drivers API Delete: UUID not found"} }
@@ -202,16 +225,12 @@ end
 
 function drivers_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      local data = scripts.get({uuid = params["uuid"]})
-      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-         local result = drivers_private.unload(params["uuid"])
-         if (result == true) then
-            drivers_private.load(params["uuid"])
-         end
+      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
+         local result = drivers_private.reload(params["uuid"])
+         return req:render{ json = {result = result} }
       else
-         drivers_private.load(params["uuid"])
+         return req:render{ json = {result = false, error_msg = "Busevents API Delete: UUID not found"} }
       end
-      return req:render{ json = {result = true} }
    else
       return req:render{ json = {result = false, error_msg = "Drivers API: No valid UUID"} }
    end
@@ -226,6 +245,7 @@ function drivers_private.http_api_update(params, req)
          if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
          if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
          local table = scripts.update(data)
+         table.reload_result = drivers_private.reload(params["uuid"])
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Drivers API Update: UUID not found"} }
@@ -250,6 +270,7 @@ function drivers_private.http_api_update_body(params, req)
       data.body = text_decoded
       if (scripts.get({uuid = uuid}) ~= nil) then
          local table = scripts.update(data)
+         table.reload_result = drivers_private.reload(params["uuid"])
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Drivers API body update: UUID not found"} }
