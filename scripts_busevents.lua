@@ -16,7 +16,7 @@ local digest = require 'digest'
 
 local busevents_main_scripts_table = {}
 
-local function log_bus_event_error(msg, uuid)
+local function log_bus_event_error(msg, uuid) --TODO: поменять на events
    logger.add_entry(logger.ERROR, "Bus-events subsystem", msg, uuid, "")
 end
 
