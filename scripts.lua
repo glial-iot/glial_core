@@ -18,9 +18,9 @@ scripts.type = {WEB_EVENT = "WEB_EVENT", TIMER_EVENT = "TIMER_EVENT", SHEDULE_EV
 scripts.store = {}
 
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
------------------- Internal API functions ------------------
+------------------↓ Internal API functions ↓------------------
 
 function scripts_private.get_list(data)
    local list_table = {}
@@ -211,7 +211,7 @@ function scripts_private.http_init()
    --http_system.endpoint_config("/scripts_body", scripts_private.http_api_body)
 end
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 --Entrypoints:
 --scripts_body(autorestart)
@@ -224,7 +224,7 @@ end
 --*run_once
 --
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 function scripts.generate_fibercreate(uuid, name)
    local function generate_fiber_error_handler(uuid_i, name_i)

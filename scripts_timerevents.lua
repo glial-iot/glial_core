@@ -28,7 +28,7 @@ local function log_timer_events_info(msg, uuid)
    logger.add_entry(logger.INFO, "Timer-event subsystem", msg, uuid, "")
 end
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 function timerevents_private.load(uuid)
    local body
@@ -202,7 +202,7 @@ function timerevents_private.worker()
    end
 end
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 function timerevents_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.TIMER_EVENT)
@@ -325,7 +325,7 @@ function timerevents_private.http_api(req)
    return system.add_headers(return_object)
 end
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 
 function timerevents.init()

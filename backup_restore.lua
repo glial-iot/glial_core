@@ -178,7 +178,7 @@ end
 
 
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 function backup_restore.http_api(req)
    local params = req:param()
@@ -221,7 +221,7 @@ end
 
 
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 function backup_restore.init()
    local http_system = require 'http_system'

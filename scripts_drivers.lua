@@ -29,7 +29,7 @@ local function log_driver_info(msg, uuid)
    logger.add_entry(logger.INFO, "Drivers subsystem", msg, uuid, "")
 end
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 function drivers_private.load(uuid)
    local body
@@ -161,7 +161,7 @@ function drivers_private.unload(uuid)
    return true
 end
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 function drivers_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.DRIVER)
@@ -284,7 +284,7 @@ function drivers_private.http_api(req)
    return system.add_headers(return_object)
 end
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 function drivers.init()
    drivers.start_all()

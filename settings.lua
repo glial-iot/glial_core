@@ -11,9 +11,9 @@ local system = require 'system'
 local config = require 'config'
 
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 function settings_private.http_api_get(params, req)
    local status, param, value, description
    if (params["param"] ~= nil) then
@@ -54,7 +54,7 @@ function settings_private.http_api(req)
    return system.add_headers(return_object)
 end
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 
 function settings.get(param, default_value)

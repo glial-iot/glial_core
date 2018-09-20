@@ -31,7 +31,7 @@ end
 
 shedule_events_private.calc_counters_period = 60
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 function shedule_events_private.load(uuid)
    local body
@@ -221,7 +221,7 @@ function shedule_events_private.worker()
    end
 end
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 function shedule_events_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.SHEDULE_EVENT)
@@ -344,7 +344,7 @@ function shedule_events_private.http_api(req)
    return system.add_headers(return_object)
 end
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 
 function shedule_events.init()

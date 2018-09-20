@@ -18,7 +18,7 @@ local fiber = require 'fiber'
 local webevents_script_bodies = {}
 webevents.bodies = webevents_script_bodies
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 local function log_web_events_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Web-events subsystem", msg, uuid, "")
@@ -130,7 +130,7 @@ function webevents_private.unload(uuid)
    return true
 end
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 function webevents_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.WEB_EVENT)
@@ -253,7 +253,7 @@ function webevents_private.http_api(req)
    return system.add_headers(return_object)
 end
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 function webevents.init()
    webevents.start_all()

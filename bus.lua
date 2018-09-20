@@ -22,7 +22,7 @@ bus.fifo_saved_rps = 0
 bus.bus_saved_rps = 0
 bus.max_fifo_count = 0
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 function bus_private.tsdb_attr_check_and_save(topic, value)
    local tuple = bus.storage.index.topic:get(topic)

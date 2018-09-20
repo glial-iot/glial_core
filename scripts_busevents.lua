@@ -28,7 +28,7 @@ local function log_bus_event_info(msg, uuid)
    logger.add_entry(logger.INFO, "Bus-events subsystem", msg, uuid, "")
 end
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 
 function busevents_private.load(uuid, run_once_flag)
@@ -184,7 +184,7 @@ function busevents_private.unload(uuid)
    return true
 end
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 function busevents_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.BUS_EVENT)
@@ -319,7 +319,7 @@ function busevents_private.http_api(req)
    return system.add_headers(return_object)
 end
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 function busevents.process(topic, value, source_uuid)
    for uuid, current_script_table in pairs(busevents_main_scripts_table) do
