@@ -6,6 +6,7 @@ local box = box
 
 local fiber = require 'fiber'
 local inspect = require 'libs/inspect'
+local digest = require 'digest'
 local cron = require('cron')
 
 local logger = require 'logger'
@@ -276,6 +277,48 @@ function shedule_events_private.http_api_reload(params, req)
    end
 end
 
+function shedule_events_private.http_api_update(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
+         local data = {}
+         data.uuid = params["uuid"]
+         data.active_flag = params["active_flag"]
+         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
+         if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
+         local table = scripts.update(data)
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Shedule event API Update: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Shedule event API Update: no UUID"} }
+   end
+end
+
+function shedule_events_private.http_api_update_body(params, req)
+   local uuid = req:query_param().uuid
+   local post_params = req:post_param()
+   local text_base64 = pairs(post_params)(post_params)
+   local text_decoded
+   local data = {}
+   local _,_, base_64_string = string.find(text_base64 or "", "data:text/plain;base64,(.+)")
+   if (base_64_string ~= nil) then
+      text_decoded = digest.base64_decode(base_64_string)
+   end
+   if (uuid ~= nil and text_decoded ~= nil) then
+      data.uuid = uuid
+      data.body = text_decoded
+      if (scripts.get({uuid = uuid}) ~= nil) then
+         local table = scripts.update(data)
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Shedule event API body update: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Shedule event API body update: no UUID or no body"} }
+   end
+end
+
 function shedule_events_private.http_api(req)
    local params = req:param()
    local return_object
@@ -283,6 +326,10 @@ function shedule_events_private.http_api(req)
       return_object = shedule_events_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = shedule_events_private.http_api_get_list(params, req)
+   elseif (params["action"] == "update") then
+      return_object = shedule_events_private.http_api_update(params, req)
+   elseif (params["action"] == "update_body") then
+      return_object = shedule_events_private.http_api_update_body(params, req)
    elseif (params["action"] == "create") then
       return_object = shedule_events_private.http_api_create(params, req)
    elseif (params["action"] == "delete") then
