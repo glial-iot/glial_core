@@ -394,14 +394,12 @@ function bus_events.process(topic, value, source_uuid)
          script_params.uuid ~= (source_uuid or "0")) then
          local mask = current_script_table.mask
          if (string.find(topic, mask) ~= nil) then
-            local event_handler = current_script_table.body.event_handler
-            local status, returned_data = pcall(event_handler, value, topic)
+            local status, err_msg = pcall(current_script_table.body.event_handler, value, topic)
             if (status ~= true) then
-               returned_data = tostring(returned_data)
-               log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
-               scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
+               err_msg = tostring(err_msg) or ""
+               log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..err_msg..')', script_params.uuid)
+               scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..err_msg})
             end
-            --return returned_data --либо не возвращать значение для записи, либо переработать механику цикла, чтобы он не прерывался
          end
          fiber.yield()
       end

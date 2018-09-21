@@ -38,8 +38,7 @@ function bus_private.fifo_storage_worker()
       local topic, value, shadow_flag, source_uuid = bus_private.get_value_from_fifo()
       if (value ~= nil and topic ~= nil) then
          if (shadow_flag == bus.TYPE.NORMAL) then
-            local new_value = scripts_busevents.process(topic, value, source_uuid)
-            value = new_value or value
+            scripts_busevents.process(topic, value, source_uuid)
             scripts_drivers.process(topic, value, source_uuid)
          end
          local timestamp = os.time()
