@@ -114,12 +114,20 @@ function shedule_events_private.load(uuid)
       return false
    end
 
+   local shedule_parsed_result, shedule_parsed_msg = cron.parse(script_params.object)
+   if (type(script_params.object) ~= "string" or shedule_parsed_result == nil) then
+      log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (shedule "'..(script_params.object or "")..'" parsed error: '..shedule_parsed_msg..')', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: shedule "'..(script_params.object or "")..'" parsed error: '..shedule_parsed_msg})
+      return false
+   end
+
    shedule_event_script_bodies[uuid] = nil
    shedule_event_script_bodies[uuid] = {}
    shedule_event_script_bodies[uuid].body = body
    shedule_event_script_bodies[uuid].shedule = script_params.object
    shedule_events_private.recalc_counts(script_params.uuid)
-   log_shedule_events_info('Shedule-event script "'..script_params.name..'" active', script_params.uuid)
+
+   log_shedule_events_info('Shedule-event script "'..script_params.name..'" active on shedule "'..script_params.object..'"', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active'})
 end
 
@@ -197,8 +205,8 @@ function shedule_events_private.recalc_counts(uuid)
          if (expr ~= nil) then
             scripts_table.next_time = cron.next(expr) + 1
          else
-            log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (error shedule parsed)', script_params.uuid)
-            scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: error shedule parsed'})
+            log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (shedule "'..(scripts_table.shedule or "")..'" parsed error)', script_params.uuid)
+            scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: shedule "'..(scripts_table.shedule or "")..'" parsed error'})
          end
       end
    end
