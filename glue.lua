@@ -6,7 +6,7 @@ local scripts = require 'scripts'
 
 local http_system = require 'http_system'
 local http_script_system = require 'http_script_system'
-local scripts_drivers = require 'scripts_drivers'
+local scripts_drivers = require 'scripts_drivers' --TODO: переименовать в соотвествии с офицаильной семантикой
 local scripts_webevents = require 'scripts_webevents'
 local scripts_busevents = require 'scripts_busevents'
 local scripts_timerevents = require 'scripts_timerevents'

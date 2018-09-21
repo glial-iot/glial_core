@@ -44,13 +44,13 @@ function shedule_events_private.load(uuid)
 
    if (script_params.uuid == nil) then
       log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: not found'})
       return false
    end
 
    if (script_params.body == nil) then
       log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (body nil)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: No body'})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: no body'})
       return false
    end
 
@@ -64,7 +64,7 @@ function shedule_events_private.load(uuid)
 
    if (current_func == nil) then
       log_shedule_events_error('Shedule-event script "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Body load error: '..(error_msg or "")})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: body load error: '..(error_msg or "")})
       return false
    end
 
@@ -267,10 +267,10 @@ function shedule_events_private.http_api_delete(params, req)
          end
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Shedule scripts API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Shedule-events API delete: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Shedule scripts API Delete: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Shedule-events API delete: no UUID"} }
    end
 end
 
@@ -281,10 +281,10 @@ function shedule_events_private.http_api_get(params, req)
       if (table ~= nil) then
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Shedule event API Get: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Shedule-events API get: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Shedule event API Get: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Shedule-events API get: no UUID"} }
    end
 end
 
@@ -294,10 +294,10 @@ function shedule_events_private.http_api_reload(params, req)
          local result = shedule_events_private.reload(params["uuid"])
          return req:render{ json = {result = result} }
       else
-         return req:render{ json = {result = false, error_msg = "Busevents API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Shedule-events API reload: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Shedule event API: No valid UUID"} }
+      return req:render{ json = {result = false, error_msg = "Shedule-events API reload: no valid UUID"} }
    end
 end
 
@@ -313,10 +313,10 @@ function shedule_events_private.http_api_update(params, req)
          table.reload_result = shedule_events_private.reload(params["uuid"])
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Shedule event API Update: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Shedule-events API update: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Shedule event API Update: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Shedule-events API update: no UUID"} }
    end
 end
 
@@ -338,10 +338,10 @@ function shedule_events_private.http_api_update_body(params, req)
          table.reload_result = shedule_events_private.reload(params["uuid"])
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Shedule event API body update: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Shedule-events API body update: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Shedule event API body update: no UUID or no body"} }
+      return req:render{ json = {result = false, error_msg = "Shedule-events API body update: no UUID or no body"} }
    end
 end
 
@@ -363,10 +363,10 @@ function shedule_events_private.http_api(req)
    elseif (params["action"] == "get") then
       return_object = shedule_events_private.http_api_get(params, req)
    else
-      return_object = req:render{ json = {result = false, error_msg = "Shedule event API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Shedule-events API: no valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {result = false, error_msg = "Shedule event API: Unknown error(2430)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Shedule-events API: unknown error(2430)"} }
    return system.add_headers(return_object)
 end
 
@@ -383,8 +383,8 @@ end
 function shedule_events.start_all()
    local list = scripts.get_all({type = scripts.type.SHEDULE_EVENT})
 
-   for _, sheduleevent in pairs(list) do
-      shedule_events_private.load(sheduleevent.uuid)
+   for _, shedule_event in pairs(list) do
+      shedule_events_private.load(shedule_event.uuid)
       fiber.yield()
    end
 end

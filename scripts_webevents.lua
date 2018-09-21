@@ -1,6 +1,6 @@
 #!/usr/bin/env tarantool
-local webevents = {} -- TODO: переименовать в соотвествии с остальными
-local webevents_private = {}
+local web_events = {}
+local web_events_private = {}
 
 local box = box
 local http_system = require 'http_system'
@@ -15,8 +15,8 @@ local scripts = require 'scripts'
 local http_script_system = require 'http_script_system'
 local fiber = require 'fiber'
 
-local webevents_script_bodies = {}
-webevents.bodies = webevents_script_bodies
+local web_events_script_bodies = {}
+web_events.bodies = web_events_script_bodies
 
 ------------------↓ Private functions ↓------------------
 
@@ -32,7 +32,7 @@ local function log_web_events_info(msg, uuid)
    logger.add_entry(logger.INFO, "Web-events subsystem", msg, uuid, "")
 end
 
-function webevents_private.load(uuid)
+function web_events_private.load(uuid)
    local body
    local script_params = scripts.get({uuid = uuid})
 
@@ -43,13 +43,13 @@ function webevents_private.load(uuid)
 
    if (script_params.uuid == nil) then
       log_web_events_error('Web-event "'..script_params.name..'" not start (not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: not found'})
       return false
    end
 
    if (script_params.body == nil) then
       log_web_events_error('Web-event "'..script_params.name..'" not start (body nil)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: No body'})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: no body'})
       return false
    end
 
@@ -63,7 +63,7 @@ function webevents_private.load(uuid)
 
    if (current_func == nil) then
       log_web_events_error('Web-event "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Body load error: '..(error_msg or "")})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: body load error: '..(error_msg or "")})
       return false
    end
 
@@ -89,10 +89,10 @@ function webevents_private.load(uuid)
       return false
    end
 
-   webevents_script_bodies[uuid] = nil
-   webevents_script_bodies[uuid] = body
+   web_events_script_bodies[uuid] = nil
+   web_events_script_bodies[uuid] = body
 
-   local callback = http_script_system.generate_callback_func(webevents_script_bodies[uuid].http_callback)
+   local callback = http_script_system.generate_callback_func(web_events_script_bodies[uuid].http_callback)
 
    local attach_result = http_script_system.attach_path(script_params.object, callback, uuid)
 
@@ -107,8 +107,8 @@ function webevents_private.load(uuid)
 end
 
 
-function webevents_private.unload(uuid)
-   local body = webevents_script_bodies[uuid]
+function web_events_private.unload(uuid)
+   local body = web_events_script_bodies[uuid]
    local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.WEB_EVENT) then
@@ -126,44 +126,44 @@ function webevents_private.unload(uuid)
 
    log_web_events_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Stopped'})
-   webevents_script_bodies[uuid] = nil
+   web_events_script_bodies[uuid] = nil
    return true
 end
 
 
-function webevents_private.reload(uuid)
+function web_events_private.reload(uuid)
    local data = scripts.get({uuid = uuid})
    if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-      local result = webevents_private.unload(uuid)
+      local result = web_events_private.unload(uuid)
       if (result == true) then
-         return webevents_private.load(uuid, false)
+         return web_events_private.load(uuid, false)
       else
          return false
       end
    else
-      return webevents_private.load(uuid, false)
+      return web_events_private.load(uuid, false)
    end
 end
 
 
 ------------------↓ HTTP API functions ↓------------------
 
-function webevents_private.http_api_get_list(params, req)
+function web_events_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.WEB_EVENT)
    return req:render{ json = table }
 end
 
-function webevents_private.http_api_create(params, req)
+function web_events_private.http_api_create(params, req)
    local status, table, err_msg = scripts.create(params["name"], scripts.type.WEB_EVENT, params["object"])
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
-function webevents_private.http_api_delete(params, req)
+function web_events_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local script_table = scripts.get({uuid = params["uuid"]})
       if (script_table ~= nil) then
          local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
-         table.unload_result = webevents_private.unload(params["uuid"])
+         table.unload_result = web_events_private.unload(params["uuid"])
          if (table.unload_result == true) then
             table = scripts.delete({uuid = params["uuid"]})
          else
@@ -172,41 +172,41 @@ function webevents_private.http_api_delete(params, req)
          end
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Webevents API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Web-events API delete: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Webevents API Delete: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Web-events API delete: no UUID"} }
    end
 end
 
 
-function webevents_private.http_api_get(params, req)
+function web_events_private.http_api_get(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local table = scripts.get({uuid = params["uuid"]})
       if (table ~= nil) then
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Webevents API Get: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Web-events API get: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Webevents API Get: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Web-events API get: no UUID"} }
    end
 end
 
-function webevents_private.http_api_reload(params, req)
+function web_events_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       if (scripts.get({uuid = params["uuid"]}) ~= nil) then
-         local result = webevents_private.reload(params["uuid"])
+         local result = web_events_private.reload(params["uuid"])
          return req:render{ json = {result = result} }
       else
-         return req:render{ json = {result = false, error_msg = "Webevents API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Web-events API reload: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Webevents API: No valid UUID"} }
+      return req:render{ json = {result = false, error_msg = "Web-events API reload: no valid UUID"} }
    end
 end
 
-function webevents_private.http_api_update(params, req)
+function web_events_private.http_api_update(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       if (scripts.get({uuid = params["uuid"]}) ~= nil) then
          local data = {}
@@ -215,17 +215,17 @@ function webevents_private.http_api_update(params, req)
          if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
          if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
          local table = scripts.update(data)
-         table.reload_result = webevents_private.reload(params["uuid"])
+         table.reload_result = web_events_private.reload(params["uuid"])
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Busevents API Update: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Web-events API update: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Busevents API Update: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Web-events API update: no UUID"} }
    end
 end
 
-function webevents_private.http_api_update_body(params, req)
+function web_events_private.http_api_update_body(params, req)
    local uuid = req:query_param().uuid
    local post_params = req:post_param()
    local text_base64 = pairs(post_params)(post_params)
@@ -240,55 +240,55 @@ function webevents_private.http_api_update_body(params, req)
       data.body = text_decoded
       if (scripts.get({uuid = uuid}) ~= nil) then
          local table = scripts.update(data)
-         table.reload_result = webevents_private.reload(params["uuid"])
+         table.reload_result = web_events_private.reload(params["uuid"])
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Busevents API body update: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Web-events API body update: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Busevents API body update: no UUID or no body"} }
+      return req:render{ json = {result = false, error_msg = "Web-events API body update: no UUID or no body"} }
    end
 end
 
-function webevents_private.http_api(req)
+function web_events_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      return_object = webevents_private.http_api_reload(params, req)
+      return_object = web_events_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
-      return_object = webevents_private.http_api_get_list(params, req)
+      return_object = web_events_private.http_api_get_list(params, req)
    elseif (params["action"] == "update") then
-      return_object = webevents_private.http_api_update(params, req)
+      return_object = web_events_private.http_api_update(params, req)
    elseif (params["action"] == "update_body") then
-      return_object = webevents_private.http_api_update_body(params, req)
+      return_object = web_events_private.http_api_update_body(params, req)
    elseif (params["action"] == "create") then
-      return_object = webevents_private.http_api_create(params, req)
+      return_object = web_events_private.http_api_create(params, req)
    elseif (params["action"] == "delete") then
-      return_object = webevents_private.http_api_delete(params, req)
+      return_object = web_events_private.http_api_delete(params, req)
    elseif (params["action"] == "get") then
-      return_object = webevents_private.http_api_get(params, req)
+      return_object = web_events_private.http_api_get(params, req)
    else
-      return_object = req:render{ json = {result = false, error_msg = "Webevents API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Web-events API: no valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {result = false, error_msg = "Webevents API: Unknown error(335)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Web-events API: unknown error(335)"} }
    return system.add_headers(return_object)
 end
 
 ------------------↓ Public functions ↓------------------
 
-function webevents.init()
-   webevents.start_all()
-   http_system.endpoint_config("/webevents", webevents_private.http_api)
+function web_events.init()
+   web_events.start_all()
+   http_system.endpoint_config("/webevents", web_events_private.http_api)
 end
 
-function webevents.start_all()
+function web_events.start_all()
    local list = scripts.get_all({type = scripts.type.WEB_EVENT})
 
-   for _, webevent in pairs(list) do
-      webevents_private.load(webevent.uuid)
+   for _, web_event in pairs(list) do
+      web_events_private.load(web_event.uuid)
       fiber.yield()
    end
 end
 
-return webevents
+return web_events

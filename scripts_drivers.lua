@@ -17,15 +17,15 @@ local http_system = require 'http_system'
 local drivers_script_bodies = {}
 local drivers_script_callback_bodies = {}
 
-local function log_driver_error(msg, uuid)
+local function log_drivers_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Drivers subsystem", msg, uuid, "")
 end
 
-local function log_driver_warning(msg, uuid)
+local function log_drivers_warning(msg, uuid)
    logger.add_entry(logger.WARNING, "Drivers subsystem", msg, uuid, "")
 end
 
-local function log_driver_info(msg, uuid)
+local function log_drivers_info(msg, uuid)
    logger.add_entry(logger.INFO, "Drivers subsystem", msg, uuid, "")
 end
 
@@ -36,24 +36,24 @@ function drivers_private.load(uuid)
    local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.DRIVER) then
-      log_driver_error('Attempt to start non-driver script "'..script_params.name..'"', script_params.uuid)
+      log_drivers_error('Attempt to start non-driver script "'..script_params.name..'"', script_params.uuid)
       return false
    end
 
    if (script_params.uuid == nil) then
-      log_driver_error('Driver "'..script_params.name..'" not start (not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
+      log_drivers_error('Driver "'..script_params.name..'" not start (not found)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: not found'})
       return false
    end
 
    if (script_params.body == nil) then
-      log_driver_error('Driver "'..script_params.name..'" not start (body nil)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: No body'})
+      log_drivers_error('Driver "'..script_params.name..'" not start (body nil)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: no body'})
       return false
    end
 
    if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
-      log_driver_info('Driver "'..script_params.name..'" not start (non-active)', script_params.uuid)
+      log_drivers_info('Driver "'..script_params.name..'" not start (non-active)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'})
       return true
    end
@@ -61,8 +61,8 @@ function drivers_private.load(uuid)
    local current_func, error_msg = loadstring(script_params.body, script_params.name)
 
    if (current_func == nil) then
-      log_driver_error('Driver "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Body load error: '..(error_msg or "")})
+      log_drivers_error('Driver "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: body load error: '..(error_msg or "")})
       return false
    end
 
@@ -71,19 +71,19 @@ function drivers_private.load(uuid)
 
    local status, returned_data = pcall(setfenv(current_func, body))
    if (status ~= true) then
-      log_driver_error('Driver "'..script_params.name..'" not start (load error: '..(returned_data or "")..')', script_params.uuid)
+      log_drivers_error('Driver "'..script_params.name..'" not start (load error: '..(returned_data or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: pcall error: '..(returned_data or "")})
       return false
    end
 
    if (body.init == nil or type(body.init) ~= "function") then
-      log_driver_error('Driver "'..script_params.name..'" not start (init function not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Init function not found or no function'})
+      log_drivers_error('Driver "'..script_params.name..'" not start (init function not found)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init function not found or no function'})
       return false
    end
 
    if (body.destroy == nil or type(body.destroy) ~= "function") then
-      log_driver_error('Driver "'..script_params.name..'" not start (destroy function not found)', script_params.uuid)
+      log_drivers_error('Driver "'..script_params.name..'" not start (destroy function not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy function not found or no function'})
       return false
    end
@@ -100,14 +100,14 @@ function drivers_private.load(uuid)
    status, returned_data = pcall(body.init)
 
    if (status ~= true) then
-      log_driver_error('Driver "'..script_params.name..'" not start (init function error: '..(returned_data or "")..')', script_params.uuid)
+      log_drivers_error('Driver "'..script_params.name..'" not start (init function error: '..(returned_data or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init function error: '..(returned_data or "")})
       return false
    end
 
    drivers_script_bodies[uuid] = nil
    drivers_script_bodies[uuid] = body
-   log_driver_info('Driver "'..script_params.name..'" started', script_params.uuid)
+   log_drivers_info('Driver "'..script_params.name..'" started', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Started'})
 end
 
@@ -116,37 +116,37 @@ function drivers_private.unload(uuid)
    local script_params = scripts.get({uuid = uuid})
 
    if (script_params.type ~= scripts.type.DRIVER) then
-      log_driver_error('Attempt to stop non-driver script "'..script_params.name..'"', script_params.uuid)
+      log_drivers_error('Attempt to stop non-driver script "'..script_params.name..'"', script_params.uuid)
       return false
    end
 
    if (body == nil) then
-      log_driver_error('Driver "'..script_params.name..'" not stop (script body error)', script_params.uuid)
+      log_drivers_error('Driver "'..script_params.name..'" not stop (script body error)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: script body error'})
       return false
    end
 
    if (body.init == nil or type(body.init) ~= "function") then
-      log_driver_error('Driver "'..script_params.name..'" not stop (init function not found)', script_params.uuid)
+      log_drivers_error('Driver "'..script_params.name..'" not stop (init function not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: init function not found or no function'})
       return false
    end
 
    if (body.destroy == nil or type(body.destroy) ~= "function") then
-      log_driver_error('Driver "'..script_params.name..'" not stop (destroy function not found)', script_params.uuid)
+      log_drivers_error('Driver "'..script_params.name..'" not stop (destroy function not found)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function not found or no function'})
       return false
    end
 
    local status, returned_data = pcall(body.destroy)
     if (status ~= true) then
-      log_driver_error('Driver "'..script_params.name..'" not stop (destroy function error: '..(returned_data or "")..')', script_params.uuid)
+      log_drivers_error('Driver "'..script_params.name..'" not stop (destroy function error: '..(returned_data or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(returned_data or "")})
       return false
    end
 
    if (returned_data == false) then
-      log_driver_warning('Driver "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
+      log_drivers_warning('Driver "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
       return false
    end
@@ -155,7 +155,7 @@ function drivers_private.unload(uuid)
       drivers_script_callback_bodies[uuid] = nil
    end
 
-   log_driver_info('Driver "'..script_params.name..'" stopped', script_params.uuid)
+   log_drivers_info('Driver "'..script_params.name..'" stopped', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Stopped'})
    drivers_script_bodies[uuid] = nil
    return true
@@ -197,15 +197,15 @@ function drivers_private.http_api_delete(params, req)
          if (table.unload_result == true) then
             table = scripts.delete({uuid = params["uuid"]})
          else
-            log_driver_warning('Driver "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
+            log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
             scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
          end
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Drivers API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Drivers API delete: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Drivers API Delete: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Drivers API delete: no UUID"} }
    end
 end
 
@@ -216,10 +216,10 @@ function drivers_private.http_api_get(params, req)
       if (table ~= nil) then
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Drivers API Get: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Drivers API get: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Drivers API Get: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Drivers API get: no UUID"} }
    end
 end
 
@@ -229,10 +229,10 @@ function drivers_private.http_api_reload(params, req)
          local result = drivers_private.reload(params["uuid"])
          return req:render{ json = {result = result} }
       else
-         return req:render{ json = {result = false, error_msg = "Busevents API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Drivers API reload: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Drivers API: No valid UUID"} }
+      return req:render{ json = {result = false, error_msg = "Drivers API reload: no valid UUID"} }
    end
 end
 
@@ -248,10 +248,10 @@ function drivers_private.http_api_update(params, req)
          table.reload_result = drivers_private.reload(params["uuid"])
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Drivers API Update: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Drivers API update: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Drivers API Update: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Drivers API update: no UUID"} }
    end
 end
 
@@ -298,10 +298,10 @@ function drivers_private.http_api(req)
    elseif (params["action"] == "get") then
       return_object = drivers_private.http_api_get(params, req)
    else
-      return_object = req:render{ json = {result = false, error_msg = "Drivers API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Drivers API: no valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {result = false, error_msg = "Drivers API: Unknown error(233)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Drivers API: unknown error(233)"} }
    return system.add_headers(return_object)
 end
 
@@ -323,8 +323,8 @@ function drivers.process(topic, value, source_uuid)
             local status, returned_data = pcall(body, value, topic)
             if (status ~= true) then
                returned_data = tostring(returned_data)
-               log_driver_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
-               scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver-event: error: '..(returned_data or "")})
+               log_drivers_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+               scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver event error: '..(returned_data or "")})
             end
          end
       end

@@ -1,6 +1,6 @@
 #!/usr/bin/env tarantool
-local timerevents = {} -- TODO: переименовать в соотвествии с остальными
-local timerevents_private = {}
+local timer_events = {}
+local timer_events_private = {}
 
 local box = box
 
@@ -30,7 +30,7 @@ end
 
 ------------------↓ Private functions ↓------------------
 
-function timerevents_private.load(uuid)
+function timer_events_private.load(uuid)
    local body
    local script_params = scripts.get({uuid = uuid})
 
@@ -41,13 +41,13 @@ function timerevents_private.load(uuid)
 
    if (script_params.uuid == nil) then
       log_timer_events_error('Timer-event script "'..script_params.name..'" not start (not found)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Not found'})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: not found'})
       return false
    end
 
    if (script_params.body == nil) then
       log_timer_events_error('Timer-event script "'..script_params.name..'" not start (body nil)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: No body'})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: no body'})
       return false
    end
 
@@ -61,7 +61,7 @@ function timerevents_private.load(uuid)
 
    if (current_func == nil) then
       log_timer_events_error('Timer-event script "'..script_params.name..'" not start (body load error: '..(error_msg or "")..')', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: Body load error: '..(error_msg or "")})
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: body load error: '..(error_msg or "")})
       return false
    end
 
@@ -122,7 +122,7 @@ function timerevents_private.load(uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active'})
 end
 
-function timerevents_private.unload(uuid)
+function timer_events_private.unload(uuid)
    local body = timer_event_script_bodies[uuid]
    local script_params = scripts.get({uuid = uuid})
 
@@ -171,22 +171,22 @@ function timerevents_private.unload(uuid)
 end
 
 
-function timerevents_private.reload(uuid)
+function timer_events_private.reload(uuid)
    local data = scripts.get({uuid = uuid})
    if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-      local result = timerevents_private.unload(uuid)
+      local result = timer_events_private.unload(uuid)
       if (result == true) then
-         return timerevents_private.load(uuid, false)
+         return timer_events_private.load(uuid, false)
       else
          return false
       end
    else
-      return timerevents_private.load(uuid, false)
+      return timer_events_private.load(uuid, false)
    end
 end
 
 
-function timerevents_private.process()
+function timer_events_private.process()
    for uuid, scripts_table in pairs(timer_event_script_bodies) do
       local script_params = scripts.get({uuid = uuid})
       if (script_params.status == scripts.statuses.NORMAL and
@@ -198,7 +198,7 @@ function timerevents_private.process()
                if (status ~= true) then
                   returned_data = tostring(returned_data)
                   log_timer_events_error('Timer-event script event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
-                  scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Shedule-event script error: '..(returned_data or "")})
+                  scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Timer-event script error: '..(returned_data or "")})
                end
             end
             scripts_table.counter = scripts_table.period
@@ -210,31 +210,31 @@ function timerevents_private.process()
    end
 end
 
-function timerevents_private.worker()
+function timer_events_private.worker()
    while true do
-      timerevents_private.process()
+      timer_events_private.process()
       fiber.sleep(1)
    end
 end
 
 ------------------↓ HTTP API functions ↓------------------
 
-function timerevents_private.http_api_get_list(params, req)
+function timer_events_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.TIMER_EVENT)
    return req:render{ json = table }
 end
 
-function timerevents_private.http_api_create(params, req)
+function timer_events_private.http_api_create(params, req)
    local status, table, err_msg = scripts.create(params["name"], scripts.type.TIMER_EVENT, params["object"])
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
-function timerevents_private.http_api_delete(params, req)
+function timer_events_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local script_table = scripts.get({uuid = params["uuid"]})
       if (script_table ~= nil) then
          local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
-         table.unload_result = timerevents_private.unload(params["uuid"])
+         table.unload_result = timer_events_private.unload(params["uuid"])
          if (table.unload_result == true) then
             table = scripts.delete({uuid = params["uuid"]})
          else
@@ -243,41 +243,41 @@ function timerevents_private.http_api_delete(params, req)
          end
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Timer event API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Timer-event API delete: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Timer event API Delete: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Timer-event API delete: no UUID"} }
    end
 end
 
 
-function timerevents_private.http_api_get(params, req)
+function timer_events_private.http_api_get(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local table = scripts.get({uuid = params["uuid"]})
       if (table ~= nil) then
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Timer event API Get: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Timer-event API get: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Timer event API Get: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Timer-event API get: no UUID"} }
    end
 end
 
-function timerevents_private.http_api_reload(params, req)
+function timer_events_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       if (scripts.get({uuid = params["uuid"]}) ~= nil) then
-         local result = timerevents_private.reload(params["uuid"])
+         local result = timer_events_private.reload(params["uuid"])
          return req:render{ json = {result = result} }
       else
-         return req:render{ json = {result = false, error_msg = "Timer event API Delete: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Timer-event API reload: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Timer event API: No valid UUID"} }
+      return req:render{ json = {result = false, error_msg = "Timer-event API reload: no valid UUID"} }
    end
 end
 
-function timerevents_private.http_api_update(params, req)
+function timer_events_private.http_api_update(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       if (scripts.get({uuid = params["uuid"]}) ~= nil) then
          local data = {}
@@ -286,17 +286,17 @@ function timerevents_private.http_api_update(params, req)
          if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
          if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
          local table = scripts.update(data)
-         table.reload_result = timerevents_private.reload(params["uuid"])
+         table.reload_result = timer_events_private.reload(params["uuid"])
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Busevents API Update: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Timer-event API update: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Busevents API Update: no UUID"} }
+      return req:render{ json = {result = false, error_msg = "Timer-event API update: no UUID"} }
    end
 end
 
-function timerevents_private.http_api_update_body(params, req)
+function timer_events_private.http_api_update_body(params, req)
    local uuid = req:query_param().uuid
    local post_params = req:post_param()
    local text_base64 = pairs(post_params)(post_params)
@@ -311,60 +311,60 @@ function timerevents_private.http_api_update_body(params, req)
       data.body = text_decoded
       if (scripts.get({uuid = uuid}) ~= nil) then
          local table = scripts.update(data)
-         table.reload_result = timerevents_private.reload(params["uuid"])
+         table.reload_result = timer_events_private.reload(params["uuid"])
          return req:render{ json = table }
       else
-         return req:render{ json = {result = false, error_msg = "Busevents API body update: UUID not found"} }
+         return req:render{ json = {result = false, error_msg = "Timer-event API body update: UUID not found"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "Busevents API body update: no UUID or no body"} }
+      return req:render{ json = {result = false, error_msg = "Timer-event API body update: no UUID or no body"} }
    end
 end
 
-function timerevents_private.http_api(req)
+function timer_events_private.http_api(req)
    local params = req:param()
    local return_object
    if (params["action"] == "reload") then
-      return_object = timerevents_private.http_api_reload(params, req)
+      return_object = timer_events_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
-      return_object = timerevents_private.http_api_get_list(params, req)
+      return_object = timer_events_private.http_api_get_list(params, req)
    elseif (params["action"] == "update") then
-      return_object = timerevents_private.http_api_update(params, req)
+      return_object = timer_events_private.http_api_update(params, req)
    elseif (params["action"] == "update_body") then
-      return_object = timerevents_private.http_api_update_body(params, req)
+      return_object = timer_events_private.http_api_update_body(params, req)
    elseif (params["action"] == "create") then
-      return_object = timerevents_private.http_api_create(params, req)
+      return_object = timer_events_private.http_api_create(params, req)
    elseif (params["action"] == "delete") then
-      return_object = timerevents_private.http_api_delete(params, req)
+      return_object = timer_events_private.http_api_delete(params, req)
    elseif (params["action"] == "get") then
-      return_object = timerevents_private.http_api_get(params, req)
+      return_object = timer_events_private.http_api_get(params, req)
    else
-      return_object = req:render{ json = {result = false, error_msg = "Timer event API: No valid action"} }
+      return_object = req:render{ json = {result = false, error_msg = "Timer-event API: No valid action"} }
    end
 
-   return_object = return_object or req:render{ json = {result = false, error_msg = "Timer event API: Unknown error(2433)"} }
+   return_object = return_object or req:render{ json = {result = false, error_msg = "Timer-event API: unknown error(2433)"} }
    return system.add_headers(return_object)
 end
 
 ------------------↓ Public functions ↓------------------
 
 
-function timerevents.init()
-   timerevents.start_all()
-   fiber.create(timerevents_private.worker)
-   http_system.endpoint_config("/timerevents", timerevents_private.http_api)
+function timer_events.init()
+   timer_events.start_all()
+   fiber.create(timer_events_private.worker)
+   http_system.endpoint_config("/timerevents", timer_events_private.http_api)
 end
 
 
 
 
-function timerevents.start_all()
+function timer_events.start_all()
    local list = scripts.get_all({type = scripts.type.TIMER_EVENT})
 
-   for _, timerevent in pairs(list) do
-      timerevents_private.load(timerevent.uuid)
+   for _, timer_event in pairs(list) do
+      timer_events_private.load(timer_event.uuid)
       fiber.yield()
    end
 end
 
-return timerevents
+return timer_events
