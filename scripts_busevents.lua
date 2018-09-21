@@ -52,10 +52,12 @@ function busevents_private.load(uuid, run_once_flag)
       return false
    end
 
-   if ((script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) and run_once_flag ~= true) then
-      log_bus_event_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'}) -- TODO: не работает без перезагрузки
-      return true
+   if (run_once_flag ~= true) then
+      if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
+         log_bus_event_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
+         scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'}) -- TODO: не работает без перезагрузки
+         return true
+      end
    end
 
    local current_func, error_msg = loadstring(script_params.body, script_params.name)
@@ -260,9 +262,17 @@ end
 
 function busevents_private.http_api_run_once(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      busevents_main_scripts_table[params["uuid"]] = nil
-      busevents_private.load(params["uuid"], true)
-      busevents_main_scripts_table[params["uuid"]] = nil
+      local script_table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
+      if (script_table.status == scripts.statuses.NORMAL) then
+         local result = busevents_private.unload(params["uuid"])
+         if (result == true) then
+            busevents_private.load(params["uuid"], true)
+         else
+            return false
+         end
+      else
+         busevents_private.load(params["uuid"], true)
+      end
       return req:render{ json = {result = true} }
    else
       return req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
