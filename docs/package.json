@@ -4,12 +4,13 @@
    "description": "Documetation for glue-system",
    "main": "index.js",
    "scripts": {
-      "build": "npx vuepress build && rm -rf ./dist/ ; mv .vuepress/dist ./ &&  cp logo.png ./dist/ &&  cp -R images ./dist/ && http-server ./dist/"
+      "build": "npx gluepress build && rm -rf ./dist/ ; mv .vuepress/dist ./ &&  cp logo.png ./dist/ &&  cp -R images ./dist/ && http-server ./dist/",
+      "deploy": "cd ./dist; git init; git add -A; git commit -m 'deploy'; git push -f https://github.com/matnick/matnick.github.io.git master"
    },
    "keywords": [],
    "author": "",
    "license": "ISC",
    "dependencies": {
-      "vuepress": "^0.14.2"
+      "gluepress": "^0.14.5"
    }
 }
