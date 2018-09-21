@@ -31,7 +31,7 @@ end
 ------------------↓ Private functions ↓------------------
 
 
-function busevents_private.load(uuid, run_once_flag)
+function busevents_private.load(uuid)
    local body
    local script_params = scripts.get({uuid = uuid})
 
@@ -52,12 +52,10 @@ function busevents_private.load(uuid, run_once_flag)
       return false
    end
 
-   if (run_once_flag ~= true) then
-      if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
-         log_bus_event_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'}) -- TODO: не работает без перезагрузки
-         return true
-      end
+   if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
+      log_bus_event_info('Web-event "'..script_params.name..'" not start (non-active)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'})
+      return true
    end
 
    local current_func, error_msg = loadstring(script_params.body, script_params.name)
@@ -90,7 +88,7 @@ function busevents_private.load(uuid, run_once_flag)
       return false
    end
 
-   if (body.destroy ~= nil) then
+   if (body.destroy ~= nil) then --TODO: на самом деле, можно убрать отсюда init/destroy, после того, как в drivers будут маски
       if (type(body.destroy) ~= "function") then
          log_bus_event_error('Bus-event script "'..script_params.name..'" not start (destroy not function)', script_params.uuid)
          scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy not function'})
@@ -98,7 +96,7 @@ function busevents_private.load(uuid, run_once_flag)
       end
    end
 
-   if (body.init ~= nil and run_once_flag ~= true) then
+   if (body.init ~= nil) then
       if (type(body.init) ~= "function") then
          log_bus_event_error('Bus-event script "'..script_params.name..'" not start (init not function)', script_params.uuid)
          scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init not function'})
@@ -114,25 +112,13 @@ function busevents_private.load(uuid, run_once_flag)
       end
    end
 
-   if (run_once_flag == true) then
-      log_bus_event_info('Bus-event "'..script_params.name..'" runned once', script_params.uuid)
-      local value = 0
-      local topic = "once"
-      local pcall_status, returned_data = pcall(body.event_handler, value, topic)
-      if (pcall_status ~= true) then
-         returned_data = tostring(returned_data)
-         log_bus_event_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
-         scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
-      end
-   else
-      busevents_main_scripts_table[uuid] = nil
-      busevents_main_scripts_table[uuid] = {}
-      busevents_main_scripts_table[uuid].body = body
-      busevents_main_scripts_table[uuid].mask = script_params.object
+   busevents_main_scripts_table[uuid] = nil
+   busevents_main_scripts_table[uuid] = {}
+   busevents_main_scripts_table[uuid].body = body
+   busevents_main_scripts_table[uuid].mask = script_params.object
 
-      log_bus_event_info('Bus-event "'..script_params.name..'" active on mask "'..(script_params.object or "")..'"', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask "'..(script_params.object or "")..'"'})
-   end
+   log_bus_event_info('Bus-event "'..script_params.name..'" active on mask "'..(script_params.object or "")..'"', script_params.uuid)
+   scripts.update({uuid = uuid, status = scripts.statuses.NORMAL, status_msg = 'Active on mask "'..(script_params.object or "")..'"'})
 
    return true
 end
@@ -183,6 +169,64 @@ function busevents_private.unload(uuid)
    log_bus_event_info('Bus-event script "'..script_params.name..'" set status to non-active', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Not active'})
    busevents_main_scripts_table[uuid] = nil
+   return true
+end
+
+function busevents_private.run_once(uuid)
+   local body
+   local script_params = scripts.get({uuid = uuid})
+
+   if (script_params.type ~= scripts.type.BUS_EVENT) then
+      log_bus_event_error('Attempt to run non-busevent script "'..script_params.name..'"', script_params.uuid)
+      return false
+   end
+
+   if (script_params.uuid == nil) then
+      log_bus_event_error('Web-event "'..script_params.name..'" not run (not found)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Run: not found'})
+      return false
+   end
+
+   if (script_params.body == nil) then
+      log_bus_event_error('Web-event "'..script_params.name..'" not run (body nil)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Run: no body'})
+      return false
+   end
+
+   local current_func, error_msg = loadstring(script_params.body, script_params.name)
+
+   if (current_func == nil) then
+      log_bus_event_error('Web-event "'..script_params.name..'" not run (body load error: '..(error_msg or "")..')', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Run: body load error: '..(error_msg or "")})
+      return false
+   end
+
+   local log_script_name = "Bus event '"..(script_params.name or "undefined name").."'"
+   body = scripts.generate_body(script_params, log_script_name)
+
+   local status, err_msg = pcall(setfenv(current_func, body))
+   if (status ~= true) then
+      log_bus_event_error('Bus-event "'..script_params.name..'" not run (load error: '..(err_msg or "")..')', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Run: pcall error: '..(err_msg or "")})
+      return false
+   end
+
+   if (body.event_handler == nil or type(body.event_handler) ~= "function") then
+      log_bus_event_error('Bus-event "'..script_params.name..'" not run ("event_handler" function not found or no function)', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Run: "event_handler" function not found or no function'})
+      return false
+   end
+
+   log_bus_event_info('Bus-event "'..script_params.name..'" runned once', script_params.uuid)
+   local value = 0
+   local topic = "once"
+   local pcall_status, returned_data = pcall(body.event_handler, value, topic)
+   if (pcall_status ~= true) then
+      returned_data = tostring(returned_data)
+      log_bus_event_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+      scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
+   end
+
    return true
 end
 
@@ -262,17 +306,7 @@ end
 
 function busevents_private.http_api_run_once(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      local script_table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
-      if (script_table.status == scripts.statuses.NORMAL) then
-         local result = busevents_private.unload(params["uuid"])
-         if (result == true) then
-            busevents_private.load(params["uuid"], true)
-         else
-            return false
-         end
-      else
-         busevents_private.load(params["uuid"], true)
-      end
+      busevents_private.run_once(params["uuid"])
       return req:render{ json = {result = true} }
    else
       return req:render{ json = {result = false, error_msg = "Busevents API: No valid UUID"} }
