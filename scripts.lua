@@ -4,7 +4,6 @@ local scripts_private = {}
 
 local box = box
 local uuid_lib = require('uuid')
-local digest = require 'digest'
 local fiber = require 'fiber'
 
 local inspect = require 'libs/inspect'
@@ -19,9 +18,9 @@ scripts.type = {WEB_EVENT = "WEB_EVENT", TIMER_EVENT = "TIMER_EVENT", SHEDULE_EV
 scripts.store = {}
 
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
------------------- Internal API functions ------------------
+------------------↓ Internal API functions ↓------------------
 
 function scripts_private.get_list(data)
    local list_table = {}
@@ -185,7 +184,9 @@ function scripts_private.create(data)
 end
 
 function scripts_private.delete(data)
-   return scripts_private.storage.index.uuid:delete(data.uuid)
+   local script_table = scripts_private.storage.index.uuid:delete(data.uuid)
+   script_table.deleted_status = true
+   return script_table
 end
 
 function scripts_private.storage_init()
@@ -205,12 +206,12 @@ function scripts_private.storage_init()
 end
 
 function scripts_private.http_init()
-   local http_system = require 'http_system'
-   http_system.endpoint_config("/scripts", scripts_private.http_api)
-   http_system.endpoint_config("/scripts_body", scripts_private.http_api_body)
+   --local http_system = require 'http_system'
+   --http_system.endpoint_config("/scripts", scripts_private.http_api)
+   --http_system.endpoint_config("/scripts_body", scripts_private.http_api_body)
 end
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 
 --Entrypoints:
 --scripts_body(autorestart)
@@ -221,72 +222,9 @@ end
 --update(autorestart)
 --*reload
 --*run_once
+--
 
-function scripts_private.http_api_update(params, req)
-   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      if (scripts_private.get({uuid = params["uuid"]}) ~= nil) then
-         local data = {}
-         data.uuid = params["uuid"]
-         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
-         data.active_flag = params["active_flag"]
-         if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
-         local table = scripts_private.update(data)
-         return req:render{ json = table }
-      else
-         return req:render{ json = {result = false, error_msg = "Script API Update: UUID not found"} }
-      end
-   else
-      return req:render{ json = {result = false, error_msg = "Script API Update: no UUID"} }
-   end
-end
-
-
-function scripts_private.http_api_body(req)
-   local return_object
-
-   local uuid = req:query_param().uuid
-   local post_params = req:post_param()
-   local text_base64 = pairs(post_params)(post_params)
-   local text_decoded
-   local data = {}
-   local _,_, base_64_string = string.find(text_base64 or "", "data:text/plain;base64,(.+)")
-   if (base_64_string ~= nil) then
-      text_decoded = digest.base64_decode(base_64_string)
-   end
-   if (uuid ~= nil and text_decoded ~= nil) then
-      data.uuid = uuid
-      data.body = text_decoded
-      if (scripts_private.get({uuid = uuid}) ~= nil) then
-         local table = scripts_private.update(data)
-         return_object = req:render{ json = table }
-      else
-         return_object = req:render{ json = {result = false, error_msg = "Script API Body update: UUID not found"} }
-      end
-   else
-      return_object = req:render{ json = {result = false, error_msg = "Script API Body update: no UUID or no body"} }
-   end
-
-   return_object = return_object or req:render{ json = {result = false, error_msg = "Script API Body update: Unknown error(1213)"} }
-   return system.add_headers(return_object)
-end
-
-
-function scripts_private.http_api(req)
-   local params = req:param()
-   local return_object
-
-   if (params["action"] == "update") then
-      return_object = scripts_private.http_api_update(params, req)
-
-   else
-      return_object = req:render{ json = {result = false, error_msg = "Script API: No valid action"} }
-   end
-
-   return_object = return_object or req:render{ json = {result = false, error_msg = "Script API: Unknown error(213)"} }
-   return system.add_headers(return_object)
-end
-
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 function scripts.generate_fibercreate(uuid, name)
    local function generate_fiber_error_handler(uuid_i, name_i)
@@ -312,6 +250,7 @@ function scripts.generate_body(script_params, log_script_name)
    body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(script_params.uuid, log_script_name)
    body.system_print = body.print
    body.log, body.print = body.log_user, body.log_user
+   body.round, body.deepcopy = system.round, system.deepcopy
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
    body.set_value, body.shadow_set_value = uuid_related_set_value, bus.shadow_set_value

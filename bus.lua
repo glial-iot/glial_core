@@ -22,7 +22,7 @@ bus.fifo_saved_rps = 0
 bus.bus_saved_rps = 0
 bus.max_fifo_count = 0
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 function bus_private.tsdb_attr_check_and_save(topic, value)
    local tuple = bus.storage.index.topic:get(topic)
@@ -142,9 +142,11 @@ function bus_private.gen_fifo_id(update_time)
    return new_id
 end
 
--------------------Public functions-------------------
+------------------↓ Public functions ↓------------------
 
 function bus.init()
+
+   ---------↓ Space "storage"(main bus storage) ↓---------
    local format = {
       {name='topic',        type='string'},   --1
       {name='value',        type='string'},   --2
@@ -158,7 +160,7 @@ function bus.init()
 
 
 
-   --------------------------------
+   ---------↓ Space "fifo_storage"(fifo storage) ↓---------
    local fifo_format = {
       {name='timestamp',      type='number'},   --1
       {name='topic',          type='string'},   --2
@@ -168,7 +170,9 @@ function bus.init()
    }
    bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, format = fifo_format, id = config.id.bus_fifo})
    bus.fifo_storage:create_index('timestamp', {parts={'timestamp'}, if_not_exists = true})
-   --------------------------------
+
+
+   --------- End storage's config ---------
 
    fiber.create(bus_private.fifo_storage_worker)
    fiber.create(bus_private.bus_rps_stat_worker)

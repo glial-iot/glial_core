@@ -10,6 +10,7 @@
 store.value = 5
 print(store.value) -- 5
 ```
+
 `main_store` - таблица, в которой находятся хранилища всех запущенных с момента запуска системы скриптов. Первый уровень таблицы — UUID скриптов. Второй уровень — store каждого скрипта. UUID скрипта можно узнать, нажав на значок "i" в интерфейсе. С помощью этой таблицы можно получать доступ к хранилищам других скриптов:
 ```lua
 store.table = {1,2,3,4,5}
@@ -19,18 +20,19 @@ print(main_store["8d72fe2f-801e-48d1-ac1a-526f3e2622c0"].table) -- { 1, 2, 3, 4,
 
 ### Функции для работы с логами
 
-#### Функции log_info, log_warning, log_error, log_user
-Добавляет в системный лог запись уровня "INFO", "WARNING", "ERROR" и "USER" соотвественно. .  
+#### Функции log_info(), log_warning(), log_error(), log_user()
+Добавляют в системный лог запись уровня "INFO", "WARNING", "ERROR" и "USER" соотвественно.  
 Использование: `log_info("Found correlation!")`, `log_warning("Found correlation!")` , `log_error("Found correlation!")` , `log_user("Found correlation!")` 
 Ничего не возвращает.  
-#### Функция log и print
+
+#### Функции log() и print()
 `log()` - алиас для функции log_user()  
 `print()` - алиас для функции log_user()  
 
 ### Функции для работы с центральной шиной
 
-#### Функция set_value
-Обновляет топик "topic", устанавливая значение "value"  
+#### Функция set_value()
+Обновляет топик "topic", устанавливая значение "value".  
 Использование: `set_value(topic, value, check_flag, update_time)`  
 Ничего не возвращает.  
 
@@ -49,36 +51,118 @@ set_value("/test/device", "5", nil, os.time()-60*60)
 set_value("/test/device", "5", "CHECK_VALUE", os.time()-60*60*2)
 ```
 
-#### Функция shadow_set_value
+#### Функция shadow_set_value()
 Обновляет топик, устанавливая значение "value", но не запускает event-скрипты, которые подписаны на этот топик.  
 Использование: `shadow_set_value(topic, value)`  
 Ничего не возвращает.  
 
 Данные, поступающие из драйверов или скриптов, могут обновлять значение топика в стандартном (standard) или теневом (shadow) режиме. В первом случае, отработают все скрипты, которые подписаны на изменения значения топика, во втором случае, значение будет изменено без запуска скриптов. При обновлении самим скриптом топика, на который он подписан, коллбек в скрипте вызываться не будет.  
 
-#### Функция get_value
+#### Функция get_value()
 Получает значение и метаинформацию топика.  
 Использование: `local value, update_time, type, tags = get_value(topic)`  
 Возвращает поля value, update_time, type, tags  <!-- Расписать подробнее в описании функции, что за поля и в каком виде -->  
 
-#### Функция bus_serialize
-Получает содержимое центральной шины (bus) в виде вложенной таблицы.
+#### Функция bus_serialize()
+Получает содержимое центральной шины (bus) в виде вложенной таблицы.  
 Использование: `local table = bus_serialize(pattern)`  
 Возвращает таблицу. Если передана переменная "pattern", то будет выбрана только часть таблицы, соответствующая заданному шаблону. Шаблоны соответствуют правилам [lua patterns](https://www.lua.org/pil/20.2.html) <!-- нужен пример -->  
 
+### Вспомогательные функции
+
+#### Функция round()
+Функция для "правильного" математического округления с произвольной точностью.
+Получает число и количество знаков после запятой, возвращает округленное число. Если количество знаков не указано, используется 2.  
+Использование: `local round_value = round(value, rounds)`  
+
+Примеры использования: 
+```lua
+local value = 3.1415926535
+print(round(value)) --> 3.14
+print(round(value, 2)) --> 3.14
+print(round(value, 3)) --> 3.142
+```
+
+#### Функция deepcopy()
+Функция для копирования таблиц lua(если попытаться скопировать таблицу `table_a = table_b`, мы получим две ссылки на одну и ту же таблицу). 
+Получает таблицу, возвращает копию таблицу. Таблица не должна быть рекурсивной, иначе функция переполнит стек.  аис
+Использование: `local copy_table = deepcopy(table)`  
+
+Пример использования: 
+```lua
+local old_table = {1, 2, 4}
+local copy_table = deepcopy(old_table)
+```
 
 ### Встроенные библиотеки
-Для использования этих библиотек не нужно делать require, они уже есть в области видимости каждого скрипта:  
-* `HTTP Client` (доступна через http_client.xxx) [Документация по библиотеке HTTP Client](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/http/). Уже созданный экземпляр доступен через http_client, т.е. для метода request() нужно вызвать http_client.request()) 
-* `MQTT` (доступна через mqtt.xxx) [Документация по библиотеке MQTT](https://github.com/tarantool/mqtt)  
-* `JSON` (доступна через json.xxx) [Документация по библиотеке JSON](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/json/)  
-* `SOCKET` (доступна через socket.xxx) [Документация по библиотеке SOCKET](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/socket/)  
-* `FIBER` (доступна через fiber.xxx) [Документация по библиотеке FIBER](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/fiber/)
->Не стоит подключать библиотеку fiber вручную, т.е. делать "local fiber = require 'fiber'".  
->В этом случае, ошибки внутри тредов fiber не попадут в лог конкретного скрипта и не сгенерируют ошибку, что усложняет отладку. 
->В библиотеке доступны методы `fiber.sleep()`, `fiber.create()`, `fiber.kill()`, `fiber.yield()`, `fiber.self()`, `fiber.status()`. Для остальных нужно делать require и оборачивать функции, которые запускаются через `fiber.create()` в `pcall()`/`xpcall()`.  
+Для использования этих библиотек не нужно делать require, они уже есть в области видимости каждого скрипта.
 
-## Информация о скриптах и драйверах
+#### Библиотека HTTP Client
+Библиотека, реализующая примитивы для http-запросов.  
+Уже созданный экземпляр доступен через обьект `http_client`, т.е. для метода `request()` нужно вызвать `http_client.request()`  
+Пример использования:  
+```lua
+local r = http_client:get('http://google.com')
+print(r.body)
+``` 
+[Документация](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/http/)  
+
+
+#### Библиотека MQTT
+Библиотека, реализующая клиента протокола MQTT. Доступна через обьект `mqtt`  
+Пример использования:  
+```lua
+local mqtt_object = mqtt.new("client_id", true)
+mqtt_object:connect({ host='127.0.0.1', port=1883 })
+ok, err = mqtt_object:subscribe('my/topic/#', 1)   
+ok, err = mqtt_object:publish('my/topic/#', 'Some payload as string', mqtt.QOS_0, mqtt.RETAIN)
+``` 
+[Документация](https://github.com/tarantool/mqtt)  
+
+
+#### Библиотека JSON
+Библиотека, конвертирующая таблицы lua в json и обратно. Доступна через обьект `json`  
+Пример использования:  
+```lua
+json.encode({abc = 234, cde = 345}) --> '{"cde":345,"abc":234}'
+json.decode('[123, "hello"]') --> [123, 'hello']
+```
+[Документация](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/json/)  
+
+
+#### Библиотека Socket
+Библиотека для доступа к системным сокетам. Доступна через обьект `socket`  
+Пример использования:  
+```lua
+local sock_1 = socket('AF_INET', 'SOCK_DGRAM', 'udp')
+local sock_2 = socket('AF_INET', 'SOCK_DGRAM', 'udp')
+sock_1:bind('127.0.0.1')
+sock_2:sendto('127.0.0.1', sock_1:name().port,'X')
+message = sock_1:recvfrom()
+print(message) --> X
+```
+[Документация](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/socket/)  
+
+
+#### Библиотека Fiber
+Библиотека для работы с потоками. Доступна через обьект `fiber`  
+Не стоит подключать библиотеку fiber вручную, т.е. делать "local fiber = require 'fiber'".  
+В этом случае, ошибки внутри тредов fiber не попадут в лог конкретного скрипта и не сгенерируют ошибку, что усложняет отладку.  
+В библиотеке доступны методы `fiber.sleep()`, `fiber.create()`, `fiber.kill()`, `fiber.yield()`, `fiber.self()`, `fiber.status()`. Для остальных нужно делать require и оборачивать функции, которые запускаются через `fiber.create()` в `pcall()`/`xpcall()`.  
+Пример использования:  
+```lua
+local function loop()
+   while true do
+      print("tick")
+      fiber.sleep(1.2) --seconds
+   end
+end
+fiber.create(loop)
+``` 
+[Документация](https://www.tarantool.io/en/doc/1.9/reference/reference_lua/fiber/)  
+
+
+## Скрипты и драйвера
 
 ### Drivers
 Драйвера — это скрипты на Lua, которые реализуют тот или иной протокол(часто с привлечением сторонних библиотек) для связи с устройством, конвертируя данные приходящие с каждого устройства в единый формат. Они работают в качестве транслятора между "языком" устройства и "языком" общей шины.  
@@ -94,7 +178,7 @@ set_value("/test/device", "5", "CHECK_VALUE", os.time()-60*60*2)
 
 ```lua
 function event_handler(value, topic)
-   print(value, topic) --"5 /test/device"
+   print(value, topic) --> "5 /test/device"
 end
 ```
 [Примеры bus-event скриптов](examples_bus_event.md)
@@ -106,7 +190,7 @@ end
 
 ![Web-event scripts](images/webScriptsList.png "Web-event scripts")
 
-Функция, реализующая непосредственную логику при обработке запроса - `http_callback()`.  
+Функция, реализующая непосредственную логику при обработке запроса — `http_callback()`.  
 
 При создании web-event скрипта, необходимо дать ему название и указать endpoint.  
 Полный адрес скрипта формируется как `адрес_сервера:порт` + `/we/` + `endpoint` и отображается в нижней части модального окна как "Full script URL".  
@@ -123,8 +207,8 @@ function http_callback(params, req)
 end
 ```
 
-Если в функции `http_callback()` вернуть одно значение-таблицу (напр. "return table"), то она будет сериализована в JSON и в таком виде отдана клиенту http-сервера.  
-Если необходимо управлять возвращаемыми данными напрямую, то надо вернуть 2 значения (напр. "return nil, 'OK'"), тогда первое значение будет отброшено, а второе - выдано клиенту в "сыром" виде без сериализации.  
+Если в функции `http_callback()` вернуть одно значение-таблицу (напр. `return table`), то она будет сериализована в JSON и в таком виде отдана клиенту http-сервера.  
+Если необходимо управлять возвращаемыми данными напрямую, то надо вернуть 2 значения (напр. `return nil, 'OK'`), тогда первое значение будет отброшено, а второе - выдано клиенту в "сыром" виде без сериализации. Для дополнительных сведений смотрите документацию [HTTP сервера Tarantool](https://github.com/tarantool/http)  
 
 [Примеры web-event скриптов](examples_web_event.md)
 
@@ -143,6 +227,8 @@ function event_handler()
    print("Timer event start")
 end
 ```
+
+[Примеры timer-event скриптов](examples_timer_event.md)
 
 ### Schedule scripts
 
@@ -180,3 +266,5 @@ function event_handler()
    print("Shedule event start")
 end
 ```
+
+[Примеры shedule-event скриптов](examples_shedule_event.md)

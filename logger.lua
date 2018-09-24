@@ -17,9 +17,9 @@ logger.REBOOT = "REBOOT"
 logger.USER = "USER"
 
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
------------------- HTTP API functions ------------------
+------------------↓ HTTP API functions ↓------------------
 function logger_private.http_api_get_logs(params, req)
    local processed_table, raw_table = {}
 
@@ -110,7 +110,7 @@ function logger_private.gen_id()
 end
 
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 
 function logger.generate_log_functions(uuid, name)

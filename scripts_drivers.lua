@@ -6,6 +6,7 @@ local box = box
 
 local fiber = require 'fiber'
 local inspect = require 'libs/inspect'
+local digest = require 'digest'
 
 local logger = require 'logger'
 local config = require 'config'
@@ -28,7 +29,7 @@ local function log_driver_info(msg, uuid)
    logger.add_entry(logger.INFO, "Drivers subsystem", msg, uuid, "")
 end
 
------------------- Private functions ------------------
+------------------↓ Private functions ↓------------------
 
 function drivers_private.load(uuid)
    local body
@@ -160,7 +161,22 @@ function drivers_private.unload(uuid)
    return true
 end
 
------------------- HTTP API functions ------------------
+
+function drivers_private.reload(uuid)
+   local data = scripts.get({uuid = uuid})
+   if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
+      local result = drivers_private.unload(uuid)
+      if (result == true) then
+         return drivers_private.load(uuid, false)
+      else
+         return false
+      end
+   else
+      return drivers_private.load(uuid, false)
+   end
+end
+
+------------------↓ HTTP API functions ↓------------------
 
 function drivers_private.http_api_get_list(params, req)
    local table = scripts.get_list(scripts.type.DRIVER)
@@ -174,8 +190,16 @@ end
 
 function drivers_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
-         local table = scripts.delete({uuid = params["uuid"]})
+      local script_table = scripts.get({uuid = params["uuid"]})
+      if (script_table ~= nil) then
+         local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
+         table.unload_result = drivers_private.unload(params["uuid"])
+         if (table.unload_result == true) then
+            table = scripts.delete({uuid = params["uuid"]})
+         else
+            log_driver_warning('Driver "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
+            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+         end
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Drivers API Delete: UUID not found"} }
@@ -201,18 +225,58 @@ end
 
 function drivers_private.http_api_reload(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
-      local data = scripts.get({uuid = params["uuid"]})
-      if (data.status == scripts.statuses.NORMAL or data.status == scripts.statuses.WARNING) then
-         local result = drivers_private.unload(params["uuid"])
-         if (result == true) then
-            drivers_private.load(params["uuid"])
-         end
+      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
+         local result = drivers_private.reload(params["uuid"])
+         return req:render{ json = {result = result} }
       else
-         drivers_private.load(params["uuid"])
+         return req:render{ json = {result = false, error_msg = "Busevents API Delete: UUID not found"} }
       end
-      return req:render{ json = {result = true} }
    else
       return req:render{ json = {result = false, error_msg = "Drivers API: No valid UUID"} }
+   end
+end
+
+function drivers_private.http_api_update(params, req)
+   if (params["uuid"] ~= nil and params["uuid"] ~= "") then
+      if (scripts.get({uuid = params["uuid"]}) ~= nil) then
+         local data = {}
+         data.uuid = params["uuid"]
+         data.active_flag = params["active_flag"]
+         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
+         if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
+         local table = scripts.update(data)
+         table.reload_result = drivers_private.reload(params["uuid"])
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Drivers API Update: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Drivers API Update: no UUID"} }
+   end
+end
+
+function drivers_private.http_api_update_body(params, req)
+   local uuid = req:query_param().uuid
+   local post_params = req:post_param()
+   local text_base64 = pairs(post_params)(post_params)
+   local text_decoded
+   local data = {}
+   local _,_, base_64_string = string.find(text_base64 or "", "data:text/plain;base64,(.+)")
+   if (base_64_string ~= nil) then
+      text_decoded = digest.base64_decode(base_64_string)
+   end
+   if (uuid ~= nil and text_decoded ~= nil) then
+      data.uuid = uuid
+      data.body = text_decoded
+      if (scripts.get({uuid = uuid}) ~= nil) then
+         local table = scripts.update(data)
+         table.reload_result = drivers_private.reload(params["uuid"])
+         return req:render{ json = table }
+      else
+         return req:render{ json = {result = false, error_msg = "Drivers API body update: UUID not found"} }
+      end
+   else
+      return req:render{ json = {result = false, error_msg = "Drivers API body update: no UUID or no body"} }
    end
 end
 
@@ -223,6 +287,10 @@ function drivers_private.http_api(req)
       return_object = drivers_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = drivers_private.http_api_get_list(params, req)
+   elseif (params["action"] == "update") then
+      return_object = drivers_private.http_api_update(params, req)
+   elseif (params["action"] == "update_body") then
+      return_object = drivers_private.http_api_update_body(params, req)
    elseif (params["action"] == "create") then
       return_object = drivers_private.http_api_create(params, req)
    elseif (params["action"] == "delete") then
@@ -237,7 +305,7 @@ function drivers_private.http_api(req)
    return system.add_headers(return_object)
 end
 
------------------- Public functions ------------------
+------------------↓ Public functions ↓------------------
 
 function drivers.init()
    drivers.start_all()
