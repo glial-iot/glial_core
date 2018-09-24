@@ -83,7 +83,7 @@ cleancity+
 - **Schedule-cкрипты** (Schedule scripts)
 - **Webevent-cкрипты** (Web scripts)
 
-![Скрипты](docs/images/gluePanel-scriptsIntro.png "Скрипты")
+![Скрипты](images/gluePanel-scriptsIntro.png "Скрипты")
 
 Подробную информацию о разработке драйверов и скриптов можно получить в [руководстве для разработчиков](developers.md).
 
