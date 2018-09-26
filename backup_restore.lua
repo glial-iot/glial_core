@@ -210,6 +210,13 @@ function backup_restore.http_api(req)
       else
          return_object = req:render{ json = {result = false, error_msg = "Backups API: no create backup before restore("..(msg or "")..")"} }
       end
+   elseif (params["action"] == "create") then
+      local result, msg = backup_restore.create_backup("User created backup")
+      if (result == true) then
+         return_object = req:render{ json = {result = true, error_msg = "Backups API: backup created"} }
+      else
+         return_object = req:render{ json = {result = false, error_msg = "Backups API: no create backup("..(msg or "")..")"} }
+      end
    else
       return_object = req:render{ json = {result = false, error_msg = "Backups API: No valid action"} }
    end
