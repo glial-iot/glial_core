@@ -284,7 +284,15 @@ function bus.http_api_handler(req)
          local value = tuple["value"]
          local type = tuple["type"]
          local tags = bus_private.get_tags(tuple["tags"])
-         table.insert(data_object, {topic = topic, time = time, value = value, type = type, tags = tags})
+
+         if (params["mask"] ~= nil and params["mask"] ~= "") then
+            local mask = "^"..params["mask"].."$"
+            if (string.find(topic, mask) ~= nil) then
+               table.insert(data_object, {topic = topic, time = time, value = value, type = type, tags = tags})
+            end
+         else
+            table.insert(data_object, {topic = topic, time = time, value = value, type = type, tags = tags})
+         end
          if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
       end
 
