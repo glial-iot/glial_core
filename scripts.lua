@@ -102,7 +102,7 @@ end
    if (type == scripts.type.DRIVER) then
       return [[-- The generated script is filled with the default content --
 
-topics = {"/test/1", "/test/2"}
+masks = {"/test/1", "/test/2"}
 
 local function main()
    while true do

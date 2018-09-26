@@ -15,7 +15,6 @@ local scripts = require 'scripts'
 local http_system = require 'http_system'
 
 local drivers_script_bodies = {}
-local drivers_script_callback_bodies = {}
 
 local function log_drivers_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Drivers subsystem", msg, uuid, "")
@@ -88,12 +87,25 @@ function drivers_private.load(uuid)
       return false
    end
 
-   if (body.topics ~= nil and type(body.topics) == "table" and #body.topics > 0) then
-      if (type(body.topic_update_callback) == "function") then
-         drivers_script_callback_bodies[uuid] = {}
-         for _, topic in pairs(body.topics) do
-            drivers_script_callback_bodies[uuid][topic] = body.topic_update_callback
+   if (body.masks ~= nil) then
+      if (type(body.masks) == "table" and #body.masks > 0) then
+         if (type(body.topic_update_callback) == "function") then
+            for i, mask in pairs(body.masks) do
+               if (type(mask) ~= "string") then
+                  log_drivers_error('Driver "'..script_params.name..'" not start (mask '..i..' not string)', script_params.uuid)
+                  scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: mask '..i..' not string'})
+                  return false
+               end
+            end
+         else
+            log_drivers_error('Driver "'..script_params.name..'" not start (topic_update_callback function not found)', script_params.uuid)
+            scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: topic_update_callback function not found or no function'})
+            return false
          end
+      else
+         log_drivers_error('Driver "'..script_params.name..'" not start (mask in not a table or blank table)', script_params.uuid)
+         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: mask in not a table or blank table'})
+         return false
       end
    end
 
@@ -139,7 +151,7 @@ function drivers_private.unload(uuid)
    end
 
    local status, returned_data = pcall(body.destroy)
-    if (status ~= true) then
+   if (status ~= true) then
       log_drivers_error('Driver "'..script_params.name..'" not stop (destroy function error: '..(returned_data or "")..')', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(returned_data or "")})
       return false
@@ -149,10 +161,6 @@ function drivers_private.unload(uuid)
       log_drivers_warning('Driver "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
       return false
-   end
-
-   if (body.topics ~= nil and type(body.topics) == "table" and #body.topics > 0) then
-      drivers_script_callback_bodies[uuid] = nil
    end
 
    log_drivers_info('Driver "'..script_params.name..'" stopped', script_params.uuid)
@@ -197,8 +205,8 @@ function drivers_private.http_api_delete(params, req)
          if (table.unload_result == true) then
             table = scripts.delete({uuid = params["uuid"]})
          else
-            log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
-            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+            log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), maybe, need restart glue', script_table.uuid)
+            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), maybe, need restart glue'})
          end
          return req:render{ json = table }
       else
@@ -312,18 +320,24 @@ function drivers.init()
 end
 
 function drivers.process(topic, value, source_uuid)
-   for uuid, scripts_bodies_table in pairs(drivers_script_callback_bodies) do --TODO: обход таблицы потенциально медленный, надо сделать индекс
+   for uuid, script_table in pairs(drivers_script_bodies) do
       local script_params = scripts.get({uuid = uuid})
       if (script_params.status == scripts.statuses.NORMAL and
           script_params.active_flag == scripts.flag.ACTIVE and
           script_params.uuid ~= (source_uuid or "0")) then
-         local body = scripts_bodies_table[topic]
-         if (type(body) == "function") then
-            local status, returned_data = pcall(body, value, topic)
-            if (status ~= true) then
-               returned_data = tostring(returned_data)
-               log_drivers_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
-               scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver event error: '..(returned_data or "")})
+         local callback = script_table.topic_update_callback
+         local masks = script_table.masks
+         if (type(callback) == "function" and type(masks) == "table" and #masks > 0) then
+            for _, mask in pairs(masks) do
+               mask = "^"..mask.."$"
+               if (string.find(topic, mask) ~= nil) then
+                  local status, returned_data = pcall(callback, value, topic)
+                  if (status ~= true) then
+                     returned_data = tostring(returned_data)
+                     log_drivers_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+                     scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver event error: '..(returned_data or "")})
+                  end
+               end
             end
          end
       end
