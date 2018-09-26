@@ -24,10 +24,15 @@ function logger_private.http_api_get_logs(params, req)
    local processed_table, raw_table = {}
 
    raw_table = logger.storage.index.timestamp:select(nil, {iterator = 'REQ'})
-      for _, tuple in pairs(raw_table) do
+   for _, tuple in pairs(raw_table) do
       repeat
          if (params["uuid"] ~= nil and params["uuid"] ~= "") then
             if (params["uuid"] ~= tuple["uuid_source"] and tuple["level"] ~= logger.REBOOT) then
+               do break end
+            end
+         end
+         if (params["level"] ~= nil and params["level"] ~= "") then
+            if (params["level"] ~= tuple["level"] and tuple["level"] ~= logger.REBOOT) then
                do break end
             end
          end
