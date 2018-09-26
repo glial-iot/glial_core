@@ -205,25 +205,6 @@ function scripts_private.storage_init()
    scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
 end
 
-function scripts_private.http_init()
-   --local http_system = require 'http_system'
-   --http_system.endpoint_config("/scripts", scripts_private.http_api)
-   --http_system.endpoint_config("/scripts_body", scripts_private.http_api_body)
-end
-
-------------------↓ HTTP API functions ↓------------------
-
---Entrypoints:
---scripts_body(autorestart)
---*get_list
---*create
---*delete
---*get
---update(autorestart)
---*reload
---*run_once
---
-
 ------------------↓ Public functions ↓------------------
 
 function scripts.generate_fibercreate(uuid, name)
@@ -281,7 +262,6 @@ end
 
 function scripts.init()
    scripts_private.storage_init()
-   scripts_private.http_init()
 end
 
 function scripts.get(data)
