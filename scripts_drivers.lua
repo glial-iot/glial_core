@@ -243,7 +243,6 @@ function drivers_private.http_api_update(params, req)
          data.uuid = params["uuid"]
          data.active_flag = params["active_flag"]
          if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
-         if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
          local table = scripts.update(data)
          table.reload_result = drivers_private.reload(params["uuid"])
          return req:render{ json = table }
