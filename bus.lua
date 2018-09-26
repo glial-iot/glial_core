@@ -55,7 +55,6 @@ function bus_private.bus_rps_stat_worker()
    end
 end
 
-
 function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid, update_time)
    if (topic ~= nil and value ~= nil and shadow_flag ~= nil and source_uuid ~= nil) then
       value = tostring(value)
@@ -77,6 +76,17 @@ function bus_private.get_value_from_fifo()
    end
 end
 
+function bus_private.get_tags(table_tags)
+   local string_tags = ""
+   for i, tag in pairs(table_tags) do
+      string_tags = string_tags..tag
+      if (i ~= #table_tags) then
+         string_tags = string_tags..", "
+      end
+   end
+   return string_tags
+end
+
 function bus_private.update_type(topic, type)
    if (topic ~= nil and type ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
       bus.storage.index.topic:update(topic, {{"=", 4, type}})
@@ -88,7 +98,17 @@ end
 
 function bus_private.update_tags(topic, tags)
    if (topic ~= nil and tags ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
-      bus.storage.index.topic:update(topic, {{"=", 5, tags}})
+      local processed_tags = tags:gsub("%%20", " ")
+      processed_tags = processed_tags:gsub(" ", "")
+      local table_tags = setmetatable({}, {__serialize = 'array'})
+      for tag in processed_tags:gmatch("([^,]+)") do
+         local copy_flag = false
+         for _, table_tag in pairs(table_tags) do
+            if (tag == table_tag) then copy_flag = true end
+         end
+         if (copy_flag == false) then table.insert(table_tags, tag) end
+      end
+      bus.storage.index.topic:update(topic, {{"=", 5, table_tags}})
       return true
    else
       return false
@@ -237,7 +257,7 @@ function bus.serialize_v2(pattern)
          local_table.__data__.update_time = tuple["update_time"]
          local_table.__data__.topic = tuple["topic"]
          local_table.__data__.type = tuple["type"]
-         local_table.__data__.tags = tuple["tags"]
+         local_table.__data__.tags = bus_private.get_tags(tuple["tags"])
       end
    end
    return bus_table
@@ -267,9 +287,7 @@ function bus.http_api_handler(req)
       if (params["topic"] == nil or params["tags"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or tags" } }
       else
-         local tags = json.decode(params["tags"])
-         tags = setmetatable(tags, {__serialize = 'array'})
-         local result = bus_private.update_tags(params["topic"], tags)
+         local result = bus_private.update_tags(params["topic"], params["tags"])
          return_object = req:render{ json = { result = result } }
       end
 
@@ -296,7 +314,7 @@ function bus.http_api_handler(req)
          local time = tuple["update_time"]
          local value = tuple["value"]
          local type = tuple["type"]
-         local tags = tuple["tags"]
+         local tags = bus_private.get_tags(tuple["tags"])
          table.insert(data_object, {topic = topic, time = time, value = value, type = type, tags = tags})
          if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
       end
