@@ -11,7 +11,6 @@ local scripts_busevents = require 'scripts_busevents'
 local scripts_drivers = require 'scripts_drivers'
 local system = require 'system'
 local fiber = require 'fiber'
-local export = require "exports/export"
 local logger = require 'logger'
 local config = require 'config'
 
@@ -23,14 +22,6 @@ bus.bus_saved_rps = 0
 bus.max_fifo_count = 0
 
 ------------------↓ Private functions ↓------------------
-
-function bus_private.tsdb_attr_check_and_save(topic, value)
-   local tuple = bus.storage.index.topic:get(topic)
-
-   if (tuple ~= nil and tuple["tsdb"] == "true") then
-      export.send_value(topic, value)
-   end
-end
 
 
 function bus_private.fifo_storage_worker()
@@ -44,7 +35,6 @@ function bus_private.fifo_storage_worker()
          local timestamp = os.time()
          bus.storage:upsert({topic, value, timestamp, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp}})
          bus.bus_saved_rps = bus.bus_saved_rps + 1
-         bus_private.tsdb_attr_check_and_save(topic, value)
          fiber.yield()
       else
          fiber.sleep(0.1)
@@ -84,21 +74,6 @@ function bus_private.get_value_from_fifo()
       local count = bus.fifo_storage.index.timestamp:count()
       if (count > bus.max_fifo_count) then bus.max_fifo_count = count end
       return tuple['topic'], tuple["value"], tuple['shadow_flag'], tuple["source_uuid"]
-   end
-end
-
-function bus_private.set_tsdb_save_attribute(topic, value)
-   if (value ~= nil and (value == "true" or value == "false")) then
-      if (topic == "*") then
-         for _, tuple in bus.storage.index.topic:pairs() do
-            bus.storage:update(tuple["topic"], {{"=", 6, value}})
-         end
-      else
-         bus.storage.index.topic:update(topic, {{"=", 6, value}})
-      end
-      return true
-   else
-      return false
    end
 end
 
@@ -233,7 +208,6 @@ function bus.serialize(pattern)
          local_table.value = tuple["value"]
          local_table.update_time = tuple["update_time"]
          local_table.topic = tuple["topic"]
-         if (tuple["tsdb"] == "true") then local_table.tsdb = true else local_table.tsdb = false end
          local_table.type = tuple["type"]
          local_table.tags = tuple["tags"]
       end
@@ -262,7 +236,6 @@ function bus.serialize_v2(pattern)
          local_table.__data__.value = tuple["value"]
          local_table.__data__.update_time = tuple["update_time"]
          local_table.__data__.topic = tuple["topic"]
-         if (tuple["tsdb"] == "true") then local_table.__data__.tsdb = true else local_table.__data__.tsdb = false end
          local_table.__data__.type = tuple["type"]
          local_table.__data__.tags = tuple["tags"]
       end
@@ -274,19 +247,7 @@ function bus.http_api_handler(req)
    local params = req:param()
    local return_object
 
-   if (params["action"] == "update_tsdb_attribute") then
-      if (params["value"] == "true" or params["value"] == "false") then
-         if (params["topic"] ~= nil) then
-            local result = bus_private.set_tsdb_save_attribute(params["topic"], params["value"])
-            return_object = req:render{ json = { result = result } }
-         else
-         return_object = req:render{ json = { result = false, msg = "No valid param topic" } }
-         end
-      else
-         return_object = req:render{ json = { result = false, msg = "No valid param value" } }
-      end
-
-   elseif (params["action"] == "update_value") then
+   if (params["action"] == "update_value") then
       if (params["topic"] == nil or params["value"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or value" } }
       else
@@ -334,11 +295,9 @@ function bus.http_api_handler(req)
          local topic = tuple["topic"]
          local time = tuple["update_time"]
          local value = tuple["value"]
-         local tsdb
-         if (tuple["tsdb"] == "true") then tsdb = true else tsdb = false end
          local type = tuple["type"]
          local tags = tuple["tags"]
-         table.insert(data_object, {topic = topic, time = time, value = value, tsdb = tsdb, type = type, tags = tags})
+         table.insert(data_object, {topic = topic, time = time, value = value, type = type, tags = tags})
          if (params["limit"] ~= nil and tonumber(params["limit"]) <= #data_object) then break end
       end
 
