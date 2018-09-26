@@ -185,8 +185,11 @@ end
 
 function scripts_private.delete(data)
    local script_table = scripts_private.storage.index.uuid:delete(data.uuid)
-   script_table.deleted_status = true
-   return script_table
+   if (script_table ~= nil) then
+      return true
+   else
+      return false
+   end
 end
 
 function scripts_private.storage_init()

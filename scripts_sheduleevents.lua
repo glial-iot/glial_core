@@ -260,7 +260,7 @@ function shedule_events_private.http_api_delete(params, req)
          local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
          table.unload_result = shedule_events_private.unload(params["uuid"])
          if (table.unload_result == true) then
-            table = scripts.delete({uuid = params["uuid"]})
+            table.delete_result = scripts.delete({uuid = params["uuid"]})
          else
             log_shedule_events_warning('Shedule script "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
             scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})

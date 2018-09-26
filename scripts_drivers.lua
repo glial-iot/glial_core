@@ -200,10 +200,14 @@ function drivers_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local script_table = scripts.get({uuid = params["uuid"]})
       if (script_table ~= nil) then
+         if (script_table.status == scripts.statuses.STOPPED and script_table.active_flag == scripts.flag.NON_ACTIVE) then
+            local result = scripts.delete({uuid = params["uuid"]})
+            return req:render{ json = {result = result} }
+         end
          local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
          table.unload_result = drivers_private.unload(params["uuid"])
          if (table.unload_result == true) then
-            table = scripts.delete({uuid = params["uuid"]})
+            table.delete_result = scripts.delete({uuid = params["uuid"]})
          else
             log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), maybe, need restart glue', script_table.uuid)
             scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), maybe, need restart glue'})
