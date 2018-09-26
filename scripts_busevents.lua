@@ -392,7 +392,7 @@ function bus_events.process(topic, value, source_uuid)
       if (script_params.status == scripts.statuses.NORMAL and
          script_params.active_flag == scripts.flag.ACTIVE and
          script_params.uuid ~= (source_uuid or "0")) then
-         local mask = current_script_table.mask
+         local mask = "^"..current_script_table.mask.."$"
          if (string.find(topic, mask) ~= nil) then
             local status, err_msg = pcall(current_script_table.body.event_handler, value, topic)
             if (status ~= true) then
