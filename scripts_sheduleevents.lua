@@ -55,7 +55,7 @@ function shedule_events_private.load(uuid)
    end
 
    if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
-      log_shedule_events_info('Shedule-event script "'..script_params.name..'" not start (non-active)', script_params.uuid)
+      --log_shedule_events_info('Shedule-event script "'..script_params.name..'" not start (non-active)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'})
       return true
    end

@@ -53,7 +53,7 @@ function drivers_private.load(uuid)
    end
 
    if (script_params.active_flag == nil or script_params.active_flag ~= scripts.flag.ACTIVE) then
-      log_drivers_info('Driver "'..script_params.name..'" not start (non-active)', script_params.uuid)
+      --log_drivers_info('Driver "'..script_params.name..'" not start (non-active)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Non-active'})
       return true
    end
