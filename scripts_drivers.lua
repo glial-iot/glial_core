@@ -337,6 +337,7 @@ function drivers.process(topic, value, source_uuid)
                      log_drivers_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
                      scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver event error: '..(returned_data or "")})
                   end
+                  fiber.yield()
                end
             end
          end
