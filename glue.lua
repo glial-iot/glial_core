@@ -5,7 +5,6 @@ local box = box
 local scripts = require 'scripts'
 
 local http_system = require 'http_system'
-local http_script_system = require 'http_script_system'
 local scripts_drivers = require 'scripts_drivers' --TODO: переименовать в соотвествии с офицаильной семантикой
 local scripts_webevents = require 'scripts_webevents'
 local scripts_busevents = require 'scripts_busevents'
@@ -59,7 +58,6 @@ if (tonumber(os.getenv('GLUE_SAFEMODE')) == 1 and tonumber(os.getenv('TARANTOOL_
    scripts.safe_mode_error_all()
 else
    logger.add_entry(logger.INFO, "System", "Starting web-events...")
-   http_script_system.init()
    scripts_webevents.init()
 
    logger.add_entry(logger.INFO, "System", "Starting bus-events...")

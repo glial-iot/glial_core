@@ -12,11 +12,13 @@ local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
 local scripts = require 'scripts'
-local http_script_system = require 'http_script_system'
 local fiber = require 'fiber'
 
 local web_events_script_bodies = {}
 web_events.bodies = web_events_script_bodies
+
+web_events_private.path_table = {}
+web_events_private.main_path = "/we/:name"
 
 ------------------↓ Private functions ↓------------------
 
@@ -92,9 +94,9 @@ function web_events_private.load(uuid)
    web_events_script_bodies[uuid] = nil
    web_events_script_bodies[uuid] = body
 
-   local callback = http_script_system.generate_callback_func(web_events_script_bodies[uuid].http_callback)
+   local callback = web_events_private.generate_callback_func(web_events_script_bodies[uuid].http_callback)
 
-   local attach_result = http_script_system.attach_path(script_params.object, callback, uuid)
+   local attach_result = web_events_private.attach_path(script_params.object, callback, uuid)
 
    if (attach_result == false) then
       log_web_events_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'"', script_params.uuid)
@@ -122,7 +124,7 @@ function web_events_private.unload(uuid)
       return false
    end
 
-   http_script_system.remove_path(script_params.object)
+   web_events_private.remove_path(script_params.object)
 
    log_web_events_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Stopped'})
@@ -143,6 +145,66 @@ function web_events_private.reload(uuid)
    else
       return web_events_private.load(uuid, false)
    end
+end
+
+function web_events_private.generate_callback_func(handler)
+   return function(req)
+      local params = req:param()
+      local return_object
+
+      local json_result, raw_result = handler(params, req)
+      if (json_result ~= nil) then
+         return_object = req:render{ json = json_result }
+      else
+         if (raw_result ~= nil) then
+            return_object = raw_result
+         else
+            return_object = req:render{ json = {} }
+         end
+      end
+
+      return system.add_headers(return_object)
+   end
+end
+
+function web_events_private.attach_path(path, handler, uuid)
+   if (web_events_private.path_table[path] ~= nil) then
+      return false
+   else
+      web_events_private.path_table[path] = {}
+      web_events_private.path_table[path].handler = handler
+      web_events_private.path_table[path].uuid = uuid
+      return true
+   end
+
+end
+
+function web_events_private.remove_path(path)
+   web_events_private.path_table[path] = nil
+end
+
+function web_events_private.main_handler(req)
+   local name = req:stash('name')
+   local return_object
+   if (web_events_private.path_table[name] ~= nil) then
+      local status, returned_data = pcall(web_events_private.path_table[name].handler, req)
+      if (status == true) then
+         return_object = returned_data
+      else
+         logger.add_entry(logger.ERROR, "Web-events subsystem", returned_data, web_events_private.path_table[name].uuid, "")
+         return_object = req:render{ json = {result = false, msg = returned_data } }
+      end
+
+   else
+      local avilable_endpoints = {}
+      for endpoint, _ in pairs(web_events_private.path_table) do
+         table.insert(avilable_endpoints, endpoint)
+      end
+
+      return_object = req:render{ json = {result = false, msg = "Endpoint '"..name.."' not found",  avilable_endpoints = avilable_endpoints} }
+   end
+
+   return system.add_headers(return_object)
 end
 
 
@@ -280,6 +342,7 @@ end
 function web_events.init()
    web_events.start_all()
    http_system.endpoint_config("/webevents", web_events_private.http_api)
+   http_system.endpoint_config(web_events_private.main_path, web_events_private.main_handler)
 end
 
 function web_events.start_all()
