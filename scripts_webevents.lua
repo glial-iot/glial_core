@@ -187,7 +187,8 @@ function web_events_private.main_handler(req)
    local name = req:stash('name')
    local return_object
    if (web_events_private.path_table[name] ~= nil) then
-      local status, returned_data = pcall(web_events_private.path_table[name].handler, req)
+      local status, returned_data, time = system.pcall_timecalc(web_events_private.path_table[name].handler, req)
+      scripts.update_worktime(web_events_private.path_table[name].uuid, time)
       if (status == true) then
          return_object = returned_data
       else

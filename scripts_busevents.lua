@@ -405,7 +405,8 @@ function bus_events.process(topic, value, source_uuid)
          script_params.uuid ~= (source_uuid or "0")) then
          local mask = "^"..current_script_table.mask.."$"
          if (string.find(topic, mask) ~= nil) then
-            local status, err_msg = pcall(current_script_table.body.event_handler, value, topic)
+            local status, err_msg, worktime = system.pcall_timecalc(current_script_table.body.event_handler, value, topic)
+            scripts.update_worktime(uuid, worktime)
             if (status ~= true) then
                err_msg = tostring(err_msg) or ""
                log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..err_msg..')', script_params.uuid)

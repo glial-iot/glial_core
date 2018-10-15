@@ -200,7 +200,8 @@ function timer_events_private.process()
           type(scripts_table.counter) == "number") then
          if (scripts_table.counter <= 1) then
             if (type(scripts_table.body.event_handler) == "function") then
-               local status, returned_data = pcall(scripts_table.body.event_handler)
+               local status, returned_data, time = system.pcall_timecalc(scripts_table.body.event_handler)
+               scripts.update_worktime(uuid, time)
                if (status ~= true) then
                   returned_data = tostring(returned_data)
                   log_timer_events_error('Timer-event script event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)

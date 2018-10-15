@@ -226,7 +226,8 @@ function shedule_events_private.time_test()
           type(scripts_table.next_time) == "number") then
          if (scripts_table.next_time - os.time() <= 1) then
             if (type(scripts_table.body.event_handler) == "function") then
-               local status, returned_data = pcall(scripts_table.body.event_handler)
+               local status, returned_data, time = system.pcall_timecalc(scripts_table.body.event_handler)
+               scripts.update_worktime(uuid, time)
                if (status ~= true) then
                   returned_data = tostring(returned_data)
                   log_shedule_events_error('Shedule-event script event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)

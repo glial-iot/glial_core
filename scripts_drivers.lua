@@ -335,7 +335,8 @@ function drivers.process(topic, value, source_uuid)
             for _, mask in pairs(masks) do
                mask = "^"..mask.."$"
                if (string.find(topic, mask) ~= nil) then
-                  local status, returned_data = pcall(callback, value, topic)
+                  local status, returned_data, time = system.pcall_timecalc(callback, value, topic)
+                  scripts.update_worktime(uuid, time)
                   if (status ~= true) then
                      returned_data = tostring(returned_data)
                      log_drivers_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)

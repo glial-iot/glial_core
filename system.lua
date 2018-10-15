@@ -3,6 +3,7 @@ local system = {}
 
 local fio = require 'fio'
 local fiber = require 'fiber'
+local clock = require 'clock'
 local inspect = require 'libs/inspect'
 
 local git_version, _
@@ -124,6 +125,16 @@ function system.concatenate_args(...)
       end
    end
    return msg
+end
+
+
+
+function system.pcall_timecalc(call_function, ...)
+   local start_time = clock.proc64()
+   local status, returned_data = pcall(call_function, ...)
+   local end_time = clock.proc64()
+   local work_time_ms = tonumber(end_time - start_time)/1000/1000
+   return status, returned_data, work_time_ms
 end
 
 

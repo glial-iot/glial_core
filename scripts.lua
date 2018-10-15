@@ -5,6 +5,7 @@ local scripts_private = {}
 local box = box
 local uuid_lib = require('uuid')
 local fiber = require 'fiber'
+local clock = require 'clock'
 
 local inspect = require 'libs/inspect'
 
@@ -194,7 +195,7 @@ function scripts_private.delete(data)
 end
 
 function scripts_private.storage_init()
-   local format = {
+   local scripts_storage_format = {
       {name='uuid',           type='string'},   --1
       {name='type',           type='string'},   --2
       {name='name',           type='string'},   --3
@@ -204,9 +205,17 @@ function scripts_private.storage_init()
       {name='active_flag',    type='string'},   --7
       {name='specific_data',  type='map'}       --8
    }
-   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format, id = config.id.scripts})
+   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = scripts_storage_format, id = config.id.scripts})
    scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
    scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
+
+
+   local worktime_format = {
+      {name='uuid',           type='string'},   --1
+      {name='worktime',       type='number'},   --2
+   }
+   scripts_private.worktime = box.schema.space.create('worktime', {if_not_exists = true, format = worktime_format, id = config.id.worktime_scripts})
+   scripts_private.worktime:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
 end
 
 ------------------↓ Public functions ↓------------------
@@ -297,6 +306,10 @@ end
 
 function scripts.update(data)
    return scripts_private.update(data)
+end
+
+function scripts.update_worktime(uuid, time)
+   scripts_private.worktime:upsert({uuid, 0}, {{"+", 2, time}})
 end
 
 function scripts.get_all(data)
