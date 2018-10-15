@@ -60,6 +60,7 @@ function scripts_private.get(data)
    end
 end
 
+
 function scripts_private.update(data)
    if (data.uuid == nil) then return nil end
    if (scripts_private.storage.index.uuid:select(data.uuid) == nil) then return nil end

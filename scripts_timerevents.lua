@@ -355,9 +355,6 @@ function timer_events.init()
    http_system.endpoint_config("/timerevents", timer_events_private.http_api)
 end
 
-
-
-
 function timer_events.start_all()
    local list = scripts.get_all({type = scripts.type.TIMER_EVENT})
 
