@@ -5,6 +5,7 @@ local bus_private = {}
 local inspect = require 'libs/inspect'
 local clock = require 'clock'
 local json = require 'json'
+local digest = require 'digest'
 local box = box
 
 local scripts_busevents = require 'scripts_busevents'
@@ -317,7 +318,7 @@ function bus.http_api_handler(req)
          local tags = bus_private.get_tags(tuple["tags"])
 
          if (params["mask"] ~= nil and params["mask"] ~= "") then
-            local mask = "^"..params["mask"].."$"
+            local mask = "^"..digest.base64_decode(params["mask"]).."$"
             if (string.find(topic, mask) ~= nil) then
                table.insert(data_object, {topic = topic, time = time, value = value, type = type, tags = tags})
             end
