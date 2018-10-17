@@ -124,6 +124,13 @@ function backup_restore.create_backup(comment)
       return false, message
    end
    fiber.yield()
+   result, msg = backup_restore_private.remove_space_files()
+   if (result == false) then
+      local message = "Backup failed on space-clean stage: "..(msg or "")
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
+   end
+   fiber.yield()
    result = backup_restore_private.archive_dump_files(comment)
    if (result == false) then
       local message = "Backup failed on archive stage"
