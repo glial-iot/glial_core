@@ -18,8 +18,49 @@ scripts.flag = {ACTIVE = "ACTIVE", NON_ACTIVE = "NON_ACTIVE"}
 scripts.type = {WEB_EVENT = "WEB_EVENT", TIMER_EVENT = "TIMER_EVENT", SHEDULE_EVENT = "SHEDULE_EVENT", BUS_EVENT = "BUS_EVENT", DRIVER = "DRIVER"}
 scripts.store = {}
 
+scripts.worktime_period = 60
 
 ------------------↓ Private functions ↓------------------
+
+function scripts_private.worktime_worker()
+   for _, tuple in scripts_private.worktime.index.uuid:pairs() do
+      scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 2, 0}})
+      scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 3, 0}})
+   end
+
+   while true do
+      fiber.sleep(scripts.worktime_period)
+      local worktime_sum = 0.1
+      for _, tuple in scripts_private.worktime.index.uuid:pairs() do
+         worktime_sum = worktime_sum + (tuple["worktime_ms"] or 0)
+      end
+      local worktime_percent = worktime_sum / 100
+      local alltime_percent = scripts.worktime_period * 1000 / 100
+
+      --local sum_worktime_percents = 0
+      --local sum_alltime_percents = 0
+
+      for _, tuple in scripts_private.worktime.index.uuid:pairs() do
+         local worktime_ms = tuple["worktime_ms"] or 0
+         local worktime_current_percent = (worktime_ms / worktime_percent)
+         local alltime_current_percent = (worktime_ms / alltime_percent)
+
+         worktime_current_percent = system.round(worktime_current_percent, 2) or 0
+         alltime_current_percent = system.round(alltime_current_percent, 2) or 0
+
+         scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 2, 0}})
+         scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 3, worktime_current_percent}})
+         scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 4, alltime_current_percent}})
+
+         --sum_alltime_percents = sum_alltime_percents + alltime_current_percent
+         --sum_worktime_percents = sum_worktime_percents + worktime_current_percent
+         --print(tuple["uuid"], tuple["worktime_ms"], "ms", worktime_current_percent, "%", alltime_current_percent, "%")
+      end
+
+      --print(sum_worktime_percents, "%", sum_alltime_percents, "%")
+
+   end
+end
 
 ------------------↓ Internal API functions ↓------------------
 
@@ -42,25 +83,27 @@ function scripts_private.get_list(data)
 end
 
 function scripts_private.get(data)
-   local tuple = scripts_private.storage.index.uuid:get(data.uuid)
+   local tuple_script = scripts_private.storage.index.uuid:get(data.uuid)
+   local tuple_worktime = scripts_private.worktime.index.uuid:get(data.uuid) or {}
 
-   if (tuple ~= nil) then
+   if (tuple_script ~= nil) then
       local table = {
-         uuid = tuple["uuid"],
-         type = tuple["type"],
-         name = tuple["name"],
-         body = tuple["body"],
-         status = tuple["status"],
-         status_msg = tuple["status_msg"],
-         active_flag = tuple["active_flag"],
-         object = tuple["specific_data"]["object"]
+         uuid = tuple_script["uuid"],
+         type = tuple_script["type"],
+         name = tuple_script["name"],
+         body = tuple_script["body"],
+         status = tuple_script["status"],
+         status_msg = tuple_script["status_msg"],
+         active_flag = tuple_script["active_flag"],
+         object = tuple_script["specific_data"]["object"],
+         worktime_percent = tuple_worktime["worktime_percent"] or 0,
+         alltime_percent = tuple_worktime["alltime_percent"] or 0
       }
       return table
    else
       return nil
    end
 end
-
 
 function scripts_private.update(data)
    if (data.uuid == nil) then return nil end
@@ -211,8 +254,10 @@ function scripts_private.storage_init()
 
 
    local worktime_format = {
-      {name='uuid',           type='string'},   --1
-      {name='worktime',       type='number'},   --2
+      {name='uuid',              type='string'},   --1
+      {name='worktime_ms',       type='number'},   --2
+      {name='worktime_percent',  type='number'},   --3
+      {name='alltime_percent',   type='number'},   --4
    }
    scripts_private.worktime = box.schema.space.create('worktime', {if_not_exists = true, format = worktime_format, id = config.id.worktime_scripts})
    scripts_private.worktime:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
@@ -275,6 +320,7 @@ end
 
 function scripts.init()
    scripts_private.storage_init()
+   fiber.create(scripts_private.worktime_worker)
 end
 
 function scripts.get(data)
@@ -309,7 +355,7 @@ function scripts.update(data)
 end
 
 function scripts.update_worktime(uuid, time)
-   scripts_private.worktime:upsert({uuid, 0}, {{"+", 2, time}})
+   scripts_private.worktime:upsert({uuid, 0, 0, 0}, {{"+", 2, time}})
 end
 
 function scripts.get_all(data)
