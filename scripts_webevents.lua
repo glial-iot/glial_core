@@ -224,15 +224,19 @@ function web_events_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local script_table = scripts.get({uuid = params["uuid"]})
       if (script_table ~= nil) then
-         local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
-         table.unload_result = web_events_private.unload(params["uuid"])
-         if (table.unload_result == true) then
-            table.delete_result = scripts.delete({uuid = params["uuid"]})
+         if (script_table.status ~= scripts.statuses.STOPPED) then
+            script_table.unload_result = web_events_private.unload(params["uuid"])
+            if (script_table.unload_result == true) then
+               script_table.delete_result = scripts.delete({uuid = params["uuid"]})
+            else
+               log_web_events_warning('Timer-event script "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
+               scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+            end
+            return req:render{ json = script_table }
          else
-            log_web_events_warning('Web-event script "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
-            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+            script_table.delete_result = scripts.delete({uuid = params["uuid"]})
+            return req:render{ json = script_table }
          end
-         return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Web-events API delete: UUID not found"} }
       end
