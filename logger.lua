@@ -36,7 +36,7 @@ function logger_private.http_api_get_logs(params, req)
                do break end
             end
          end
-         local time_in_sec = math.ceil(tuple["timestamp"]/10000)
+         local time_in_sec = math.floor(tuple["timestamp"]/10000)
          local processed_tuple = {
             level = tuple["level"],
             source = tuple["source"],
