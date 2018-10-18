@@ -154,13 +154,7 @@ function logger.generate_log_functions(uuid, name)
 end
 
 function logger.add_entry(level, source, entry, uuid_source, trace)
-   local local_trace = trace or debug.traceback()
-   local_trace = tostring(local_trace)
-
-   uuid_source = uuid_source or "No UUID"
-   source = source or "No source"
-
-   if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER and level ~= logger.REBOOT) then
+   if (entry == nil) then
       return
    end
 
@@ -170,12 +164,21 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       entry = tostring(entry)
    end
 
-   if (entry == nil) then
+   if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER and level ~= logger.REBOOT) then
       return
    end
 
+   trace = tostring(trace or debug.traceback())
+   uuid_source = uuid_source or "No UUID"
+   source = source or "No source"
 
-   logger.storage:insert{logger_private.gen_id(), level, source, uuid_source, entry, local_trace}
+   if (level == logger.REBOOT) then
+      for _, tuple in logger.storage.index.level:pairs(logger.REBOOT) do
+         logger.storage.index.timestamp:update(tuple["timestamp"], {{"=", 2, logger.INFO}})
+      end
+   end
+
+   logger.storage:insert{logger_private.gen_id(), level, source, uuid_source, entry, trace}
 
    if (level == logger.INFO and source ~= "Tarantool logs adapter") then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
@@ -185,7 +188,6 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       log.error("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    end
 end
-
 
 function logger.storage_init()
    local format = {

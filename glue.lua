@@ -36,8 +36,8 @@ system.dir_check(config.dir.DUMP_FILES)
 box_config()
 
 logger.storage_init()
-logger.add_entry(logger.REBOOT, "------------", "-----------------------------------------------------------------------")
-logger.add_entry(logger.INFO, "System", "GLUE System, "..system.git_version()..", tarantool version "..require('tarantool').version..", pid "..require('tarantool').pid())
+local msg_reboot = "GLUE, "..system.git_version()..", tarantool "..require('tarantool').version
+logger.add_entry(logger.REBOOT, "------------", msg_reboot, nil, "Tarantool pid "..require('tarantool').pid())
 
 http_system.init()
 logger.http_init()
