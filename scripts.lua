@@ -228,6 +228,13 @@ function scripts_private.create(data)
    return scripts_private.get({uuid = new_data.uuid}) or "no."
 end
 
+function scripts_private.copy(data)
+   local tuple_script = scripts_private.storage.index.uuid:get(data.uuid)
+   local table = scripts_private.create({type = tuple_script["type"], name = data.name, body = tuple_script["body"]})
+
+   return true, table, nil
+end
+
 function scripts_private.delete(data)
    local script_table = scripts_private.storage.index.uuid:delete(data.uuid)
    if (script_table ~= nil) then
@@ -333,6 +340,10 @@ end
 
 function scripts.get_list(type)
    return scripts_private.get_list({type = type})
+end
+
+function scripts.copy(name, uuid)
+   return scripts_private.copy({name = name, uuid = uuid})
 end
 
 function scripts.create(name, type, object)

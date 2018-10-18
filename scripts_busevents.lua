@@ -263,6 +263,11 @@ function bus_events_private.http_api_create(params, req)
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
+function bus_events_private.http_api_copy(params, req)
+   local status, table, err_msg = scripts.copy(params["name"], params["uuid"])
+   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
+end
+
 function bus_events_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local script_table = scripts.get({uuid = params["uuid"]})
@@ -383,6 +388,8 @@ function bus_events_private.http_api(req)
       return_object = bus_events_private.http_api_run_once(params, req)
    elseif (params["action"] == "create") then
       return_object = bus_events_private.http_api_create(params, req)
+   elseif (params["action"] == "copy") then
+      return_object = bus_events_private.http_api_copy(params, req)
    elseif (params["action"] == "delete") then
       return_object = bus_events_private.http_api_delete(params, req)
    elseif (params["action"] == "get") then
