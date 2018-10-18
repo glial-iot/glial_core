@@ -225,7 +225,7 @@ function scripts_private.create(data)
       new_data.specific_data
    }
    scripts_private.storage:insert(table)
-   return scripts_private.get({uuid = new_data.uuid}) or "no."
+   return scripts_private.get({uuid = new_data.uuid}) or "no." -- зачем тут "no"?
 end
 
 function scripts_private.copy(data)
