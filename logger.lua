@@ -32,8 +32,14 @@ function logger_private.http_api_get_logs(params, req)
             end
          end
          if (params["level"] ~= nil and params["level"] ~= "") then
-            if (params["level"] ~= tuple["level"] and tuple["level"] ~= logger.REBOOT) then
-               do break end
+            if (params["level"] == "!USER") then
+               if (tuple["level"] == logger.USER) then
+                  do break end
+               end
+            else
+               if (params["level"] ~= tuple["level"] and tuple["level"] ~= logger.REBOOT and params["level"] ~= "ALL") then
+                  do break end
+               end
             end
          end
          local time_in_sec = math.floor(tuple["timestamp"]/10000)
