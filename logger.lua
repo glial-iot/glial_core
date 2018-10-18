@@ -91,6 +91,7 @@ function logger_private.tarantool_pipe_log_handler(req)
       type ~= nil and
       message ~= nil and
       string.find(message, "Empty input string") == nil and
+      string.find(message, "too long WAL write") == nil and
       string.find(message, "^Tarantool .+") == nil and
       string.find(message, "^log level .+") == nil and
       string.find(body, "LOGGER:") == nil
