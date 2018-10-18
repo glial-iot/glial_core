@@ -176,11 +176,11 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
 
    logger.storage:insert{logger_private.gen_id(), level, source, uuid_source, entry, local_trace}
 
-   if (level == logger.INFO) then
+   if (level == logger.INFO and source ~= "Tarantool logs adapter") then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
-   elseif (level == logger.WARNING) then
+   elseif (level == logger.WARNING and source ~= "Tarantool logs adapter") then
       log.warn("LOGGER:"..(source or "")..":"..(entry or "no entry"))
-   elseif (level == logger.ERROR) then
+   elseif (level == logger.ERROR and source ~= "Tarantool logs adapter") then
       log.error("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    end
 end
