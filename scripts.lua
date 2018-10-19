@@ -74,6 +74,8 @@ function scripts_private.update_specific_data(data)
    if (data.object ~= nil) then specific_data.object = data.object end
    if (data.alltime_percent ~= nil) then specific_data.alltime_percent = data.alltime_percent end
    if (data.worktime_percent ~= nil) then specific_data.worktime_percent = data.worktime_percent end
+   if (data.comment ~= nil) then specific_data.comment = data.comment end
+   if (data.tag ~= nil) then specific_data.tag = data.tag end
 
    specific_data = setmetatable(specific_data, {__serialize = 'map'})
    scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, specific_data}})
@@ -93,6 +95,8 @@ function scripts_private.get_list(data)
          object = tuple["specific_data"]["object"],
          worktime_percent = tuple["specific_data"]["worktime_percent"] or 0,
          alltime_percent = tuple["specific_data"]["alltime_percent"] or 0,
+         comment = tuple["specific_data"]["comment"] or "",
+         tag = tuple["specific_data"]["tag"] or ""
       }
       table.insert(list_table, current_script_table)
    end
@@ -114,6 +118,8 @@ function scripts_private.get(data)
          object = tuple["specific_data"]["object"],
          worktime_percent = tuple["specific_data"]["worktime_percent"] or 0,
          alltime_percent = tuple["specific_data"]["alltime_percent"] or 0,
+         comment = tuple["specific_data"]["comment"] or "",
+         tag = tuple["specific_data"]["tag"] or ""
       }
       return table
    else
@@ -132,6 +138,8 @@ function scripts_private.update(data)
    if (data.active_flag ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 7, data.active_flag}}) end
 
    if (data.object ~= nil) then scripts_private.update_specific_data({uuid = data.uuid, object = data.object}) end
+   if (data.comment ~= nil) then scripts_private.update_specific_data({uuid = data.uuid, comment = data.comment}) end
+   if (data.tag ~= nil) then scripts_private.update_specific_data({uuid = data.uuid, tag = data.tag}) end
 
    return scripts_private.get({uuid = data.uuid})
 end
@@ -203,6 +211,8 @@ end]]
 function event_handler()
 
 end]]
+   end
+
 end
 
 function scripts_private.create(data)
@@ -221,6 +231,12 @@ function scripts_private.create(data)
       new_data.specific_data.object = data.object
    end
 
+   if (data.comment ~= nil) then
+      new_data.specific_data.comment = data.comment
+   end
+
+   if (data.tag ~= nil) then
+      new_data.specific_data.tag = data.tag
    end
 
    local table = {
