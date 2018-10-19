@@ -232,7 +232,8 @@ function timer_events_private.http_api_get_list(params, req)
 end
 
 function timer_events_private.http_api_create(params, req)
-   local status, table, err_msg = scripts.create(params["name"], scripts.type.TIMER_EVENT, params["object"])
+   params["name"] = string.gsub(params["name"], "+", " ")
+   local status, table, err_msg = scripts.create(params["name"], scripts.type.TIMER_EVENT, params["object"], params["tag"], params["comment"])
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 

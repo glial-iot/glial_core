@@ -369,13 +369,13 @@ function scripts.copy(name, uuid)
    return scripts_private.copy({name = name, uuid = uuid})
 end
 
-function scripts.create(name, type, object)
+function scripts.create(name, type, object, tag, comment)
    if (name ~= nil and name ~= "" and type ~= nil and scripts.type[type] ~= nil) then
-      local new_object
-      if (object ~= nil) then new_object = string.gsub(object, "+", " ") end
       local table = scripts_private.create({type = type,
-                                            name = string.gsub(name, "+", " "),
-                                            object = new_object,
+                                            name = name,
+                                            object = object,
+                                            tag = tag,
+                                            comment = comment,
                                             body = scripts_private.generate_init_body(type)
                                           })
       return true, table
