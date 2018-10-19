@@ -49,8 +49,8 @@ function scripts_private.worktime_worker()
          alltime_current_percent = system.round(alltime_current_percent, 2) or 0
 
          scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 2, 0}})
-         scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 3, worktime_current_percent}})
-         scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 4, alltime_current_percent}})
+         scripts_private.update_specific_data({uuid = tuple["uuid"], worktime_percent = worktime_current_percent})
+         scripts_private.update_specific_data({uuid = tuple["uuid"], alltime_percent = alltime_current_percent})
 
          --sum_alltime_percents = sum_alltime_percents + alltime_current_percent
          --sum_worktime_percents = sum_worktime_percents + worktime_current_percent
@@ -64,6 +64,21 @@ end
 
 ------------------↓ Internal API functions ↓------------------
 
+
+function scripts_private.update_specific_data(data)
+   if (data.uuid == nil) then return nil end
+   if (scripts_private.storage.index.uuid:select(data.uuid) == nil) then return nil end
+   local tuple = scripts_private.storage.index.uuid:get(data.uuid)
+   local specific_data = tuple["specific_data"]
+
+   if (data.object ~= nil) then specific_data.object = data.object end
+   if (data.alltime_percent ~= nil) then specific_data.alltime_percent = data.alltime_percent end
+   if (data.worktime_percent ~= nil) then specific_data.worktime_percent = data.worktime_percent end
+
+   specific_data = setmetatable(specific_data, {__serialize = 'map'})
+   scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, specific_data}})
+end
+
 function scripts_private.get_list(data)
    local list_table = {}
 
@@ -75,7 +90,9 @@ function scripts_private.get_list(data)
          status = tuple["status"],
          status_msg = tuple["status_msg"],
          active_flag = tuple["active_flag"],
-         object = tuple["specific_data"]["object"]
+         object = tuple["specific_data"]["object"],
+         worktime_percent = tuple["specific_data"]["worktime_percent"] or 0,
+         alltime_percent = tuple["specific_data"]["alltime_percent"] or 0,
       }
       table.insert(list_table, current_script_table)
    end
@@ -83,21 +100,20 @@ function scripts_private.get_list(data)
 end
 
 function scripts_private.get(data)
-   local tuple_script = scripts_private.storage.index.uuid:get(data.uuid)
-   local tuple_worktime = scripts_private.worktime.index.uuid:get(data.uuid) or {}
+   local tuple = scripts_private.storage.index.uuid:get(data.uuid)
 
-   if (tuple_script ~= nil) then
+   if (tuple ~= nil) then
       local table = {
-         uuid = tuple_script["uuid"],
-         type = tuple_script["type"],
-         name = tuple_script["name"],
-         body = tuple_script["body"],
-         status = tuple_script["status"],
-         status_msg = tuple_script["status_msg"],
-         active_flag = tuple_script["active_flag"],
-         object = tuple_script["specific_data"]["object"],
-         worktime_percent = tuple_worktime["worktime_percent"] or 0,
-         alltime_percent = tuple_worktime["alltime_percent"] or 0
+         uuid = tuple["uuid"],
+         type = tuple["type"],
+         name = tuple["name"],
+         body = tuple["body"],
+         status = tuple["status"],
+         status_msg = tuple["status_msg"],
+         active_flag = tuple["active_flag"],
+         object = tuple["specific_data"]["object"],
+         worktime_percent = tuple["specific_data"]["worktime_percent"] or 0,
+         alltime_percent = tuple["specific_data"]["alltime_percent"] or 0,
       }
       return table
    else
@@ -115,13 +131,7 @@ function scripts_private.update(data)
    if (data.status_msg ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 6, data.status_msg}}) end
    if (data.active_flag ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 7, data.active_flag}}) end
 
-   if (data.object ~= nil) then
-      local tuple = scripts_private.storage.index.uuid:get(data.uuid)
-      local specific_data = tuple["specific_data"]
-      specific_data.object = data.object
-      specific_data = setmetatable(specific_data, {__serialize = 'map'})
-      scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, specific_data}})
-   end
+   if (data.object ~= nil) then scripts_private.update_specific_data({uuid = data.uuid, object = data.object}) end
 
    return scripts_private.get({uuid = data.uuid})
 end
@@ -193,8 +203,6 @@ end]]
 function event_handler()
 
 end]]
-   end
-
 end
 
 function scripts_private.create(data)
@@ -207,11 +215,12 @@ function scripts_private.create(data)
    new_data.status = data.status or scripts.statuses.STOPPED
    new_data.status_msg = data.status_msg or "New script"
    new_data.active_flag = data.active_flag or scripts.flag.NON_ACTIVE
+   new_data.specific_data = setmetatable({}, {__serialize = 'map'})
+
    if (data.object ~= nil) then
-      local specific_data = {object = data.object}
-      new_data.specific_data = setmetatable(specific_data, {__serialize = 'map'})
-   else
-      new_data.specific_data = setmetatable({}, {__serialize = 'map'})
+      new_data.specific_data.object = data.object
+   end
+
    end
 
    local table = {
@@ -263,8 +272,6 @@ function scripts_private.storage_init()
    local worktime_format = {
       {name='uuid',              type='string'},   --1
       {name='worktime_ms',       type='number'},   --2
-      {name='worktime_percent',  type='number'},   --3
-      {name='alltime_percent',   type='number'},   --4
    }
    scripts_private.worktime = box.schema.space.create('worktime', {if_not_exists = true, format = worktime_format, id = config.id.worktime_scripts})
    scripts_private.worktime:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
@@ -365,8 +372,8 @@ function scripts.update(data)
    return scripts_private.update(data)
 end
 
-function scripts.update_worktime(uuid, time)
-   scripts_private.worktime:upsert({uuid, 0, 0, 0}, {{"+", 2, time}})
+function scripts.update_worktime(uuid, time_ms)
+   scripts_private.worktime:upsert({uuid, 0}, {{"+", 2, time_ms}})
 end
 
 function scripts.get_all(data)
