@@ -173,7 +173,7 @@ function bus.init()
    fiber.create(bus_private.bus_rps_stat_worker)
 
    local http_system = require 'http_system'
-   http_system.endpoint_config("/system_bus", bus.http_api_handler)
+   http_system.endpoint_config("/system_bus", bus.http_api)
 
    bus.storage:upsert({"/glue/bus/fifo_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
    bus.storage:upsert({"/glue/bus/bus_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
@@ -264,7 +264,7 @@ function bus.serialize_v2(pattern)
    return bus_table
 end
 
-function bus.http_api_handler(req)
+function bus.http_api(req)
    local params = req:param()
    local return_object
 
