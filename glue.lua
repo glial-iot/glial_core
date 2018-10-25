@@ -19,14 +19,21 @@ local backup_restore = require 'backup_restore'
 local settings = require 'settings'
 
 local function box_config()
+   local tarantool_bin_port = tonumber(os.getenv('TARANTOOL_BIN_PORT'))
+
    box.cfg {
-      listen = 3313,
+      listen = tarantool_bin_port,
       log_level = 4,
       memtx_dir = config.dir.DATABASE,
       vinyl_dir = config.dir.DATABASE,
       wal_dir = config.dir.DATABASE,
       log = "pipe: ./http_pipe_logger.lua"
-    }
+   }
+
+   if (tarantool_bin_port ~= nil) then
+      print("Tarantool server runned on "..tarantool_bin_port.." port")
+   end
+
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
@@ -39,7 +46,7 @@ logger.storage_init()
 local msg_reboot = "GLUE, "..system.git_version()..", tarantool "..require('tarantool').version
 logger.add_entry(logger.REBOOT, "------------", msg_reboot, nil, "Tarantool pid "..require('tarantool').pid())
 
-http_system.init()
+http_system.init(os.getenv('HTTP_PORT'))
 logger.http_init()
 logger.add_entry(logger.INFO, "System", "HTTP subsystem initialized")
 
