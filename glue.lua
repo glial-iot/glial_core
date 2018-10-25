@@ -5,7 +5,7 @@ local box = box
 local scripts = require 'scripts'
 
 local http_system = require 'http_system'
-local scripts_drivers = require 'scripts_drivers' --TODO: переименовать в соотвествии с офицаильной семантикой
+local scripts_drivers = require 'scripts_drivers' --TODO: переименовать в соотвествии с официальной семантикой
 local scripts_webevents = require 'scripts_webevents'
 local scripts_busevents = require 'scripts_busevents'
 local scripts_timerevents = require 'scripts_timerevents'
