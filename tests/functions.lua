@@ -59,6 +59,10 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
 
 end
 
+function getGluePid()
+    return json_decode(makeApiCall("system_event", "GET", "action=get_pid")).pid
+end
+
 function createScript (type)
     local script_name = md5.sumhexa(math.random())
     local result = json.decode(makeApiCall(type, "GET", "action=create&name="..script_name))
