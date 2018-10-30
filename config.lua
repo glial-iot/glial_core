@@ -9,12 +9,7 @@ config.dir.BACKUP = "backup"
 config.dir.DUMP_FILES = "dump"
 config.MAX_BACKUP_FILES = 200
 config.BACKUP_PERIODIC_HOURS = 5
-
-if (tonumber(os.getenv('TEST_ENV')) == 1) then
-    config.HTTP_PORT = 8888
-else
-    config.HTTP_PORT = 8080
-end
+config.HTTP_PORT = 8080
 
 config.id = {}
 config.id.bus = 600
