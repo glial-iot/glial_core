@@ -19,6 +19,8 @@ function private.system_action_http_api(req)
       return_object = req:render{ json = { result = true } }
    elseif (params["action"] == "get_git_version") then
       return_object = req:render{ json = { version = system.git_version() } }
+   elseif (params["action"] == "get_pid") then
+      return_object = req:render{ json = { pid = require('tarantool').pid() } }
    elseif (params["action"] == "update") then
       local old_version = system.git_version(true)
       local emessage_1 = system.os_command("git fetch 2>&1")

@@ -18,3 +18,4 @@
 /docs/node_modules
 /docs/dist
 /docs/.vuepress/dist
+/tests/logs
