@@ -11,6 +11,17 @@ math.randomseed(os.time())
 
 require("functions")
 
+TARANTOOL_PID = nil
+
+describe("Launch Tarantool" , function()
+    test("Make system call to launch Glue with parameters", function()
+        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute("sleep 2")
+        TARANTOOL_PID = getGluePid()
+        assert.are_not.equal(nil, getGluePid())
+    end)
+end)
+
 describe("Testing basic script system functionality", function()
     describe("Testing script create/delete", function()
 
@@ -155,7 +166,13 @@ end)
 describe("Testing advanced script system functionality", function()
 
     test("Delete script where destroy() returns false", function()
-        local script_body = readFile("./tests/test_scripts/destroy_returns_false.lua")
+        local script_body = readFile("./test_scripts/destroy_returns_false.lua")
+        local driver_script = createScript("driver")
+        updateScriptBody("driver", driver_script.uuid, script_body)
+        setScriptActiveFlag("driver", driver_script.uuid, "ACTIVE")
+        deleteScript("driver", driver_script.uuid)
+        local script_list_after_delete = getScriptsList("driver")
+        assert.are.equal(nil, string.match(script_list_after_delete, driver_script.name))
     end)
 
     describe("Create invalid script, launch it and get error", function()
@@ -245,3 +262,5 @@ describe("Testing advanced script system functionality", function()
     end)
 
 end)
+
+os.execute("kill ".. TARANTOOL_PID)
