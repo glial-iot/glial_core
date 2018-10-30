@@ -37,6 +37,7 @@ local function box_config(tarantool_bin_port, tarantool_wal_dir)
 end
 
 local tarantool_bin_port = tonumber(os.getenv('TARANTOOL_BIN_PORT'))
+local glue_http_port = tonumber(os.getenv('HTTP_PORT')) or config.HTTP_PORT
 local tarantool_wal_dir = os.getenv('TARANTOOL_WAL_DIR') or config.dir.DATABASE
 
 system.dir_check(tarantool_wal_dir)
@@ -48,7 +49,7 @@ logger.storage_init()
 local msg_reboot = "GLUE, "..system.git_version()..", tarantool "..require('tarantool').version
 logger.add_entry(logger.REBOOT, "------------", msg_reboot, nil, "Tarantool pid "..require('tarantool').pid())
 
-http_system.init(os.getenv('HTTP_PORT'))
+http_system.init(glue_http_port)
 logger.http_init()
 logger.add_entry(logger.INFO, "System", "HTTP subsystem initialized")
 
