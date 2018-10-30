@@ -18,15 +18,14 @@ local config = require 'config'
 local backup_restore = require 'backup_restore'
 local settings = require 'settings'
 
-local function box_config()
-   local tarantool_bin_port = tonumber(os.getenv('TARANTOOL_BIN_PORT'))
+local function box_config(tarantool_bin_port, tarantool_wal_dir)
 
    box.cfg {
       listen = tarantool_bin_port,
       log_level = 4,
-      memtx_dir = config.dir.DATABASE,
-      vinyl_dir = config.dir.DATABASE,
-      wal_dir = config.dir.DATABASE,
+      memtx_dir = tarantool_wal_dir,
+      vinyl_dir = tarantool_wal_dir,
+      wal_dir = tarantool_wal_dir,
       log = "pipe: ./http_pipe_logger.lua"
    }
 
@@ -37,10 +36,13 @@ local function box_config()
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 end
 
-system.dir_check(config.dir.DATABASE)
+local tarantool_bin_port = tonumber(os.getenv('TARANTOOL_BIN_PORT'))
+local tarantool_wal_dir = os.getenv('TARANTOOL_WAL_DIR') or config.dir.DATABASE
+
+system.dir_check(tarantool_wal_dir)
 system.dir_check(config.dir.BACKUP)
 system.dir_check(config.dir.DUMP_FILES)
-box_config()
+box_config(tarantool_bin_port, tarantool_wal_dir)
 
 logger.storage_init()
 local msg_reboot = "GLUE, "..system.git_version()..", tarantool "..require('tarantool').version
