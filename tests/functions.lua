@@ -100,3 +100,11 @@ end
 function setScriptActiveFlag (type, uuid, active_flag)
     return json.decode(makeApiCall(type, "GET", "action=update&uuid=" .. uuid .. "&active_flag=" .. active_flag))
 end
+
+function readFile(path)
+    local file = io.open(path, "rb")
+    if not file then return nil end
+    local content = file:read "*a"
+    file:close()
+    return content
+end
