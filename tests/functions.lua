@@ -60,7 +60,8 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
 end
 
 function getGluePid()
-    return json_decode(makeApiCall("system_event", "GET", "action=get_pid")).pid
+    local result = json.decode(makeApiCall("system_event", "GET", "action=get_pid"))
+    return result.pid
 end
 
 function createScript (type)
