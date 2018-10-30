@@ -99,7 +99,7 @@ function web_events_private.load(uuid)
    local attach_result = web_events_private.attach_path(script_params.object, callback, uuid)
 
    if (attach_result == false) then
-      log_web_events_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'"', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'")', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: duplicate path'})
    else
       log_web_events_info('Web-event "'..script_params.name..'" started and attached path "'..(script_params.object or '')..'"', script_params.uuid)
