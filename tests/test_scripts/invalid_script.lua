@@ -9,11 +9,10 @@ local function main()
     end
 end
 
--- Undefined function
-generateError()
-
 function init()
     store.fiber_object = fiber.create(main)
+    -- Undefined function
+    generateError()
 end
 
 function destroy()

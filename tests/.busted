@@ -3,6 +3,7 @@ return {
         coverage = false
     },
     default = {
-        verbose = true
+        verbose = true,
+        output = "TAP"
     }
 }

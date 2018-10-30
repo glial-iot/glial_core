@@ -9,7 +9,7 @@ local json = require "json"
 
 math.randomseed(os.time())
 
-require("tests/functions")
+require("functions")
 
 describe("Testing basic script system functionality", function()
     describe("Testing script create/delete", function()
@@ -153,19 +153,11 @@ end)
 
 
 describe("Testing advanced script system functionality", function()
-    describe("Delete script where destroy() returns false", function()
-        test("Create script", function()
-            assert.is_true(true)
-        end)
 
-        test("Update script body and return false on destroy", function()
-            assert.is_true(true)
-        end)
-
-        test("Delete script", function()
-            assert.is_true(true)
-        end)
+    test("Delete script where destroy() returns false", function()
+        local script_body = readFile("./tests/test_scripts/destroy_returns_false.lua")
     end)
+
     describe("Create invalid script, launch it and get error", function()
         test("Create invalid script", function()
             assert.is_true(true)
