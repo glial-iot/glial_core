@@ -183,90 +183,63 @@ describe("Testing advanced script system functionality", function()
 
     end)
 
-    describe("Create invalid script, launch it and get error", function()
-        test("Create invalid script", function()
-            assert.is_true(true)
-        end)
-
-        test("Update invalid script body", function()
-            assert.is_true(true)
-        end)
-
-        test("Activate/launch invalid script and get error", function()
-            assert.is_true(true)
-        end)
+    test("Create invalid script, launch it and get error", function()
+        local driver_script = createScriptFromFile("driver", "./test_scripts/invalid_script.lua")
+        setScriptActiveFlag("driver", driver_script.uuid, "ACTIVE")
+        local launched_invalid_script =  getScriptByUuid("driver", driver_script.uuid)
+        assert.are.equal("ERROR", launched_invalid_script.status)
     end)
 
-    describe("Create valid script, launch it and get no errors", function()
-        test("Create valid script", function()
-            assert.is_true(true)
-        end)
-
-        test("Update valid script body", function()
-            assert.is_true(true)
-        end)
-
-        test("Activate/launch valid script and get error", function()
-            assert.is_true(true)
-        end)
+    test("Create valid script, launch it and get no errors", function()
+        local driver_script = createScriptFromFile("driver", "./test_scripts/valid_script.lua")
+        setScriptActiveFlag("driver", driver_script.uuid, "ACTIVE")
+        local launched_valid_script =  getScriptByUuid("driver", driver_script.uuid)
+        assert.are.equal("NORMAL", launched_valid_script.status)
     end)
 
-    describe("Create script that modifies bus, launch it and check that bus is updated", function()
-        test("Create script that modifies bus", function()
-            assert.is_true(true)
-        end)
-
-        test("Update script body to modify bus", function()
-            assert.is_true(true)
-        end)
-
-        test("Activate/launch script", function()
-            assert.is_true(true)
-        end)
-
-        test("Check that bus is modified", function()
-            assert.is_true(true)
-        end)
+    test("Create script that modifies bus, launch it and check that bus is updated", function()
+        local modifies_bus_script = createScriptFromFile("driver", "./test_scripts/modifies_bus.lua")
+        setScriptActiveFlag("driver", modifies_bus_script.uuid, "ACTIVE")
+        sleep(100)
+        local topics = getBusTopicsByMask("/test/modify_bus/value", 1)
+        assert.are.equal("modified", topics[1].value)
     end)
 
-    describe("Create script that creates logs, launch it and check that logs are created", function()
-        test("Create script that creates logs", function()
-            assert.is_true(true)
-        end)
-
-        test("Update script body to create logs", function()
-            assert.is_true(true)
-        end)
-
-        test("Activate/launch script", function()
-            assert.is_true(true)
-        end)
-
-        test("Check that logs are created", function()
-            assert.is_true(true)
-        end)
+    test("Create script that creates logs, launch it and check that logs are created", function()
+        local creates_logs_script = createScriptFromFile("driver", "./test_scripts/creates_logs.lua")
+        setScriptActiveFlag("driver", creates_logs_script.uuid, "ACTIVE")
+        sleep(300)
+        local logs = getLogs(creates_logs_script.uuid)
+        local levels = {"ERROR", "WARNING", "INFO", "USER"}
+        for iteration, value in ipairs(levels) do
+            fun.each(function(x)
+                assert.are_not.equal(nil, string.match(x.source, creates_logs_script.name))
+            end, fun.filter(function(x)
+                return x.level == value and x.source ~= "Drivers subsystem"
+            end, logs))
+        end
     end)
 
+    -- TODO: API method "update_value" accepts "topic" in plain text without base64 or urlencode.
     describe("Create script that listens to bus events, launch script, generate an event, check that script has reacted to the event", function()
-        test("Create script that listens to bus events", function()
-            assert.is_true(true)
-        end)
+        local object = "/test/event_script/bus_value"
+        local bus_event_script = createScriptFromFile("bus_event", "./test_scripts/listens_to_bus_events.lua")
+        changeScriptObject ("bus_event", bus_event_script.uuid, object)
 
-        test("Update script object to listen to bus events", function()
-            assert.is_true(true)
-        end)
+        setScriptActiveFlag("bus_event", bus_event_script.uuid, "ACTIVE")
+        sleep(300)
 
-        test("Update script body to react to bus events", function()
-            assert.is_true(true)
-        end)
+        updateBusTopic("/test/event_script/bus_value", "specific_value")
+        sleep(300)
 
-        test("Activate/launch script", function()
-            assert.is_true(true)
-        end)
+        local topics = getBusTopicsByMask("/test/event_script/current_status", 1)
+        assert.are.equal("success", topics[1].value)
 
-        test("Check that script has reacted to event", function()
-            assert.is_true(true)
-        end)
+        updateBusTopic("/test/event_script/bus_value", "not_specific_value")
+        sleep(300)
+
+        topics = getBusTopicsByMask("/test/event_script/current_status", 1)
+        assert.are.equal("reverted", topics[1].value)
     end)
 
 end)
