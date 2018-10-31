@@ -11,14 +11,14 @@ math.randomseed(os.time())
 
 require("functions")
 
-TARANTOOL_PID = nil
+local tarantool_pid
 
 describe("Launch Tarantool" , function()
     test("Make system call to launch Glue with parameters", function()
         os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
         os.execute("sleep 2")
-        TARANTOOL_PID = getGluePid()
-        assert.are_not.equal(nil, getGluePid())
+        tarantool_pid = getGluePid()
+        assert.are_not.equal(nil, tarantool_pid)
     end)
 end)
 
@@ -263,4 +263,10 @@ describe("Testing advanced script system functionality", function()
 
 end)
 
-os.execute("kill ".. TARANTOOL_PID)
+describe("Kill Tarantool" , function()
+    test("Make system call to kill Glue", function()
+      os.execute("kill ".. tarantool_pid)
+    end)
+end)
+
+
