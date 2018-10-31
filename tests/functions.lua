@@ -120,15 +120,20 @@ function readFile(path)
 end
 
 function startTarantool()
-    os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
-    os.execute("sleep 1")
+    local tarantool_pid = getGluePid()
+    if (tarantool_pid == false) then
+        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute("sleep 1")
+    end
     return  getGluePid()
 end
 
 function stopTarantool()
     local tarantool_pid = getGluePid()
-    os.execute("kill ".. tarantool_pid)
-    os.execute("sleep 1")
+    if (tarantool_pid ~= false) then
+        os.execute("kill ".. tarantool_pid)
+        os.execute("sleep 1")
+    end
     return getGluePid()
 end
 
@@ -141,6 +146,8 @@ function restartTarantool()
         os.execute("sleep 1")
         return  getGluePid()
     else
-        return false
+        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute("sleep 1")
+        return  getGluePid()
     end
 end
