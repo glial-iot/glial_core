@@ -3,6 +3,10 @@ return {
         coverage = false
     },
     default = {
-        verbose = true,
+        verbose = true
+    },
+    tarantool = {
+        tags = "tarantool",
+        verbose = true
     }
 }

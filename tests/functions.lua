@@ -60,8 +60,13 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
 end
 
 function getGluePid()
-    local result = json.decode(makeApiCall("system_event", "GET", "action=get_pid"))
-    return result.pid
+    local response_body = makeApiCall("system_event", "GET", "action=get_pid")
+    local result = json.decode(response_body)
+    if (result ~= nil) then
+        return result.pid
+    else
+        return false
+    end
 end
 
 function createScript (type)
@@ -97,8 +102,11 @@ function renameScript (type, uuid)
     return json.decode(makeApiCall(type, "GET", "action=update&uuid=" .. uuid .. "&name=" .. new_script_name))
 end
 
-function changeScriptObject (type, uuid)
-    local new_script_object = md5.sumhexa(math.random())
+function changeScriptObject (type, uuid, object)
+    local new_script_object = object
+    if object == nil then
+        new_script_object = md5.sumhexa(math.random())
+    end
     return json.decode(makeApiCall(type, "GET", "action=update&uuid=" .. uuid .. "&object=" .. new_script_object))
 end
 
@@ -112,4 +120,66 @@ function readFile(path)
     local content = file:read "*a"
     file:close()
     return content
+end
+
+function startTarantool()
+    local tarantool_pid = getGluePid()
+    if (tarantool_pid == false) then
+        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute("sleep 1")
+    end
+    return  getGluePid()
+end
+
+function stopTarantool()
+    local tarantool_pid = getGluePid()
+    if (tarantool_pid ~= false) then
+        os.execute("kill ".. tarantool_pid)
+        os.execute("sleep 1")
+    end
+    return getGluePid()
+end
+
+function restartTarantool()
+    local tarantool_pid = getGluePid()
+    if (tarantool_pid ~= false) then
+        os.execute("kill ".. tarantool_pid)
+        os.execute("sleep 1")
+        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute("sleep 1")
+        return  getGluePid()
+    else
+        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute("sleep 1")
+        return  getGluePid()
+    end
+end
+
+function createScriptFromFile(type, file_path)
+    local script_body = readFile(file_path)
+    local script = createScript(type)
+    updateScriptBody(type, script.uuid, script_body)
+    return script
+end
+
+function getBusTopicsByMask(mask, limit)
+    return json.decode(makeApiCall("system_bus", "GET", "action=get_bus&mask=" .. base64.encode(mask) .. "&limit=" .. limit))
+end
+
+function getLogs(uuid, level, limit)
+    local args = {uuid = uuid , level = level, limit = limit}
+    local parameters = "action=get_logs"
+    for i,v in pairs(args) do
+        parameters = parameters.."&"..i.."="..v
+    end
+    return json.decode(makeApiCall("log", "GET", parameters))
+end
+
+function sleep (msec)
+    local sec = tonumber(msec) / 1000
+    os.execute("sleep "..sec)
+end
+
+function updateBusTopic (topic, value)
+    return json.decode(makeApiCall("system_bus", "GET", "action=update_value&topic=" .. topic .. "&value=" .. value))
 end
