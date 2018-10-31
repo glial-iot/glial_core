@@ -4,6 +4,5 @@ return {
     },
     default = {
         verbose = true,
-        output = "TAP"
     }
 }
