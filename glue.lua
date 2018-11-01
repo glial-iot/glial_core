@@ -21,6 +21,7 @@ local settings = require 'settings'
 local function box_config(tarantool_bin_port, tarantool_wal_dir)
 
    box.cfg {
+      hot_standby = true,
       listen = tarantool_bin_port,
       log_level = 4,
       memtx_dir = tarantool_wal_dir,
