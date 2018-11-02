@@ -6,6 +6,6 @@ mkdir -p ./logs
 
 busted tests.lua
 # Run only tests with #tarantool tag
-# busted -t "tarantool" tests.lua
+# busted -t "backups" tests.lua
 
 rm -rf ../test_db
