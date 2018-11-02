@@ -8,5 +8,9 @@ return {
     tarantool = {
         tags = "tarantool",
         verbose = true
+    },
+    backups = {
+        tags = "backups",
+        verbose = true
     }
 }

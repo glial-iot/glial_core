@@ -1,5 +1,6 @@
 require 'busted.runner'()
 local http = require("socket.http")
+local socket = require("socket")
 local ltn12 = require("ltn12")
 local md5 = require("md5")
 local base64 = require ("base64")
@@ -175,11 +176,54 @@ function getLogs(uuid, level, limit)
     return json.decode(makeApiCall("log", "GET", parameters))
 end
 
-function sleep (msec)
-    local sec = tonumber(msec) / 1000
-    os.execute("sleep "..sec)
+function deleteAllLogs()
+    return json.decode(makeApiCall("log", "GET", "action=delete_logs"))
 end
 
-function updateBusTopic (topic, value)
+function sleep (msec)
+    local sec = tonumber(msec) / 1000
+    socket.sleep(sec)
+end
+
+function updateBusTopicValue (topic, value)
     return json.decode(makeApiCall("system_bus", "GET", "action=update_value&topic=" .. topic .. "&value=" .. value))
+end
+
+function updateBusTopicTags (topic, tags)
+    return json.decode(makeApiCall("system_bus", "GET", "action=update_tags&topic=" .. topic .. "&tags=" .. tags))
+end
+
+function updateBusTopicType (topic, type)
+    return json.decode(makeApiCall("system_bus", "GET", "action=update_type&topic=" .. topic .. "&type=" .. type))
+end
+
+function deleteBusTopic(topic)
+    return json.decode(makeApiCall("system_bus", "GET", "action=delete_topics&topic=" .. topic))
+end
+
+function createBackup()
+    return json.decode(makeApiCall("backup", "GET", "action=create"))
+end
+
+function getBackupsList()
+    return json.decode(makeApiCall("backup", "GET", "action=get_list"))
+end
+
+function restoreBackup(filename)
+    return json.decode(makeApiCall("backup", "GET", "action=restore&filename=" .. filename))
+end
+
+function wipeStorage()
+    os.execute("cd .. rm -rf ./test_db")
+end
+
+function getLatestUserBackup ()
+    local backups_list = getBackupsList()
+    local recent_backups = {}
+    fun.each(function(x)
+        table.insert(recent_backups, x)
+    end, fun.filter(function(x)
+        return x.comment == "User created backup" and string.match(x.time_text, "seconds")
+    end, backups_list))
+    return recent_backups[1]
 end

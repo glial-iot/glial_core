@@ -11,7 +11,7 @@ math.randomseed(os.time())
 
 require("functions")
 
-describe("Launch #tarantool" , function()
+describe("Launch #tarantool (required for #script, #logs, #bus and #backups tests)" , function()
     test("Make system call to launch Glue with parameters", function()
         local tarantool_pid = startTarantool()
         assert.are_not.equal(false, tarantool_pid)
@@ -19,7 +19,7 @@ describe("Launch #tarantool" , function()
     end)
 end)
 
-describe("Testing basic script system functionality", function()
+describe("Testing basic #script system functionality", function()
     describe("Testing script create/delete", function()
 
         -- TODO: Check special symbols in script name +\/_-%. At the moment + gets deleted, \ gets escaped in name.
@@ -160,7 +160,7 @@ describe("Testing basic script system functionality", function()
 end)
 
 
-describe("Testing advanced script system functionality", function()
+describe("Testing advanced #script system functionality", function()
 
     describe("Delete script where destroy() returns false", function()
 
@@ -229,13 +229,13 @@ describe("Testing advanced script system functionality", function()
         setScriptActiveFlag("bus_event", bus_event_script.uuid, "ACTIVE")
         sleep(300)
 
-        updateBusTopic("/test/event_script/bus_value", "specific_value")
+        updateBusTopicValue("/test/event_script/bus_value", "specific_value")
         sleep(300)
 
         local topics = getBusTopicsByMask("/test/event_script/current_status", 1)
         assert.are.equal("success", topics[1].value)
 
-        updateBusTopic("/test/event_script/bus_value", "not_specific_value")
+        updateBusTopicValue("/test/event_script/bus_value", "not_specific_value")
         sleep(300)
 
         topics = getBusTopicsByMask("/test/event_script/current_status", 1)
@@ -244,7 +244,198 @@ describe("Testing advanced script system functionality", function()
 
 end)
 
-test("Kill #tarantool", function()
+
+describe("Testing #bus", function()
+
+    test("Create topic with value, update it and check updated", function()
+
+        updateBusTopicValue("/test/bus_test/create_topic", "test_value")
+        sleep(100)
+        local topics = getBusTopicsByMask("/test/bus_test/create_topic", 1)
+        assert.are.equal("test_value", topics[1].value)
+
+        updateBusTopicValue("/test/bus_test/create_topic", "test_value2")
+        sleep(100)
+        local topics = getBusTopicsByMask("/test/bus_test/create_topic", 1)
+        assert.are.equal("test_value2", topics[1].value)
+
+    end)
+
+    test("Change topic metadata", function()
+
+        local topic_name = "/test/bus_test/metadata_topic"
+        updateBusTopicValue(topic_name, "metadata_test")
+        sleep(100)
+
+        updateBusTopicTags(topic_name, "test_tag")
+        updateBusTopicType(topic_name, "sample_type")
+        sleep(100)
+
+        local topics = getBusTopicsByMask(topic_name, 1)
+        assert.are.equal("metadata_test", topics[1].value)
+        assert.are.equal("sample_type", topics[1].type)
+        assert.are.equal("test_tag", topics[1].tags)
+    end)
+
+    test("Change topic metadata", function()
+
+        local topic_name = "/test/bus_test/metadata_topic"
+        updateBusTopicValue(topic_name, "metadata_test")
+        sleep(100)
+
+        updateBusTopicTags(topic_name, "test_tag")
+        updateBusTopicType(topic_name, "sample_type")
+        sleep(100)
+
+        local topics = getBusTopicsByMask(topic_name, 1)
+        assert.are.equal("metadata_test", topics[1].value)
+        assert.are.equal("sample_type", topics[1].type)
+        assert.are.equal("test_tag", topics[1].tags)
+
+    end)
+
+    test("Delete topic from bus", function()
+        local topic_name = "/test/bus_test/topic_to_be_deleted"
+        updateBusTopicValue(topic_name, "sample_value")
+        sleep(100)
+        deleteBusTopic(topic_name)
+        sleep(100)
+
+        local topics = getBusTopicsByMask(topic_name, 1)
+        assert.are.equal('true', topics["none_data"])
+    end)
+end)
+
+describe("Testing #logs", function()
+
+    test("Create log entries (different levels)", function()
+
+        local creates_logs_script = createScriptFromFile("driver", "./test_scripts/creates_logs.lua")
+        setScriptActiveFlag("driver", creates_logs_script.uuid, "ACTIVE")
+        sleep(300)
+
+        local logs = getLogs(creates_logs_script.uuid)
+        local levels = {"ERROR", "WARNING", "INFO", "USER"}
+        for iteration, value in ipairs(levels) do
+            fun.each(function(x)
+                assert.are_not.equal(nil, string.match(x.source, creates_logs_script.name))
+            end, fun.filter(function(x)
+                return x.level == value and x.source ~= "Drivers subsystem"
+            end, logs))
+        end
+
+    end)
+
+    test("Get logs sorted by level (filter check)", function()
+
+        local levels = {"ERROR", "WARNING", "INFO", "USER"}
+
+        for iteration, value in ipairs(levels) do
+
+            local logs_string = inspect(getLogs(nil, value))
+            local unwanted_levels = levels
+            unwanted_levels[iteration] = nil
+
+            for i, unwanted_value in ipairs(unwanted_levels) do
+                assert.are.equal(nil, string.match(logs_string, unwanted_value))
+            end
+
+            assert.are_not.equal(nil, string.match(logs_string, value))
+        end
+
+    end)
+
+    test("Delete all logs", function()
+
+        local creates_logs_script = createScriptFromFile("driver", "./test_scripts/creates_logs.lua")
+        setScriptActiveFlag("driver", creates_logs_script.uuid, "ACTIVE")
+        sleep(300)
+
+        local logs_string =inspect(getLogs(creates_logs_script.uuid))
+        assert.are_not.equal(nil, string.match(logs_string, creates_logs_script.name))
+
+        deleteAllLogs()
+        sleep(100)
+        local logs_string_after_delete = inspect(getLogs(creates_logs_script.uuid))
+        assert.are.equal(nil, string.match(logs_string_after_delete, creates_logs_script.name))
+
+    end)
+
+end)
+
+describe("Testing #backups", function()
+
+    test("Create test data (scripts, bus topics, logs, etc.)", function()
+        local initial_glue_pid = getGluePid()
+        local creates_logs_script = createScriptFromFile("driver", "./test_scripts/creates_logs.lua")
+        setScriptActiveFlag("driver", creates_logs_script.uuid, "ACTIVE")
+        sleep(200)
+
+        local modifies_bus_script = createScriptFromFile("driver", "./test_scripts/modifies_bus_for_backups.lua")
+        setScriptActiveFlag("driver", creates_logs_script.uuid, "ACTIVE")
+        sleep(200)
+
+        local scripts_list = getScriptsList("driver")
+
+        assert.are_not.equal(nil, string.match(scripts_list, creates_logs_script.name))
+        assert.are_not.equal(nil, string.match(scripts_list, modifies_bus_script.name))
+
+        local logs_string = inspect(getLogs())
+        assert.are_not.equal(nil, string.match(logs_string, creates_logs_script.name))
+
+        local wipe_time = os.time()
+
+        local backup = createBackup()
+        sleep(300)
+
+
+        wipeStorage()
+        sleep(1000)
+        restartTarantool()
+        sleep(1000)
+        local glue_pid_start_after_wipe = getGluePid()
+        assert.is_not_false(glue_pid_start_after_wipe)
+        assert.are_not.equal(initial_glue_pid, glue_pid_start_after_wipe)
+
+        local latest_backup = getLatestUserBackup()
+        local restore_status = restoreBackup(latest_backup.filename)
+        assert.are.equal("true", restore_status.result)
+        sleep(3000)
+
+        local glue_pid_after_restore = getGluePid()
+        assert.is_false(glue_pid_after_restore)
+
+        startTarantool()
+        local glue_pid_start_after_restore = getGluePid()
+        assert.is_not_false(glue_pid_start_after_restore)
+        assert.are_not.equal(glue_pid_start_after_wipe, glue_pid_start_after_restore)
+
+        local scripts_list_after_restore = getScriptsList("driver")
+        sleep(2000)
+        sleep(2000)
+        sleep(2000)
+        sleep(2000)
+        sleep(2000)
+        assert.are_not.equal(nil, string.match(scripts_list_after_restore, creates_logs_script.name))
+        assert.are_not.equal(nil, string.match(scripts_list_after_restore, modifies_bus_script.name))
+
+        print("Glue PID =" .. getGluePid())
+        local logs_after_restore = getLogs()
+        sleep(2000)
+        fun.each(function(x)
+            print("current_os.time:" .. os.time())
+            print("log_created.time: " .. x.time)
+            print("log_created.time: " .. x.entry)
+            print("log_created.time: " .. x.trace)
+            print("wipe_time: " .. wipe_time )
+            print("-------")
+            assert.is_true(x.time >= wipe_time)
+        end, logs_after_restore)
+    end)
+
+end)
+
+test("Kill #tarantool (required for #script, #logs, #bus and #backups tests)", function()
     local tarantool_status = stopTarantool()
     assert.is_false(tarantool_status)
 end)
