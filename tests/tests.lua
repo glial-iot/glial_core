@@ -365,30 +365,38 @@ end)
 
 describe("Testing #backups", function()
 
-    test("Create test data (scripts, bus topics, logs, etc.)", function()
+    test("Check backup creation, wipe and restore from backup.)", function()
+        -- Save initial glue pid for further checks
         local initial_glue_pid = getGluePid()
+
+        -- Create scripts that write to logs and bus.
         local creates_logs_script = createScriptFromFile("driver", "./test_scripts/creates_logs.lua")
         setScriptActiveFlag("driver", creates_logs_script.uuid, "ACTIVE")
         sleep(200)
 
         local modifies_bus_script = createScriptFromFile("driver", "./test_scripts/modifies_bus_for_backups.lua")
-        setScriptActiveFlag("driver", creates_logs_script.uuid, "ACTIVE")
+        setScriptActiveFlag("driver", modifies_bus_script.uuid, "ACTIVE")
         sleep(200)
 
+        -- Check that scripts are created
         local scripts_list = getScriptsList("driver")
-
         assert.are_not.equal(nil, string.match(scripts_list, creates_logs_script.name))
         assert.are_not.equal(nil, string.match(scripts_list, modifies_bus_script.name))
 
+        -- Check that logs are created
         local logs_string = inspect(getLogs())
         assert.are_not.equal(nil, string.match(logs_string, creates_logs_script.name))
 
-        local wipe_time = os.time()
+        -- Check that bus topic is created
+        local bus_topics = getBusTopicsByMask("/test/modify_bus/for_backups", 1)
+        assert.are.equal("modified_for_backup", bus_topics[1].value)
 
+        -- Create user backup
         local backup = createBackup()
         sleep(300)
 
-
+        -- Wipe storage, restart Glue and check that PID has changed
+        local wipe_time = os.time()
         wipeStorage()
         sleep(1000)
         restartTarantool()
@@ -397,38 +405,49 @@ describe("Testing #backups", function()
         assert.is_not_false(glue_pid_start_after_wipe)
         assert.are_not.equal(initial_glue_pid, glue_pid_start_after_wipe)
 
+        -- Check that there are no old logs after wipe.
+        local logs_after_restart = getLogs()
+        fun.each(function(x)
+            assert.is_true(x.time >= wipe_time)
+        end, logs_after_restart)
+
+        -- Check that there are no old drivers after wipe
+        local scripts_list_after_wipe = getScriptsList("driver")
+        assert.are.equal(nil, string.match(scripts_list_after_wipe, creates_logs_script.name))
+        assert.are.equal(nil, string.match(scripts_list_after_wipe, modifies_bus_script.name))
+
+        -- Check that there are no old bus topics after wipe
+        local bus_topics_after_wipe = getBusTopicsByMask("/test/modify_bus/for_backups", 1)
+        assert.are.equal('true', bus_topics_after_wipe["none_data"])
+
+        -- Get latest user backup and restore it
         local latest_backup = getLatestUserBackup()
         local restore_status = restoreBackup(latest_backup.filename)
-        assert.are.equal("true", restore_status.result)
+        assert.are.equal(true, restore_status.result)
         sleep(3000)
 
+        -- Check that Glue is stopped after backup restore
         local glue_pid_after_restore = getGluePid()
         assert.is_false(glue_pid_after_restore)
 
+        -- Start Glue after backup restore and check that it's pid changed
         startTarantool()
         local glue_pid_start_after_restore = getGluePid()
         assert.is_not_false(glue_pid_start_after_restore)
         assert.are_not.equal(glue_pid_start_after_wipe, glue_pid_start_after_restore)
 
+        -- Check that drivers are restored
         local scripts_list_after_restore = getScriptsList("driver")
-        sleep(2000)
-        sleep(2000)
-        sleep(2000)
-        sleep(2000)
-        sleep(2000)
         assert.are_not.equal(nil, string.match(scripts_list_after_restore, creates_logs_script.name))
         assert.are_not.equal(nil, string.match(scripts_list_after_restore, modifies_bus_script.name))
 
-        print("Glue PID =" .. getGluePid())
+        -- Check that bus topics are restored
+        local bus_topics_after_restore = getBusTopicsByMask("/test/modify_bus/for_backups", 1)
+        assert.are.equal("modified_for_backup", bus_topics_after_restore[1].value)
+
+        -- Check that no log entries were restored from backup
         local logs_after_restore = getLogs()
-        sleep(2000)
         fun.each(function(x)
-            print("current_os.time:" .. os.time())
-            print("log_created.time: " .. x.time)
-            print("log_created.time: " .. x.entry)
-            print("log_created.time: " .. x.trace)
-            print("wipe_time: " .. wipe_time )
-            print("-------")
             assert.is_true(x.time >= wipe_time)
         end, logs_after_restore)
     end)
