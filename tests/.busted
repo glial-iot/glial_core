@@ -12,5 +12,9 @@ return {
     backups = {
         tags = "backups",
         verbose = true
+    },
+    functions = {
+        tags = "functions",
+        verbose = true
     }
 }
