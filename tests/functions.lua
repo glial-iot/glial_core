@@ -214,7 +214,7 @@ function restoreBackup(filename)
 end
 
 function wipeStorage()
-    os.execute("cd .. rm -rf ./test_db")
+    os.execute("cd .. && rm -rf ./test_db")
 end
 
 function getLatestUserBackup ()
