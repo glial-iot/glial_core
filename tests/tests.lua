@@ -200,7 +200,7 @@ describe("Testing advanced #script system functionality", function()
     test("Create script that modifies bus, launch it and check that bus is updated", function()
         local modifies_bus_script = createScriptFromFile("driver", "./test_scripts/modifies_bus.lua")
         setScriptActiveFlag("driver", modifies_bus_script.uuid, "ACTIVE")
-        sleep(100)
+        sleep(200)
         local topics = getBusTopicsByMask("/test/modify_bus/value", 1)
         assert.are.equal("modified", topics[1].value)
     end)
@@ -250,12 +250,12 @@ describe("Testing #bus", function()
     test("Create topic with value, update it and check updated", function()
 
         updateBusTopicValue("/test/bus_test/create_topic", "test_value")
-        sleep(100)
+        sleep(200)
         local topics = getBusTopicsByMask("/test/bus_test/create_topic", 1)
         assert.are.equal("test_value", topics[1].value)
 
         updateBusTopicValue("/test/bus_test/create_topic", "test_value2")
-        sleep(100)
+        sleep(200)
         local topics = getBusTopicsByMask("/test/bus_test/create_topic", 1)
         assert.are.equal("test_value2", topics[1].value)
 
@@ -265,11 +265,11 @@ describe("Testing #bus", function()
 
         local topic_name = "/test/bus_test/metadata_topic"
         updateBusTopicValue(topic_name, "metadata_test")
-        sleep(100)
+        sleep(200)
 
         updateBusTopicTags(topic_name, "test_tag")
         updateBusTopicType(topic_name, "sample_type")
-        sleep(100)
+        sleep(200)
 
         local topics = getBusTopicsByMask(topic_name, 1)
         assert.are.equal("metadata_test", topics[1].value)
@@ -281,11 +281,11 @@ describe("Testing #bus", function()
 
         local topic_name = "/test/bus_test/metadata_topic"
         updateBusTopicValue(topic_name, "metadata_test")
-        sleep(100)
+        sleep(200)
 
         updateBusTopicTags(topic_name, "test_tag")
         updateBusTopicType(topic_name, "sample_type")
-        sleep(100)
+        sleep(200)
 
         local topics = getBusTopicsByMask(topic_name, 1)
         assert.are.equal("metadata_test", topics[1].value)
@@ -297,9 +297,9 @@ describe("Testing #bus", function()
     test("Delete topic from bus", function()
         local topic_name = "/test/bus_test/topic_to_be_deleted"
         updateBusTopicValue(topic_name, "sample_value")
-        sleep(100)
+        sleep(200)
         deleteBusTopic(topic_name)
-        sleep(100)
+        sleep(200)
 
         local topics = getBusTopicsByMask(topic_name, 1)
         assert.are.equal('true', topics["none_data"])
@@ -355,7 +355,7 @@ describe("Testing #logs", function()
         assert.are_not.equal(nil, string.match(logs_string, creates_logs_script.name))
 
         deleteAllLogs()
-        sleep(100)
+        sleep(200)
         local logs_string_after_delete = inspect(getLogs(creates_logs_script.uuid))
         assert.are.equal(nil, string.match(logs_string_after_delete, creates_logs_script.name))
 
@@ -465,7 +465,7 @@ describe("Testing #functions", function()
         -- Check that script is created
         local scripts_list = getScriptsList("driver")
         assert.are_not.equal(nil, string.match(scripts_list, round_function_script.name))
-        sleep(100)
+        sleep(200)
 
         -- Check that bus contains rounded and initial values.
         local bus_topic_initial = getBusTopicsByMask("/test/functions/initial_value", 1)
