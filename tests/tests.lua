@@ -11,7 +11,7 @@ math.randomseed(os.time())
 
 require("functions")
 
-describe("Launch #tarantool (required for #script, #logs, #bus and #backups tests)" , function()
+describe("Launch #tarantool (required for #script, #logs, #bus, #functions and #backups tests)" , function()
     test("Make system call to launch Glue with parameters", function()
         local tarantool_pid = startTarantool()
         assert.are_not.equal(false, tarantool_pid)
@@ -454,7 +454,67 @@ describe("Testing #backups", function()
 
 end)
 
-test("Kill #tarantool (required for #script, #logs, #bus and #backups tests)", function()
+describe("Testing #functions", function()
+
+    test("Check round() function.", function()
+        -- Create driver that writes rounded values to bus
+        local round_function_script = createScriptFromFile("driver", "./test_scripts/modifies_bus_round.lua")
+        setScriptActiveFlag("driver", round_function_script.uuid, "ACTIVE")
+        sleep(200)
+
+        -- Check that script is created
+        local scripts_list = getScriptsList("driver")
+        assert.are_not.equal(nil, string.match(scripts_list, round_function_script.name))
+        sleep(100)
+
+        -- Check that bus contains rounded and initial values.
+        local bus_topic_initial = getBusTopicsByMask("/test/functions/initial_value", 1)
+        local bus_topic_rounded = getBusTopicsByMask("/test/functions/rounded_value", 1)
+        assert.are.equal(0.6789123, tonumber(bus_topic_initial[1].value))
+        assert.are.equal(0.68, tonumber(bus_topic_rounded[1].value))
+
+    end)
+
+    test("Check deepcopy() function.", function()
+        -- Create driver that creates table, saves table values to bus,
+        -- uses deepcopy()to create another table and saves its' values to bus too.
+        local deepcopy_function_script = createScriptFromFile("driver", "./test_scripts/modifies_bus_deepcopy.lua")
+        setScriptActiveFlag("driver", deepcopy_function_script.uuid, "ACTIVE")
+        sleep(500)
+
+        -- Check that script is created
+        local scripts_list = getScriptsList("driver")
+        assert.are_not.equal(nil, string.match(scripts_list, deepcopy_function_script.name))
+        sleep(200)
+
+        -- Check that bus contains initial table (that was sent when script started), copied table contains modified data
+        -- and initial table's data wasn't modified by modification of copied table (no reference).
+        local initial_table_foo = getBusTopicsByMask("/test/test_deepcopy/initial_table/foo", 1)
+        local initial_table_bar = getBusTopicsByMask("/test/test_deepcopy/initial_table/bar", 1)
+        local initial_table_foobar = getBusTopicsByMask("/test/test_deepcopy/initial_table/foobar", 1)
+        assert.are.equal("bar", initial_table_foo[1].value)
+        assert.are.equal("123", initial_table_bar[1].value)
+        assert.are.equal("true", initial_table_foobar[1].value)
+
+        local copied_table_modified_foo = getBusTopicsByMask("/test/test_deepcopy/copied_table_modified/foo", 1)
+        local copied_table_modified_bar = getBusTopicsByMask("/test/test_deepcopy/copied_table_modified/bar", 1)
+        local copied_table_modified_foobar = getBusTopicsByMask("/test/test_deepcopy/copied_table_modified/foobar", 1)
+        assert.are.equal("new", copied_table_modified_foo[1].value)
+        assert.are.equal("321", copied_table_modified_bar[1].value)
+        assert.are.equal("false", copied_table_modified_foobar[1].value)
+
+        local initial_table_not_modified_foo = getBusTopicsByMask("/test/test_deepcopy/initial_table_not_modified/foo", 1)
+        local initial_table_not_modified_bar = getBusTopicsByMask("/test/test_deepcopy/initial_table_not_modified/bar", 1)
+        local initial_table_not_modified_foobar = getBusTopicsByMask("/test/test_deepcopy/initial_table_not_modified/foobar", 1)
+        assert.are.equal("bar", initial_table_not_modified_foo[1].value)
+        assert.are.equal("123", initial_table_not_modified_bar[1].value)
+        assert.are.equal("true", initial_table_not_modified_foobar[1].value)
+
+    end)
+
+end)
+
+test("Kill #tarantool (required for #script, #logs, #bus, #functions and #backups tests)", function()
     local tarantool_status = stopTarantool()
     assert.is_false(tarantool_status)
 end)
