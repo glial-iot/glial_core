@@ -12,7 +12,7 @@ end
 function init()
     store.fiber_object = fiber.create(main)
     -- Undefined function
-    generateError()
+    undefinedFunction()
 end
 
 function destroy()

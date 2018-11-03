@@ -130,7 +130,7 @@ function startTarantool()
         os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
     end
-    return  getGluePid()
+    return getGluePid()
 end
 
 function stopTarantool()
@@ -149,11 +149,11 @@ function restartTarantool()
         os.execute("sleep 1")
         os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
-        return  getGluePid()
+        return getGluePid()
     else
         os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
-        return  getGluePid()
+        return getGluePid()
     end
 end
 
