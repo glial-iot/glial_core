@@ -9,6 +9,7 @@ local fun = require('fun')
 local json = require "json"
 
 math.randomseed(os.time())
+local tarantool_start_cmd = "TIME="..os.time().." ./run_tarantool.sh &"
 
 function makeApiCall (type , method, parameters, payload, web_event_endpoint)
     if payload == nil then payload = "" end
@@ -126,7 +127,7 @@ end
 function startTarantool()
     local tarantool_pid = getGluePid()
     if (tarantool_pid == false) then
-        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
     end
     return  getGluePid()
@@ -146,11 +147,11 @@ function restartTarantool()
     if (tarantool_pid ~= false) then
         os.execute("kill ".. tarantool_pid)
         os.execute("sleep 1")
-        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
         return  getGluePid()
     else
-        os.execute("cd .. && today=`date +%Y-%m-%d-%H-%M` && TARANTOOL_CONSOLE=0 HTTP_PORT=8888 TARANTOOL_WAL_DIR=test_db tarantool glue.lua &> ./tests/logs/tarantool-$today.log &")
+        os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
         return  getGluePid()
     end
