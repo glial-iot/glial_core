@@ -1,12 +1,19 @@
 #!/bin/sh
 rm -rf ./temp_deb_packet_create
 
+cd ..
+tarantoolctl rocks install http
+tarantoolctl rocks install mqtt
+tarantoolctl rocks install dump
+tarantoolctl rocks install cron-parser
+cd ./debian
+
 mkdir ./temp_deb_packet_create
 cd ./temp_deb_packet_create
-mkdir -p ./glue/debian
+mkdir -p ./glue/DEBIAN
 
-cp ../control ./glue/debian/control
-cp ../dirs ./glue/debian/dirs
+cp ../control ./glue/DEBIAN/control
+cp ../dirs ./glue/DEBIAN/dirs
 
 mkdir -p ./glue/usr/share/tarantool/glue
 cp ../../*.lua ./glue/usr/share/tarantool/glue
