@@ -3,7 +3,7 @@ Version: 0.73-82-gfd80b2b
 Maintainer: vvzvlad <vvzvlad@gmail.com>
 Architecture: all
 Section: misc
-Description:
+Description: IoT management system by Nokia IoT Lab
 Priority: optional
 Origin: vvzvlad <vvzvlad@gmail.com>
 Depends: tarantool, libmosquitto-dev, tarantool-dev
