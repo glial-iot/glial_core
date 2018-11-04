@@ -19,3 +19,4 @@
 /docs/dist
 /docs/.vuepress/dist
 /tests/logs
+/temp_deb_packet_create
