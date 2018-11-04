@@ -11,9 +11,11 @@ cp ../dirs ./glue/debian/dirs
 mkdir -p ./glue/usr/share/tarantool/glue
 cp ../../*.lua ./glue/usr/share/tarantool/glue
 cp -r ../../libs ./glue/usr/share/tarantool/glue
+cp -r ../../.rocks ./glue/usr/share/tarantool/glue
 
 mkdir -p ./glue/etc/tarantool/instances.enabled/
-mv ./glue/usr/share/tarantool/glue/glue_start.lua ./glue/etc/tarantool/instances.enabled/glue.lua
+rm ./glue/usr/share/tarantool/glue/glue_start.lua
+cp ../wirenboard/glue_start.lua ./glue/etc/tarantool/instances.enabled/glue.lua
 
 
 chown -R root:root ./glue/
@@ -24,4 +26,4 @@ dpkg-deb --build glue
 
 mv glue.deb glue_0.73-82-gfd80b2b_all.deb
 
-lintian glue_0.73-82-gfd80b2b_all.deb
+#lintian glue_0.73-82-gfd80b2b_all.deb
