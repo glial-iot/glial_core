@@ -1,4 +1,7 @@
 #!/bin/sh
+GIT=`git describe --dirty --always --tags`
+VERSION="Version: "$GIT
+
 rm -rf ./temp_deb_packet_create
 
 cd ..
@@ -13,6 +16,7 @@ cd ./temp_deb_packet_create
 mkdir -p ./glue/DEBIAN
 
 cp ../control ./glue/DEBIAN/control
+echo $VERSION >> ./glue/DEBIAN/control
 cp ../dirs ./glue/DEBIAN/dirs
 
 mkdir -p ./glue/usr/share/tarantool/glue
@@ -23,16 +27,19 @@ cp -r ../../panel ./glue/usr/share/tarantool/glue
 
 mkdir -p ./glue/etc/tarantool/instances.enabled/
 rm ./glue/usr/share/tarantool/glue/glue_start.lua
-cp ../wirenboard/glue_start.lua ./glue/etc/tarantool/instances.enabled/glue.lua
-
+cp ../wb_instance_glue_start.lua ./glue/etc/tarantool/instances.enabled/glue.lua
 
 chown -R root:root ./glue/
 chown -R tarantool:tarantool ./glue/etc/tarantool/
 chown -R tarantool:tarantool ./glue/usr/share/tarantool/
 
+KB=`du -sk  ./glue |awk '{print $1}'`
+SIZE="Installed-Size:  "$GIT
+
+echo $SIZE >> ./glue/DEBIAN/control
+
 dpkg-deb --build glue
 
-GIT=`git describe --dirty --always --tags`
 mv glue.deb ../glue_$GIT.deb
 
 cd ..
