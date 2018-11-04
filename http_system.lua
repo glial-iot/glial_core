@@ -12,8 +12,10 @@ function http_system.init(http_port)
 end
 
 function http_system.init_server(http_port)
-   http_system.server = require('http.server').new(nil, http_port, {charset = "utf-8"})
+   http_port = tonumber(http_port) or config.HTTP_PORT
+   http_system.server = require('http.server').new(nil, http_port, {charset = "utf-8", app_dir = "./panel"})
    print("HTTP server runned on "..http_port.." port")
+   http_system.server:route({ path = '/panel', file = 'index.html' })
    http_system.server:start()
 end
 
