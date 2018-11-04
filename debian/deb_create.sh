@@ -32,6 +32,10 @@ chown -R tarantool:tarantool ./glue/usr/share/tarantool/
 
 dpkg-deb --build glue
 
-mv glue.deb glue_0.73-82-gfd80b2b_all.deb
+GIT=`git describe --dirty --always --tags`
+mv glue.deb ../glue_$GIT.deb
+
+cd ..
+rm -rf ./temp_deb_packet_create
 
 #lintian glue_0.73-82-gfd80b2b_all.deb
