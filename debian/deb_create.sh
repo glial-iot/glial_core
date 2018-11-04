@@ -12,6 +12,7 @@ mkdir -p ./glue/usr/share/tarantool/glue
 cp ../../*.lua ./glue/usr/share/tarantool/glue
 cp -r ../../libs ./glue/usr/share/tarantool/glue
 cp -r ../../.rocks ./glue/usr/share/tarantool/glue
+cp -r ../../panel ./glue/usr/share/tarantool/glue
 
 mkdir -p ./glue/etc/tarantool/instances.enabled/
 rm ./glue/usr/share/tarantool/glue/glue_start.lua
