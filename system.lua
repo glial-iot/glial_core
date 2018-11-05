@@ -64,7 +64,7 @@ end
 
 function system.version()
    if (version ~= nil and version_type ~= nil) then
-      return version_type, version
+      return version, version_type
    else
       _, _, git_version = string.find(system.os_command("git describe --dirty --always --tags"), "(%S+)%s*$")
       if (git_version == nil) then
@@ -72,15 +72,15 @@ function system.version()
          if (standalone_version == nil) then
             version_type = "standalone"
             version = "Version error"
-            return version_type, version
+            return version, version_type
          end
          version_type = "standalone"
          version = standalone_version
-         return version_type, version
+         return version, version_type
       else
          version_type = "git"
          version = git_version
-         return version_type, version
+         return version, version_type
       end
    end
 end
