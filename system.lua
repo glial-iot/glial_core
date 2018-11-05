@@ -6,7 +6,8 @@ local fiber = require 'fiber'
 local clock = require 'clock'
 local inspect = require 'libs/inspect'
 
-local git_version, _
+local git_version
+local version, version_type, _
 
 function system.reverse_table(t)
    local reversedTable = {}
@@ -55,14 +56,32 @@ function system.print_n(data, ...)
 	io.flush()
 end
 
+function system.git_version()
+   _, _, git_version = string.find(system.os_command("git describe --dirty --always --tags"), "(%S+)%s*$")
+   git_version = git_version or "Version git error"
+   return git_version
+end
 
-function system.git_version(new_flag)
-   if (git_version == nil or new_flag == true) then
-      _, _, git_version = string.find(system.os_command("git describe --dirty --always --tags"), "(%S+)%s*$")
-      git_version = git_version or "Version git error"
-      return git_version
+function system.version()
+   if (version ~= nil and version_type ~= nil) then
+      return version_type, version
    else
-      return git_version
+      _, _, git_version = string.find(system.os_command("git describe --dirty --always --tags"), "(%S+)%s*$")
+      if (git_version == nil) then
+         local _, _, standalone_version = string.find(system.os_command("cat ./VERSION"), "(%S+)%s*$")
+         if (standalone_version == nil) then
+            version_type = "standalone"
+            version = "Version error"
+            return version_type, version
+         end
+         version_type = "standalone"
+         version = standalone_version
+         return version_type, version
+      else
+         version_type = "git"
+         version = git_version
+         return version_type, version
+      end
    end
 end
 

@@ -44,7 +44,7 @@ local function start()
    box.schema.user.grant('guest', 'read,write,execute', 'universe', nil, {if_not_exists = true})
 
    logger.storage_init()
-   local msg_reboot = "GLUE, "..system.git_version()..", tarantool "..require('tarantool').version
+   local msg_reboot = "GLUE, "..system.version()..", tarantool "..require('tarantool').version
    logger.add_entry(logger.REBOOT, "------------", msg_reboot, nil, "Tarantool pid "..require('tarantool').pid())
 
    http_system.init(glue_http_port)

@@ -46,6 +46,10 @@ cp ../dirs ./glue/DEBIAN/dirs
 cp ../prerm ./glue/DEBIAN/prerm
 cp ../postinst ./glue/DEBIAN/postinst
 
+
+# Add version file
+echo $VERSION > ./glue/usr/share/tarantool/glue/VERSION
+
 # Buld
 dpkg-deb --build glue
 
