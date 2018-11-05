@@ -1,5 +1,5 @@
 #!/bin/sh
-GIT=`git describe --dirty --always --tags`
+GIT=`git describe --dirty --always --tags | cut -c 2-`
 VERSION="Version: "$GIT
 
 rm -rf ./temp_deb_packet_create
