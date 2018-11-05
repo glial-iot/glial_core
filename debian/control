@@ -1,6 +1,6 @@
 Package: glue
 Maintainer: vvzvlad <vvzvlad@gmail.com>
-Architecture: all
+Architecture: arnhf
 Section: misc
 Description: IoT management system by Nokia IoT Lab
 Priority: optional
