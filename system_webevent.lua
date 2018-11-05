@@ -31,7 +31,7 @@ function private.system_action_http_api(req)
 
    if (params["action"] == "tarantool_stop") then
       logger.add_entry(logger.INFO, "Action events", 'System get command stop on web control page')
-      fiber.create(system.wait_and_exit)
+      system.wait_and_exit()
       return_object = req:render{ json = { result = true } }
    elseif (params["action"] == "wipe_storage") then
       os.execute("rm -rf ./db")
