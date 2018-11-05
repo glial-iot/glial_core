@@ -7,7 +7,7 @@ local fiber = require 'fiber'
 
 function private.update(req)
    local _, version_type = system.version()
-   if (version_type ~= "standalone") then
+   if (version_type == "standalone") then
       return req:render{ json = { result = false, msg = "Standalone mode, update error, use system commands" } }
    end
    local branch_1 = system.os_command("git rev-parse --abbrev-ref HEAD")
