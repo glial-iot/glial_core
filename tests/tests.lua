@@ -1,10 +1,10 @@
 require 'busted.runner'()
-local http = require("socket.http")
-local ltn12 = require("ltn12")
-local md5 = require("md5")
-local base64 = require ("base64")
-local inspect = require('inspect')
-local fun = require('fun')
+local http = require "socket.http"
+local ltn12 = require "ltn12"
+local md5 = require "md5"
+local base64 = require "base64"
+local inspect = require 'inspect'
+local fun = require 'fun'
 local json = require "json"
 
 math.randomseed(os.time())
@@ -186,14 +186,14 @@ describe("Testing advanced #script system functionality", function()
     test("Create invalid script, launch it and get error", function()
         local driver_script = createScriptFromFile("driver", "./test_scripts/invalid_script.lua")
         setScriptActiveFlag("driver", driver_script.uuid, "ACTIVE")
-        local launched_invalid_script =  getScriptByUuid("driver", driver_script.uuid)
+        local launched_invalid_script = getScriptByUuid("driver", driver_script.uuid)
         assert.are.equal("ERROR", launched_invalid_script.status)
     end)
 
     test("Create valid script, launch it and get no errors", function()
         local driver_script = createScriptFromFile("driver", "./test_scripts/valid_script.lua")
         setScriptActiveFlag("driver", driver_script.uuid, "ACTIVE")
-        local launched_valid_script =  getScriptByUuid("driver", driver_script.uuid)
+        local launched_valid_script = getScriptByUuid("driver", driver_script.uuid)
         assert.are.equal("NORMAL", launched_valid_script.status)
     end)
 

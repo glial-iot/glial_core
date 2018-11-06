@@ -1,11 +1,11 @@
 require 'busted.runner'()
-local http = require("socket.http")
-local socket = require("socket")
-local ltn12 = require("ltn12")
-local md5 = require("md5")
-local base64 = require ("base64")
-local inspect = require('inspect')
-local fun = require('fun')
+local http = require "socket.http"
+local socket = require "socket"
+local ltn12 = require "ltn12"
+local md5 = require "md5"
+local base64 = require "base64"
+local inspect = require 'inspect'
+local fun = require 'fun'
 local json = require "json"
 
 math.randomseed(os.time())
@@ -34,7 +34,7 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
     local response_body = {}
 
     if method == "GET" then
-        local body, code, headers, status  = http.request {
+        local body, code, headers, status = http.request {
             method = method,
             url = active_endpoint,
             source = ltn12.source.string(parameters),
@@ -45,7 +45,7 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
         }
     end
     if method == "POST" then
-        local body, code, headers, status  = http.request {
+        local body, code, headers, status = http.request {
             method = method,
             url = active_endpoint.."?"..parameters,
             source = ltn12.source.string(payload),
@@ -57,7 +57,7 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
         }
     end
 
-    return table.concat(response_body), code, headers, status;
+    return table.concat(response_body), code, headers, status
 
 end
 
@@ -91,7 +91,7 @@ function updateScriptBody(type, uuid, script_body)
 end
 
 function copyScript(type, uuid, new_name)
-    local result =  json.decode(makeApiCall(type, "GET", "action=copy&uuid=" .. uuid .. "&name="..new_name))
+    local result = json.decode(makeApiCall(type, "GET", "action=copy&uuid=" .. uuid .. "&name="..new_name))
     return result.script
 end
 
