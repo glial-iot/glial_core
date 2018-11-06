@@ -110,8 +110,8 @@ end
 
 function system.wait_and_exit()
    fiber.create(function()
+      require('logger').add_entry(require('logger').INFO, "System", 'System stopped')
       fiber.sleep(1)
-      require('logger').logger.add_entry(require('logger').logger.INFO, "System", 'System stopped')
       os.exit(1)
    end)
 end
