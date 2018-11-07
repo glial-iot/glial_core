@@ -300,8 +300,8 @@ function timer_events_private.http_api_update(params, req)
          local data = {}
          data.uuid = params["uuid"]
          data.active_flag = params["active_flag"]
-         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
-         if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
+         if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+         if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
          if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
          if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
          local table = scripts.update(data)
