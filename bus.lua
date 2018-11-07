@@ -200,6 +200,10 @@ function bus.shadow_set_value(topic, value)
    return bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW, "0")
 end
 
+function bus.update_type(topic, type)
+   return bus_private.update_type(topic, type)
+end
+
 function bus.get_value(topic)
    local tuple = bus.storage.index.topic:get(topic)
 
