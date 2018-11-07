@@ -261,6 +261,8 @@ function drivers_private.http_api_update(params, req)
          data.uuid = params["uuid"]
          data.active_flag = params["active_flag"]
          if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
+         if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+         if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
          local table = scripts.update(data)
          table.reload_result = drivers_private.reload(params["uuid"])
          return req:render{ json = table }
