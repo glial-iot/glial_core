@@ -255,8 +255,13 @@ end
 
 function scripts_private.copy(data)
    local tuple_script = scripts_private.storage.index.uuid:get(data.uuid)
-   local table = scripts_private.create({type = tuple_script["type"], name = data.name, body = tuple_script["body"]})
-
+   local new_data = {
+      type = tuple_script["type"],
+      object = tuple_script["specific_data"]["object"],
+      name = data.name,
+      body = tuple_script["body"]
+   }
+   local table = scripts_private.create(new_data)
    return true, table, nil
 end
 
