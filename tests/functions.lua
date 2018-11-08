@@ -73,7 +73,7 @@ end
 
 function createScript (type)
     local script_name = md5.sumhexa(math.random())
-    local result = json.decode(makeApiCall(type, "GET", "action=create&name="..script_name))
+    local result = json.decode(makeApiCall(type, "GET", "action=create&name="..base64.encode(script_name)))
     return result.script
 end
 
@@ -101,7 +101,7 @@ end
 
 function renameScript (type, uuid)
     local new_script_name = md5.sumhexa(math.random())
-    return json.decode(makeApiCall(type, "GET", "action=update&uuid=" .. uuid .. "&name=" .. new_script_name))
+    return json.decode(makeApiCall(type, "GET", "action=update&uuid=" .. uuid .. "&name=" .. base64.encode(new_script_name)))
 end
 
 function changeScriptObject (type, uuid, object)
@@ -109,7 +109,7 @@ function changeScriptObject (type, uuid, object)
     if object == nil then
         new_script_object = md5.sumhexa(math.random())
     end
-    return json.decode(makeApiCall(type, "GET", "action=update&uuid=" .. uuid .. "&object=" .. new_script_object))
+    return json.decode(makeApiCall(type, "GET", "action=update&uuid=" .. uuid .. "&object=" .. base64.encode(new_script_object)))
 end
 
 function setScriptActiveFlag (type, uuid, active_flag)
