@@ -227,18 +227,24 @@ end
 ------------------↓ HTTP API functions ↓------------------
 
 function timer_events_private.http_api_get_list(params, req)
-   local table = scripts.get_list(scripts.type.TIMER_EVENT)
+   local tag
+   if (params["tag"] ~= nil) then tag = digest.base64_decode(params["tag"]) end
+   local table = scripts.get_list(scripts.type.TIMER_EVENT, tag)
    return req:render{ json = table }
 end
 
 function timer_events_private.http_api_create(params, req)
-   params["name"] = string.gsub(params["name"], "+", " ")
-   local status, table, err_msg = scripts.create(params["name"], scripts.type.TIMER_EVENT, params["object"], params["tag"], params["comment"])
+   local data = {}
+   if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+   if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
+   if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+   if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
+   local status, table, err_msg = scripts.create(data.name, scripts.type.TIMER_EVENT, data.object, data.tag, data.comment)
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
 function timer_events_private.http_api_copy(params, req)
-   local status, table, err_msg = scripts.copy(params["name"], params["uuid"])
+   local status, table, err_msg = scripts.copy(digest.base64_decode(params["name"]), params["uuid"])
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 

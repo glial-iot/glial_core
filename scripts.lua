@@ -98,7 +98,13 @@ function scripts_private.get_list(data)
          comment = tuple["specific_data"]["comment"] or "",
          tag = tuple["specific_data"]["tag"] or ""
       }
-      table.insert(list_table, current_script_table)
+      if (data.tag ~= nil and data.tag ~= "") then
+         if (current_script_table.tag == data.tag) then
+            table.insert(list_table, current_script_table)
+         end
+      else
+         table.insert(list_table, current_script_table)
+      end
    end
    return list_table
 end
@@ -367,8 +373,8 @@ function scripts.delete(data)
    return scripts_private.delete({uuid = data.uuid})
 end
 
-function scripts.get_list(type)
-   return scripts_private.get_list({type = type})
+function scripts.get_list(type, tag)
+   return scripts_private.get_list({type = type, tag = tag})
 end
 
 function scripts.copy(name, uuid)
