@@ -42,16 +42,15 @@ function logger_private.http_api_get_logs(params, req)
                end
             end
          end
-         local time_in_sec = math.floor(tuple["timestamp"]/10000)
+         local time_in_ms = tuple["timestamp"]/10
          local processed_tuple = {
             level = tuple["level"],
             source = tuple["source"],
             uuid_source = tuple["uuid_source"],
             entry = tuple["entry"],
-            time = time_in_sec,
-            time_ms = math.floor(tuple["timestamp"]/10),
+            time = math.floor(time_in_ms/10000),
+            time_ms = math.floor(time_in_ms),
             trace = tuple["trace"],
-            date_abs = os.date("%Y-%m-%d, %H:%M:%S", time_in_sec),
          }
          table.insert(processed_table, processed_tuple)
       until true
