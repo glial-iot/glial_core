@@ -48,7 +48,7 @@ function logger_private.http_api_get_logs(params, req)
             source = tuple["source"],
             uuid_source = tuple["uuid_source"],
             entry = tuple["entry"],
-            time = math.floor(time_in_ms/10000),
+            time = math.floor(time_in_ms/1000),
             time_ms = math.floor(time_in_ms),
             trace = tuple["trace"],
          }
