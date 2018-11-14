@@ -347,6 +347,7 @@ function scripts.generate_body(script_params, log_script_name)
    body.mqtt = require 'mqtt'
    body.json = require 'json'
    body.socket = require 'socket'
+   body.clock = require 'clock'
    return body
 end
 
