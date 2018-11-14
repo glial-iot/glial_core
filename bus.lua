@@ -27,13 +27,14 @@ bus.max_fifo_count = 0
 
 function bus_private.fifo_storage_worker()
    while true do
-      local topic, value, shadow_flag, source_uuid = bus_private.get_value_from_fifo()
+      local topic, value, shadow_flag, source_uuid, timestamp = bus_private.get_value_from_fifo()
       if (value ~= nil and topic ~= nil) then
          if (shadow_flag == bus.TYPE.NORMAL) then
             scripts_busevents.process(topic, value, source_uuid)
             scripts_drivers.process(topic, value, source_uuid)
          end
-         local timestamp = os.time()
+         timestamp = timestamp or os.time()*10000
+         timestamp = timestamp/10000
          bus.storage:upsert({topic, value, timestamp, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp}})
          bus.bus_saved_rps = bus.bus_saved_rps + 1
          fiber.yield()
@@ -73,7 +74,7 @@ function bus_private.get_value_from_fifo()
       bus.fifo_storage.index.timestamp:delete(tuple['timestamp'])
       local count = bus.fifo_storage.index.timestamp:count()
       if (count > bus.max_fifo_count) then bus.max_fifo_count = count end
-      return tuple['topic'], tuple["value"], tuple['shadow_flag'], tuple["source_uuid"]
+      return tuple['topic'], tuple["value"], tuple['shadow_flag'], tuple["source_uuid"], tuple['timestamp']
    end
 end
 
@@ -130,7 +131,7 @@ end
 
 function bus_private.gen_fifo_id(update_time)
    local current_time = update_time or clock.realtime()
-   local new_id = current_time*10000
+   local new_id = math.ceil(current_time*10000)
    while bus.fifo_storage.index.timestamp:get(new_id) do
       new_id = new_id + 1
    end
