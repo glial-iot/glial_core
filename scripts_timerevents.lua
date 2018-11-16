@@ -233,6 +233,11 @@ function timer_events_private.http_api_get_list(params, req)
    return req:render{ json = table }
 end
 
+function timer_events_private.http_api_get_tags(params, req)
+   local table = scripts.get_tags()
+   return req:render{ json = table }
+end
+
 function timer_events_private.http_api_create(params, req)
    local data = {}
    if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
@@ -353,6 +358,8 @@ function timer_events_private.http_api(req)
       return_object = timer_events_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = timer_events_private.http_api_get_list(params, req)
+   elseif (params["action"] == "get_tags") then
+      return_object = timer_events_private.http_api_get_tags(params, req)
    elseif (params["action"] == "update") then
       return_object = timer_events_private.http_api_update(params, req)
    elseif (params["action"] == "update_body") then

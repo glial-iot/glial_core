@@ -378,6 +378,24 @@ function scripts.get_list(type, tag)
    return scripts_private.get_list({type = type, tag = tag})
 end
 
+function scripts.get_tags()
+   local tags_table_raw = {}
+   local tags_table_processed = {}
+
+   for _, tuple in scripts_private.storage.index.type:pairs() do
+      local current_tag = tuple["specific_data"]["tag"]
+      if (current_tag ~= nil) then
+         tags_table_raw[current_tag] = current_tag
+      end
+   end
+
+   for _, tag in pairs(tags_table_raw) do
+      table.insert(tags_table_processed, tag)
+   end
+
+   return tags_table_processed
+end
+
 function scripts.copy(name, uuid)
    return scripts_private.copy({name = name, uuid = uuid})
 end
