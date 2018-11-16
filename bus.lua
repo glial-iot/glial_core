@@ -277,7 +277,7 @@ function bus.http_api(req)
    local params = req:param()
    local return_object
 
-   if (params["action"] == "update_value") then
+   if (params["action"] == "update_value") then --TODO: перемеименовать метод в set
       if (params["topic"] == nil or params["value"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or value" } }
       else
@@ -285,7 +285,7 @@ function bus.http_api(req)
          return_object = req:render{ json = { result = result } }
       end
 
-   elseif (params["action"] == "update_type") then
+   elseif (params["action"] == "update_type") then --TODO: перемеименовать метод в set
       if (params["topic"] == nil or params["type"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or type" } }
       else
@@ -293,7 +293,7 @@ function bus.http_api(req)
          return_object = req:render{ json = { result = result } }
       end
 
-   elseif (params["action"] == "update_tags") then
+   elseif (params["action"] == "update_tags") then -- TODO: перемеименовать метод в set
       if (params["topic"] == nil or params["tags"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or tags" } }
       else
