@@ -89,7 +89,7 @@ function bus_private.get_tags(table_tags)
    return string_tags
 end
 
-function bus_private.update_type(topic, type)
+function bus_private.set_type(topic, type)
    if (topic ~= nil and type ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
       bus.storage.index.topic:update(topic, {{"=", 4, type}})
       return true
@@ -98,7 +98,7 @@ function bus_private.update_type(topic, type)
    end
 end
 
-function bus_private.update_tags(topic, tags)
+function bus_private.set_tags(topic, tags)
    if (topic ~= nil and tags ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
       local processed_tags = tags:gsub("%%20", " ")
       processed_tags = processed_tags:gsub(" ", "")
@@ -201,8 +201,12 @@ function bus.shadow_set_value(topic, value)
    return bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW, "0")
 end
 
-function bus.update_type(topic, type)
-   return bus_private.update_type(topic, type)
+function bus.set_type(topic, type)
+   return bus_private.set_type(topic, type)
+end
+
+function bus.set_tags(topic, tags)
+   return bus_private.set_tags(topic, tags)
 end
 
 function bus.get_value(topic)
@@ -285,7 +289,7 @@ function bus.http_api(req)
       if (params["topic"] == nil or params["type"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or type" } }
       else
-         local result = bus_private.update_type(params["topic"], params["type"])
+         local result = bus_private.set_type(params["topic"], params["type"])
          return_object = req:render{ json = { result = result } }
       end
 
@@ -293,7 +297,7 @@ function bus.http_api(req)
       if (params["topic"] == nil or params["tags"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or tags" } }
       else
-         local result = bus_private.update_tags(params["topic"], params["tags"])
+         local result = bus_private.set_tags(params["topic"], params["tags"])
          return_object = req:render{ json = { result = result } }
       end
 
