@@ -229,7 +229,7 @@ function bus_events_private.run_once(uuid)
    local pcall_status, returned_data = pcall(body.event_handler, value, topic)
    if (pcall_status ~= true) then
       returned_data = tostring(returned_data)
-      log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+      log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or ""), script_params.uuid)
       scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
    end
 
@@ -432,7 +432,7 @@ function bus_events.process(topic, value, source_uuid)
             scripts.update_worktime(uuid, worktime)
             if (status ~= true) then
                err_msg = tostring(err_msg) or ""
-               log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..err_msg..')', script_params.uuid)
+               log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..err_msg, script_params.uuid)
                scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..err_msg})
             end
          end

@@ -230,7 +230,7 @@ function shedule_events_private.time_test()
                scripts.update_worktime(uuid, time)
                if (status ~= true) then
                   returned_data = tostring(returned_data)
-                  log_shedule_events_error('Shedule-event script event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+                  log_shedule_events_error('Shedule-event script event "'..script_params.name..'" generate error: '..(returned_data or ""), script_params.uuid)
                   scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Shedule-event script error: '..(returned_data or "")})
                end
             end
