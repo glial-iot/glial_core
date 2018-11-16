@@ -335,7 +335,6 @@ function scripts.generate_body(script_params, log_script_name)
    body._script_uuid = script_params.uuid
    body.set_value, body.shadow_set_value = uuid_related_set_value, bus.shadow_set_value
    body.set_type = bus.update_type
-   body.update_value, body.shadow_update_value = body.set_value, body.shadow_set_value --deprecated names
    body.get_value, body.bus_serialize = bus.get_value, bus.serialize
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(script_params.uuid, log_script_name)
