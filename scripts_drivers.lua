@@ -347,7 +347,7 @@ function drivers.init()
    http_system.endpoint_config("/drivers", drivers_private.http_api)
 end
 
-function drivers.process(topic, value, source_uuid)
+function drivers.process(topic, value, source_uuid, timestamp)
    for uuid, script_table in pairs(drivers_script_bodies) do
       local script_params = scripts.get({uuid = uuid})
       if (script_params.status == scripts.statuses.NORMAL and
@@ -359,7 +359,7 @@ function drivers.process(topic, value, source_uuid)
             for _, mask in pairs(masks) do
                mask = "^"..mask.."$"
                if (string.find(topic, mask) ~= nil) then
-                  local status, returned_data, time = system.pcall_timecalc(callback, value, topic)
+                  local status, returned_data, time = system.pcall_timecalc(callback, value, topic, timestamp)
                   scripts.update_worktime(uuid, time)
                   if (status ~= true) then
                      returned_data = tostring(returned_data)

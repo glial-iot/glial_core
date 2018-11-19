@@ -29,12 +29,12 @@ function bus_private.fifo_storage_worker()
    while true do
       local topic, value, shadow_flag, source_uuid, timestamp = bus_private.get_value_from_fifo()
       if (value ~= nil and topic ~= nil) then
-         if (shadow_flag == bus.TYPE.NORMAL) then
-            scripts_busevents.process(topic, value, source_uuid)
-            scripts_drivers.process(topic, value, source_uuid)
-         end
          timestamp = timestamp or os.time()*10000
          timestamp = timestamp/10000
+         if (shadow_flag == bus.TYPE.NORMAL) then
+            scripts_busevents.process(topic, value, source_uuid, timestamp)
+            scripts_drivers.process(topic, value, source_uuid, timestamp)
+         end
          bus.storage:upsert({topic, value, timestamp, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp}})
          bus.bus_saved_rps = bus.bus_saved_rps + 1
          fiber.yield()

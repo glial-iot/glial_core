@@ -420,7 +420,7 @@ end
 
 ------------------↓ Public functions ↓------------------
 
-function bus_events.process(topic, value, source_uuid)
+function bus_events.process(topic, value, source_uuid, timestamp)
    for uuid, current_script_table in pairs(bus_events_main_scripts_table) do
       local script_params = scripts.get({uuid = uuid})
       if (script_params.status == scripts.statuses.NORMAL and
@@ -428,7 +428,7 @@ function bus_events.process(topic, value, source_uuid)
          script_params.uuid ~= (source_uuid or "0")) then
          local mask = "^"..current_script_table.mask.."$"
          if (string.find(topic, mask) ~= nil) then
-            local status, err_msg, worktime = system.pcall_timecalc(current_script_table.body.event_handler, value, topic)
+            local status, err_msg, worktime = system.pcall_timecalc(current_script_table.body.event_handler, value, topic, timestamp)
             scripts.update_worktime(uuid, worktime)
             if (status ~= true) then
                err_msg = tostring(err_msg) or ""
