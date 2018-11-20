@@ -27,15 +27,14 @@ bus.max_fifo_count = 0
 
 function bus_private.fifo_storage_worker()
    while true do
-      local topic, value, shadow_flag, source_uuid, timestamp = bus_private.get_value_from_fifo()
+      local topic, value, shadow_flag, source_uuid, timestamp_us = bus_private.get_value_from_fifo()
       if (value ~= nil and topic ~= nil) then
-         timestamp = timestamp or os.time()*10000
-         timestamp = timestamp/10000
+         local timestamp_s = tonumber(timestamp_us/1000/1000)
          if (shadow_flag == bus.TYPE.NORMAL) then
-            scripts_busevents.process(topic, value, source_uuid, timestamp)
-            scripts_drivers.process(topic, value, source_uuid, timestamp)
+            scripts_busevents.process(topic, value, source_uuid, timestamp_s)
+            scripts_drivers.process(topic, value, source_uuid, timestamp_s)
          end
-         bus.storage:upsert({topic, value, timestamp, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp}})
+         bus.storage:upsert({topic, value, timestamp_s, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp_s}})
          bus.bus_saved_rps = bus.bus_saved_rps + 1
          fiber.yield()
       else
@@ -57,10 +56,12 @@ function bus_private.bus_rps_stat_worker()
    end
 end
 
-function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid, update_time)
+function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid, update_time_s)
    if (topic ~= nil and value ~= nil and shadow_flag ~= nil and source_uuid ~= nil) then
       value = tostring(value)
-      local id = bus_private.gen_fifo_id(update_time)
+      local update_time_us
+      if (update_time_s ~= nil) then update_time_us = update_time_s * 1000 * 1000 end
+      local id = bus_private.gen_fifo_id(update_time_us)
       bus.fifo_storage:insert{id, topic, value, shadow_flag, source_uuid}
       bus.fifo_saved_rps = bus.fifo_saved_rps + 1
       return true
@@ -129,9 +130,8 @@ function bus_private.delete_topics(topic)
    return false
 end
 
-function bus_private.gen_fifo_id(update_time)
-   local current_time = update_time or clock.realtime()
-   local new_id = math.ceil(current_time*10000)
+function bus_private.gen_fifo_id(update_time_us)
+   local new_id = update_time_us or clock.time64()/1000
    while bus.fifo_storage.index.timestamp:get(new_id) do
       new_id = new_id + 1
    end
