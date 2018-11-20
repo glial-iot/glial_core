@@ -20,6 +20,21 @@ web_events.bodies = web_events_script_bodies
 web_events_private.path_table = {}
 web_events_private.main_path = "/we/:name"
 
+web_events_private.init_body = [[-- The generated script is filled with the default content --
+function http_callback(params, req)
+
+   -- The script will receive parameters in the params table with this kind of query: /we/object?action=print_test
+   if (params["action"] == "print_test") then
+      return {print_text = "test"}
+      --return nil, "OK" --The direct output option without convert to json(see doc on http-tarantool)
+   else
+      return {no_data = "yes"}
+   end
+   -- The table returned by the script will be given as json: { "print_text": "test" } or {"no_data": "yes"}
+
+end
+]]
+
 ------------------↓ Private functions ↓------------------
 
 local function log_web_events_error(msg, uuid)
@@ -229,7 +244,7 @@ function web_events_private.http_api_create(params, req)
    if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
    if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
    if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
-   local status, table, err_msg = scripts.create(data.name, scripts.type.WEB_EVENT, data.object, data.tag, data.comment)
+   local status, table, err_msg = scripts.create(data.name, scripts.type.WEB_EVENT, data.object, data.tag, data.comment, web_events_private.init_body)
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 

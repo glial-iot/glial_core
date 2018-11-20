@@ -16,6 +16,31 @@ local http_system = require 'http_system'
 
 local drivers_script_bodies = {}
 
+drivers_private.init_body = [[-- The generated script is filled with the default content --
+
+masks = {"/test/1", "/test/2"}
+
+local function main()
+   while true do
+      print("Test driver loop")
+      fiber.sleep(600)
+   end
+end
+
+function init()
+   store.fiber_object = fiber.create(main)
+end
+
+function destroy()
+   if (store.fiber_object:status() ~= "dead") then
+      store.fiber_object:cancel()
+   end
+end
+
+function topic_update_callback(value, topic, timestamp)
+   print("Test driver callback:", value, topic)
+end]]
+
 local function log_drivers_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Drivers subsystem", msg, uuid, "")
 end
@@ -204,7 +229,7 @@ function drivers_private.http_api_create(params, req)
    if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
    if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
    if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
-   local status, table, err_msg = scripts.create(data.name, scripts.type.DRIVER, data.object, data.tag, data.comment)
+   local status, table, err_msg = scripts.create(data.name, scripts.type.DRIVER, data.object, data.tag, data.comment, drivers_private.init_body)
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 

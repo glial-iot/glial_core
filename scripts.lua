@@ -150,77 +150,6 @@ function scripts_private.update(data)
    return scripts_private.get({uuid = data.uuid})
 end
 
-function scripts_private.generate_init_body(type)
-   if (type == scripts.type.WEB_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function http_callback(params, req)
-
-   -- The script will receive parameters in the params table with this kind of query: /we/object?action=print_test
-   if (params["action"] == "print_test") then
-      return {print_text = "test"}
-      --return nil, "OK" --The direct output option without convert to json(see doc on http-tarantool)
-   else
-      return {no_data = "yes"}
-   end
-   -- The table returned by the script will be given as json: { "print_text": "test" } or {"no_data": "yes"}
-
-end
-]]
-   end
-
-   if (type == scripts.type.DRIVER) then
-      return [[-- The generated script is filled with the default content --
-
-masks = {"/test/1", "/test/2"}
-
-local function main()
-   while true do
-      print("Test driver loop")
-      fiber.sleep(600)
-   end
-end
-
-function init()
-   store.fiber_object = fiber.create(main)
-end
-
-function destroy()
-   if (store.fiber_object:status() ~= "dead") then
-      store.fiber_object:cancel()
-   end
-end
-
-function topic_update_callback(value, topic, timestamp)
-   print("Test driver callback:", value, topic)
-end]]
-   end
-
-
-   if (type == scripts.type.BUS_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function event_handler(value, topic, timestamp)
-    store.old_value = store.old_value or 0
-    store.old_value = store.old_value + value
-    log_info(store.old_value)
-end]]
-   end
-
-   if (type == scripts.type.TIMER_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function event_handler()
-
-end]]
-   end
-
-   if (type == scripts.type.SHEDULE_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function event_handler()
-
-end]]
-   end
-
-end
-
 function scripts_private.create(data)
    if (data.type == nil) then return nil end
    local new_data = {}
@@ -400,14 +329,14 @@ function scripts.copy(name, uuid)
    return scripts_private.copy({name = name, uuid = uuid})
 end
 
-function scripts.create(name, type, object, tag, comment)
+function scripts.create(name, type, object, tag, comment, body)
    if (name ~= nil and name ~= "" and type ~= nil and scripts.type[type] ~= nil) then
       local table = scripts_private.create({type = type,
                                             name = name,
                                             object = object,
                                             tag = tag,
                                             comment = comment,
-                                            body = scripts_private.generate_init_body(type)
+                                            body = body
                                           })
       return true, table
    else
