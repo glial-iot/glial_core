@@ -31,8 +31,13 @@ function logger_private.log_rotate_worker()
       arena_used_ratio = tonumber(arena_used_ratio)
 
       if (quota_used_ratio > user_truncate_threshold_percent or arena_used_ratio > user_truncate_threshold_percent) then
-         logger.storage.index.level:select(logger.USER)
-         logger.add_entry(logger.WARNING, "Logger", "Remove all USER level logs(used ratio > 80%)", "", "")
+         local iterator = 0
+         for _, tuple in logger.storage.index.level:pairs(logger.USER) do
+            logger.storage.index.timestamp:delete(tuple["timestamp"])
+            iterator = iterator + 1
+         end
+
+         logger.add_entry(logger.WARNING, "Logger", "Remove all USER level logs(used ratio > 80%): "..iterator.." entries", "", "")
          fiber.sleep(50)
       end
       fiber.sleep(5)
