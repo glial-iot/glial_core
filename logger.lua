@@ -6,6 +6,7 @@ local log = require 'log'
 local inspect = require 'libs/inspect'
 local box = box
 local clock = require 'clock'
+local fiber = require 'fiber'
 
 local system = require 'system'
 local config = require 'config'
@@ -16,8 +17,27 @@ logger.ERROR = "ERROR"
 logger.REBOOT = "REBOOT"
 logger.USER = "USER"
 
+local user_truncate_threshold_percent = 80
 
 ------------------↓ Private functions ↓------------------
+
+function logger_private.log_rotate_worker()
+   while true do
+      local stats_slab_info = box.slab.info()
+      local _, _, quota_used_ratio = string.find(stats_slab_info.quota_used_ratio, "(.+)%%$")
+      local _, _, arena_used_ratio = string.find(stats_slab_info.arena_used_ratio, "(.+)%%$")
+
+      quota_used_ratio = tonumber(quota_used_ratio)
+      arena_used_ratio = tonumber(arena_used_ratio)
+
+      if (quota_used_ratio > user_truncate_threshold_percent or arena_used_ratio > user_truncate_threshold_percent) then
+         logger.storage.index.level:select(logger.USER)
+         logger.add_entry(logger.WARNING, "Logger", "Remove all USER level logs(used ratio > 80%)", "", "")
+         fiber.sleep(50)
+      end
+      fiber.sleep(5)
+   end
+end
 
 ------------------↓ HTTP API functions ↓------------------
 function logger_private.http_api_get_logs(params, req)
@@ -202,6 +222,8 @@ function logger.storage_init()
    logger.storage:create_index('timestamp', {parts = {'timestamp'}, if_not_exists = true})
    logger.storage:create_index('level', {parts = {'level'}, if_not_exists = true, unique = false})
    logger.storage:create_index('uuid_source', {parts = {'uuid_source'}, if_not_exists = true, unique = false})
+
+   fiber.create(logger_private.log_rotate_worker)
 end
 
 function logger.http_init()
@@ -209,6 +231,5 @@ function logger.http_init()
    http_system.endpoint_config("/system_logger_ext", logger_private.tarantool_pipe_log_handler)
    http_system.endpoint_config("/logger", logger_private.http_api)
 end
-
 
 return logger
