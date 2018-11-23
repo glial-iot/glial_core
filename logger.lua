@@ -23,11 +23,7 @@ local user_truncate_threshold_percent = 80
 
 function logger_private.log_rotate_worker()
    while true do
-      local stats_slab_info = box.slab.info()
-      local _, _, quota_used_ratio = string.find(stats_slab_info.quota_used_ratio, "(.+)%%$")
-      local _, _, arena_used_ratio = string.find(stats_slab_info.arena_used_ratio, "(.+)%%$")
-
-      quota_used_ratio = tonumber(quota_used_ratio)
+      local _, _, arena_used_ratio = string.find(box.slab.info().arena_used_ratio, "(.+)%%$")
       arena_used_ratio = tonumber(arena_used_ratio)
 
       if (arena_used_ratio > user_truncate_threshold_percent) then
@@ -37,7 +33,8 @@ function logger_private.log_rotate_worker()
             iterator = iterator + 1
          end
 
-         logger.add_entry(logger.WARNING, "Logger", "Remove all USER level logs(arena used ratio > 80%): "..iterator.." entries", "", "")
+         iterator = iterator / 1000
+         logger.add_entry(logger.WARNING, "Logger", "Remove all USER level logs(arena used ratio > 80%): "..iterator.."k entries", "", "")
          fiber.sleep(50)
       end
       fiber.sleep(5)
