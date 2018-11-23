@@ -158,8 +158,7 @@ function logger.generate_log_functions(uuid, name)
 
    local function log_info(msg, ...)
       msg = system.concatenate_args(msg, ...)
-      local trace = debug.traceback("", 2)
-      logger.add_entry(logger.INFO, name, msg, uuid, trace)
+      logger.add_entry(logger.INFO, name, msg, uuid, "")
    end
 
    local function log_warning(msg, ...)
@@ -170,8 +169,7 @@ function logger.generate_log_functions(uuid, name)
 
    local function log_user(msg, ...)
       msg = system.concatenate_args(msg, ...)
-      local trace = debug.traceback("", 2)
-      logger.add_entry(logger.USER, name, msg, uuid, trace)
+      logger.add_entry(logger.USER, name, msg, uuid, "")
    end
 
    return log_error, log_warning, log_info, log_user
