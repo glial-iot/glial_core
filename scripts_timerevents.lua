@@ -346,7 +346,9 @@ function timer_events_private.http_api_update_body(params, req)
       data.body = text_decoded
       if (scripts.get({uuid = uuid}) ~= nil) then
          local table = scripts.update(data)
-         table.reload_result = timer_events_private.reload(params["uuid"])
+         if (params["reload"] ~= "none") then
+            table.reload_result = timer_events_private.reload(params["uuid"])
+         end
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Timer-event API body update: UUID not found"} }
