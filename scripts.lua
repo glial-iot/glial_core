@@ -255,17 +255,14 @@ end
 function scripts.generate_body(script_params, log_script_name)
    local bus = require 'bus'
    local body = setmetatable({}, {__index=_G})
-   local uuid_related_set_value = bus.set_value_generator(script_params.uuid)
    body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(script_params.uuid, log_script_name)
    body.system_print = body.print
    body.log, body.print = body.log_user, body.log_user
    body.round, body.deepcopy = system.round, system.deepcopy
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
-   body.set_value, body.shadow_set_value = uuid_related_set_value, bus.shadow_set_value
-   body.set_type = bus.set_type
-   body.set_tags = bus.set_tags
    body.get_value, body.bus_serialize = bus.get_value, bus.serialize
+   body.update = bus.update_generator(script_params.uuid)
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(script_params.uuid, log_script_name)
    body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
