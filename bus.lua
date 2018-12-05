@@ -198,7 +198,7 @@ function bus.get_value(topic)
    local tuple = bus.storage.index.topic:get(topic)
 
    if (tuple ~= nil) then
-      return tuple["value"], tuple["update_time"], tuple["type"], tuple["tags"]
+      return tuple["value"], tuple["update_time"], tuple["type"], setmetatable(tuple["tags"], nil)
    else
       return nil
    end
@@ -224,7 +224,7 @@ function bus.serialize(pattern)
          local_table.update_time = tuple["update_time"]
          local_table.topic = tuple["topic"]
          local_table.type = tuple["type"]
-         local_table.tags = tuple["tags"]
+         local_table.tags = setmetatable(tuple["tags"], nil)
       end
    end
    return bus_table
