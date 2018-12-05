@@ -204,6 +204,25 @@ function bus.get_value(topic)
    end
 end
 
+function bus.get_bus(pattern)
+   local bus_table = {}
+
+   for _, tuple in bus.storage.index.topic:pairs() do
+      local topic = tuple["topic"].."/"
+
+      if (topic:find(pattern or "")) then
+         local local_table = {}
+         local_table.value = tuple["value"]
+         local_table.update_time = tuple["update_time"]
+         local_table.topic = tuple["topic"]
+         local_table.type = tuple["type"]
+         local_table.tags = setmetatable(tuple["tags"], nil)
+         table.insert(bus_table, local_table)
+      end
+   end
+   return bus_table
+end
+
 function bus.serialize(pattern)
    local bus_table = {}
 

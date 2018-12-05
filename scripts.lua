@@ -261,7 +261,7 @@ function scripts.generate_body(script_params, log_script_name)
    body.round, body.deepcopy = system.round, system.deepcopy
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
-   body.get_value, body.bus_serialize = bus.get_value, bus.serialize
+   body.get_value, body.bus_serialize, body.get_bus = bus.get_value, bus.serialize, bus.get_bus
    body.update = bus.update_generator(script_params.uuid)
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(script_params.uuid, log_script_name)
