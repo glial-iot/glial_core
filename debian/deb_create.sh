@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 rm -rf ./temp_deb_packet_create
 
