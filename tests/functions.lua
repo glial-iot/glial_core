@@ -91,7 +91,7 @@ function updateScriptBody(type, uuid, script_body)
 end
 
 function copyScript(type, uuid, new_name)
-    local result = json.decode(makeApiCall(type, "GET", "action=copy&uuid=" .. uuid .. "&name="..new_name))
+    local result = json.decode(makeApiCall(type, "GET", "action=copy&uuid=" .. uuid .. "&name="..base64.encode(new_name)))
     return result.script
 end
 

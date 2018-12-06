@@ -396,7 +396,7 @@ describe("Testing #backups", function()
         sleep(300)
 
         -- Wipe storage, restart Glue and check that PID has changed
-        local wipe_time = os.time()
+        local wipe_time = os.time()*1000
         wipeStorage()
         sleep(1000)
         restartTarantool()
@@ -408,7 +408,7 @@ describe("Testing #backups", function()
         -- Check that there are no old logs after wipe.
         local logs_after_restart = getLogs()
         fun.each(function(x)
-            assert.is_true(x.time >= wipe_time)
+            assert.is_true(x.time_ms >= wipe_time)
         end, logs_after_restart)
 
         -- Check that there are no old drivers after wipe
@@ -448,7 +448,7 @@ describe("Testing #backups", function()
         -- Check that no log entries were restored from backup
         local logs_after_restore = getLogs()
         fun.each(function(x)
-            assert.is_true(x.time >= wipe_time)
+            assert.is_true(x.time_ms >= wipe_time)
         end, logs_after_restore)
     end)
 

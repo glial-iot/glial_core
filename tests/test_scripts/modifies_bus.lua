@@ -1,5 +1,5 @@
 function init()
-    update("/test/modify_bus/value", "modified")
+    update({topic = "/test/modify_bus/value", value = "modified"})
 end
 
 function destroy()

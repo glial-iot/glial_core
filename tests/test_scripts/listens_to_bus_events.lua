@@ -8,6 +8,6 @@ function event_handler(value)
         test_value = "reverted"
     end
 
-    update("/test/event_script/current_status", test_value)
+    update({topic = "/test/event_script/current_status", value = test_value})
 
 end
