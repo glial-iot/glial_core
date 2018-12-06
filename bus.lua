@@ -179,6 +179,7 @@ function bus.update_generator(uuid)
       table.time = tonumber(table.time)
       if (type(table.value) == "string") then map.value = table.value end
       if (type(table.value) == "number") then map.value = tostring(table.value) end
+      if (type(table.value) == "boolean") then map.value = tostring(table.value) end
       if (type(table.type) == "string") then map.type = table.type end
       if (type(uuid) == "string") then map.uuid = uuid end
       if (type(table.tags) == "table") then map.tags = table.tags end
