@@ -1,4 +1,10 @@
 #!/bin/sh
+set -e
+
+#luarocks install cqueues CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu/ OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu/
+#luarocks install luaossl CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu/ OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu/
+#apt-get install m4
+
 
 rm -rf ./temp_deb_packet_create
 
