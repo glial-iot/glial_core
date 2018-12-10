@@ -1,0 +1,10 @@
+language: c
+
+before_install:
+  - docker build -t nokia_tarantool ./
+  - docker run --name tarantool_test -itd --restart=unless-stopped -e "TZ=Europe/Moscow" nokia_tarantool
+
+script:
+  - docker exec -i tarantool_test mkdir -p ./logs
+  - docker exec -i tarantool_test busted tests.lua
+  - docker exec -i tarantool_test rm -rf ../test_db
