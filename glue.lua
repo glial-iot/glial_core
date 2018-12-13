@@ -22,6 +22,11 @@ local function start()
    local tarantool_bin_port = tonumber(os.getenv('TARANTOOL_BIN_PORT'))
    local glue_http_port = tonumber(os.getenv('HTTP_PORT')) or config.HTTP_PORT
    local tarantool_wal_dir = os.getenv('TARANTOOL_WAL_DIR') or config.dir.DATABASE
+   local log_type = os.getenv('LOG_TYPE') or "PIPE"
+   local log_point
+   if (log_type ~= "NONE") then
+      log_point = "pipe: PORT="..glue_http_port.."./http_pipe_logger.lua"
+   end
 
    system.dir_check(tarantool_wal_dir)
    system.dir_check(config.dir.BACKUP)
@@ -34,7 +39,7 @@ local function start()
       memtx_dir = tarantool_wal_dir,
       vinyl_dir = tarantool_wal_dir,
       wal_dir = tarantool_wal_dir,
-      log = "pipe: PORT="..glue_http_port.."./http_pipe_logger.lua"
+      log = log_point
    }
 
    if (tarantool_bin_port ~= nil) then
