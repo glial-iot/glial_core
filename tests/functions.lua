@@ -9,7 +9,7 @@ local fun = require 'fun'
 local json = require "json"
 
 math.randomseed(os.time())
-local tarantool_start_cmd = "TIME="..os.time().." ./run_tarantool.sh &"
+local tarantool_start_cmd = "TIME="..os.time().." LOG_TYPE=NONE ./run_tarantool.sh &"
 
 function makeApiCall (type , method, parameters, payload, web_event_endpoint)
     if payload == nil then payload = "" end
