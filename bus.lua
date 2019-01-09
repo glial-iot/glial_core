@@ -37,7 +37,7 @@ function bus_private.fifo_storage_worker()
       local topic, metadata = bus_private.get_value_from_fifo_s()
       if (topic ~= nil and metadata ~= nil and type(metadata) == "table") then
 
-         if (metadata.check == true and bus.get_value(topic) == tostring(metadata.value)) then
+         if (metadata.check == true and bus.get_value(topic) == tostring(metadata.value)) then --неправильная логика
             metadata.value = nil
          end
 
