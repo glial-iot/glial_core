@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
 
-#luarocks install cqueues CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu/ OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu/
-#luarocks install luaossl CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu/ OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu/
-#apt-get install m4
+#curl -s https://packagecloud.io/install/repositories/tarantool/1_10/script.deb.sh | sudo bash
+#apt-get -y install tarantool=1.10.2.18.g480c55b67-1 tarantool-dev=1.10.2.18.g480c55b67-1 libmosquitto-dev
+
 
 
 rm -rf ./temp_deb_packet_create
