@@ -1,5 +1,5 @@
 # Glue
-[![Tests:](https://travis-ci.org/glial-iot/glue.svg?branch=develop)](https://travis-ci.org/glial-iot/glue)
+[![Tests:](https://travis-ci.org/glial-iot/glue.svg?branch=develop-bad)](https://travis-ci.org/glial-iot/glue)
 
 ## Как запустить Glue?
 
