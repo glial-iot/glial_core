@@ -399,8 +399,29 @@ end
 function bus_events_private.http_api(req)
    local params = req:param()
    local return_object
-
-   return_object = req:render{ json = {result = false, error_msg = "Bus-events API: no valid action"} }
+   if (params["action"] == "reload") then
+      return_object = bus_events_private.http_api_reload(params, req)
+   elseif (params["action"] == "get_list") then
+      return_object = bus_events_private.http_api_get_list(params, req)
+   elseif (params["action"] == "get_tags") then
+      return_object = bus_events_private.http_api_get_tags(params, req)
+   elseif (params["action"] == "update") then
+      return_object = bus_events_private.http_api_update(params, req)
+   elseif (params["action"] == "update_body") then
+      return_object = bus_events_private.http_api_update_body(params, req)
+   elseif (params["action"] == "run_once") then
+      return_object = bus_events_private.http_api_run_once(params, req)
+   elseif (params["action"] == "create") then
+      return_object = bus_events_private.http_api_create(params, req)
+   elseif (params["action"] == "copy") then
+      return_object = bus_events_private.http_api_copy(params, req)
+   elseif (params["action"] == "delete") then
+      return_object = bus_events_private.http_api_delete(params, req)
+   elseif (params["action"] == "get") then
+      return_object = bus_events_private.http_api_get(params, req)
+   else
+      return_object = req:render{ json = {result = false, error_msg = "Bus-events API: no valid action"} }
+   end
 
    return_object = return_object or req:render{ json = {result = false, error_msg = "Bus-events API: unknown error(435)"} }
    return system.add_headers(return_object)
