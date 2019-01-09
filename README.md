@@ -1,5 +1,9 @@
 # Glue
-[![Tests:](https://travis-ci.org/glial-iot/glue.svg?branch=develop)](https://travis-ci.org/glial-iot/glue)
+[![](https://img.shields.io/travis/glial-iot/glue/develop.svg?label=integration%20tests)](https://travis-ci.org/glial-iot/glue) ![](https://img.shields.io/github/last-commit/glial-iot/glue.svg) ![](https://img.shields.io/github/commit-activity/y/glial-iot/glue.svg) ![](https://img.shields.io/github/tag-date/glial-iot/glue.svg?label=last%20version)  
+![](https://img.shields.io/github/languages/top/glial-iot/glue.svg) ![](https://img.shields.io/github/languages/code-size/glial-iot/glue.svg) ![](https://img.shields.io/github/repo-size/glial-iot/glue.svg) ![](https://img.shields.io/github/license/glial-iot/glue.svg)  
+
+<!-- ![](https://img.shields.io/github/issues-raw/glial-iot/glue.svg) ![](https://img.shields.io/github/issues-closed-raw/glial-iot/glue.svg) -->
+
 
 ## Как запустить Glue?
 
