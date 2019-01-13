@@ -12,7 +12,6 @@
 /user/html/*
 /user
 /backup
-/glue.code-workspace
 /dump
 /docs/package-lock.json
 /docs/node_modules
