@@ -1,0 +1,20 @@
+return {
+    _all = {
+        coverage = false
+    },
+    default = {
+        verbose = true
+    },
+    tarantool = {
+        tags = "tarantool",
+        verbose = true
+    },
+    backups = {
+        tags = "backups",
+        verbose = true
+    },
+    functions = {
+        tags = "functions",
+        verbose = true
+    }
+}

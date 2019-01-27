@@ -5,6 +5,7 @@ local scripts_private = {}
 local box = box
 local uuid_lib = require('uuid')
 local fiber = require 'fiber'
+local clock = require 'clock'
 
 local inspect = require 'libs/inspect'
 
@@ -17,10 +18,68 @@ scripts.flag = {ACTIVE = "ACTIVE", NON_ACTIVE = "NON_ACTIVE"}
 scripts.type = {WEB_EVENT = "WEB_EVENT", TIMER_EVENT = "TIMER_EVENT", SHEDULE_EVENT = "SHEDULE_EVENT", BUS_EVENT = "BUS_EVENT", DRIVER = "DRIVER"}
 scripts.store = {}
 
+scripts.worktime_period = 60
 
 ------------------↓ Private functions ↓------------------
 
+function scripts_private.worktime_worker()
+   for _, tuple in scripts_private.worktime.index.uuid:pairs() do
+      scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 2, 0}})
+      scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 3, 0}})
+   end
+
+   while true do
+      fiber.sleep(scripts.worktime_period)
+      local worktime_sum = 0.1
+      for _, tuple in scripts_private.worktime.index.uuid:pairs() do
+         worktime_sum = worktime_sum + (tuple["worktime_ms"] or 0)
+      end
+      local worktime_percent = worktime_sum / 100
+      local alltime_percent = scripts.worktime_period * 1000 / 100
+
+      --local sum_worktime_percents = 0
+      --local sum_alltime_percents = 0
+
+      for _, tuple in scripts_private.worktime.index.uuid:pairs() do
+         local worktime_ms = tuple["worktime_ms"] or 0
+         local worktime_current_percent = (worktime_ms / worktime_percent)
+         local alltime_current_percent = (worktime_ms / alltime_percent)
+
+         worktime_current_percent = system.round(worktime_current_percent, 2) or 0
+         alltime_current_percent = system.round(alltime_current_percent, 2) or 0
+
+         scripts_private.worktime.index.uuid:update(tuple["uuid"], {{"=", 2, 0}})
+         scripts_private.update_specific_data({uuid = tuple["uuid"], worktime_percent = worktime_current_percent})
+         scripts_private.update_specific_data({uuid = tuple["uuid"], alltime_percent = alltime_current_percent})
+
+         --sum_alltime_percents = sum_alltime_percents + alltime_current_percent
+         --sum_worktime_percents = sum_worktime_percents + worktime_current_percent
+         --print(tuple["uuid"], tuple["worktime_ms"], "ms", worktime_current_percent, "%", alltime_current_percent, "%")
+      end
+
+      --print(sum_worktime_percents, "%", sum_alltime_percents, "%")
+
+   end
+end
+
 ------------------↓ Internal API functions ↓------------------
+
+
+function scripts_private.update_specific_data(data)
+   if (data.uuid == nil) then return nil end
+   if (scripts_private.storage.index.uuid:select(data.uuid) == nil) then return nil end
+   local tuple = scripts_private.storage.index.uuid:get(data.uuid)
+   local specific_data = tuple["specific_data"]
+
+   if (data.object ~= nil) then specific_data.object = data.object end
+   if (data.alltime_percent ~= nil) then specific_data.alltime_percent = data.alltime_percent end
+   if (data.worktime_percent ~= nil) then specific_data.worktime_percent = data.worktime_percent end
+   if (data.comment ~= nil) then specific_data.comment = data.comment end
+   if (data.tag ~= nil) then specific_data.tag = data.tag end
+
+   specific_data = setmetatable(specific_data, {__serialize = 'map'})
+   scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, specific_data}})
+end
 
 function scripts_private.get_list(data)
    local list_table = {}
@@ -33,9 +92,19 @@ function scripts_private.get_list(data)
          status = tuple["status"],
          status_msg = tuple["status_msg"],
          active_flag = tuple["active_flag"],
-         object = tuple["specific_data"]["object"]
+         object = tuple["specific_data"]["object"],
+         worktime_percent = tuple["specific_data"]["worktime_percent"] or 0,
+         alltime_percent = tuple["specific_data"]["alltime_percent"] or 0,
+         comment = tuple["specific_data"]["comment"] or "",
+         tag = tuple["specific_data"]["tag"] or ""
       }
-      table.insert(list_table, current_script_table)
+      if (data.tag ~= nil and data.tag ~= "") then
+         if (current_script_table.tag == data.tag) then
+            table.insert(list_table, current_script_table)
+         end
+      else
+         table.insert(list_table, current_script_table)
+      end
    end
    return list_table
 end
@@ -52,7 +121,11 @@ function scripts_private.get(data)
          status = tuple["status"],
          status_msg = tuple["status_msg"],
          active_flag = tuple["active_flag"],
-         object = tuple["specific_data"]["object"]
+         object = tuple["specific_data"]["object"],
+         worktime_percent = tuple["specific_data"]["worktime_percent"] or 0,
+         alltime_percent = tuple["specific_data"]["alltime_percent"] or 0,
+         comment = tuple["specific_data"]["comment"] or "",
+         tag = tuple["specific_data"]["tag"] or ""
       }
       return table
    else
@@ -70,86 +143,11 @@ function scripts_private.update(data)
    if (data.status_msg ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 6, data.status_msg}}) end
    if (data.active_flag ~= nil) then scripts_private.storage.index.uuid:update(data.uuid, {{"=", 7, data.active_flag}}) end
 
-   if (data.object ~= nil) then
-      local tuple = scripts_private.storage.index.uuid:get(data.uuid)
-      local specific_data = tuple["specific_data"]
-      specific_data.object = data.object
-      specific_data = setmetatable(specific_data, {__serialize = 'map'})
-      scripts_private.storage.index.uuid:update(data.uuid, {{"=", 8, specific_data}})
-   end
+   if (data.object ~= nil) then scripts_private.update_specific_data({uuid = data.uuid, object = data.object}) end
+   if (data.comment ~= nil) then scripts_private.update_specific_data({uuid = data.uuid, comment = data.comment}) end
+   if (data.tag ~= nil) then scripts_private.update_specific_data({uuid = data.uuid, tag = data.tag}) end
 
    return scripts_private.get({uuid = data.uuid})
-end
-
-function scripts_private.generate_init_body(type)
-   if (type == scripts.type.WEB_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function http_callback(params, req)
-
-   -- The script will receive parameters in the params table with this kind of query: /we/object?action=print_test
-   if (params["action"] == "print_test") then
-      return {print_text = "test"}
-      --return nil, "OK" --The direct output option without convert to json(see doc on http-tarantool)
-   else
-      return {no_data = "yes"}
-   end
-   -- The table returned by the script will be given as json: { "print_text": "test" } or {"no_data": "yes"}
-
-end
-]]
-   end
-
-   if (type == scripts.type.DRIVER) then
-      return [[-- The generated script is filled with the default content --
-
-masks = {"/test/1", "/test/2"}
-
-local function main()
-   while true do
-      print("Test driver loop")
-      fiber.sleep(600)
-   end
-end
-
-function init()
-   store.fiber_object = fiber.create(main)
-end
-
-function destroy()
-   if (store.fiber_object:status() ~= "dead") then
-      store.fiber_object:cancel()
-   end
-end
-
-function topic_update_callback(value, topic)
-   print("Test driver callback:", value, topic)
-end]]
-   end
-
-
-   if (type == scripts.type.BUS_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function event_handler(value, topic)
-    store.old_value = store.old_value or 0
-    store.old_value = store.old_value + value
-    log_info(store.old_value)
-end]]
-   end
-
-   if (type == scripts.type.TIMER_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function event_handler()
-
-end]]
-   end
-
-   if (type == scripts.type.SHEDULE_EVENT) then
-      return [[-- The generated script is filled with the default content --
-function event_handler()
-
-end]]
-   end
-
 end
 
 function scripts_private.create(data)
@@ -162,11 +160,18 @@ function scripts_private.create(data)
    new_data.status = data.status or scripts.statuses.STOPPED
    new_data.status_msg = data.status_msg or "New script"
    new_data.active_flag = data.active_flag or scripts.flag.NON_ACTIVE
+   new_data.specific_data = setmetatable({}, {__serialize = 'map'})
+
    if (data.object ~= nil) then
-      local specific_data = {object = data.object}
-      new_data.specific_data = setmetatable(specific_data, {__serialize = 'map'})
-   else
-      new_data.specific_data = setmetatable({}, {__serialize = 'map'})
+      new_data.specific_data.object = data.object
+   end
+
+   if (data.comment ~= nil) then
+      new_data.specific_data.comment = data.comment
+   end
+
+   if (data.tag ~= nil) then
+      new_data.specific_data.tag = data.tag
    end
 
    local table = {
@@ -180,7 +185,19 @@ function scripts_private.create(data)
       new_data.specific_data
    }
    scripts_private.storage:insert(table)
-   return scripts_private.get({uuid = new_data.uuid}) or "no."
+   return scripts_private.get({uuid = new_data.uuid}) or "no." -- зачем тут "no"?
+end
+
+function scripts_private.copy(data)
+   local tuple_script = scripts_private.storage.index.uuid:get(data.uuid)
+   local new_data = {
+      type = tuple_script["type"],
+      object = tuple_script["specific_data"]["object"],
+      name = data.name,
+      body = tuple_script["body"]
+   }
+   local table = scripts_private.create(new_data)
+   return true, table, nil
 end
 
 function scripts_private.delete(data)
@@ -193,7 +210,7 @@ function scripts_private.delete(data)
 end
 
 function scripts_private.storage_init()
-   local format = {
+   local scripts_storage_format = {
       {name='uuid',           type='string'},   --1
       {name='type',           type='string'},   --2
       {name='name',           type='string'},   --3
@@ -203,9 +220,17 @@ function scripts_private.storage_init()
       {name='active_flag',    type='string'},   --7
       {name='specific_data',  type='map'}       --8
    }
-   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = format, id = config.id.scripts})
+   scripts_private.storage = box.schema.space.create('scripts', {if_not_exists = true, format = scripts_storage_format, id = config.id.scripts})
    scripts_private.storage:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
    scripts_private.storage:create_index('type', {parts = {'type'}, if_not_exists = true, unique = false})
+
+
+   local worktime_format = {
+      {name='uuid',              type='string'},   --1
+      {name='worktime_ms',       type='number'},   --2
+   }
+   scripts_private.worktime = box.schema.space.create('worktime', {if_not_exists = true, format = worktime_format, id = config.id.worktime_scripts})
+   scripts_private.worktime:create_index('uuid', {parts = {'uuid'}, if_not_exists = true})
 end
 
 ------------------↓ Public functions ↓------------------
@@ -230,16 +255,14 @@ end
 function scripts.generate_body(script_params, log_script_name)
    local bus = require 'bus'
    local body = setmetatable({}, {__index=_G})
-   local uuid_related_set_value = bus.set_value_generator(script_params.uuid)
    body.log_error, body.log_warning, body.log_info, body.log_user = logger.generate_log_functions(script_params.uuid, log_script_name)
    body.system_print = body.print
    body.log, body.print = body.log_user, body.log_user
    body.round, body.deepcopy = system.round, system.deepcopy
    body._script_name = script_params.name
    body._script_uuid = script_params.uuid
-   body.set_value, body.shadow_set_value = uuid_related_set_value, bus.shadow_set_value
-   body.update_value, body.shadow_update_value = body.set_value, body.shadow_set_value --deprecated names
-   body.get_value, body.bus_serialize = bus.get_value, bus.serialize
+   body.get_value, body.bus_serialize, body.get_bus = bus.get_value, bus.serialize, bus.get_bus
+   body.update = bus.update_generator(script_params.uuid)
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(script_params.uuid, log_script_name)
    body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
@@ -250,6 +273,7 @@ function scripts.generate_body(script_params, log_script_name)
    body.mqtt = require 'mqtt'
    body.json = require 'json'
    body.socket = require 'socket'
+   body.clock = require 'clock'
    return body
 end
 
@@ -265,6 +289,7 @@ end
 
 function scripts.init()
    scripts_private.storage_init()
+   fiber.create(scripts_private.worktime_worker)
 end
 
 function scripts.get(data)
@@ -275,18 +300,40 @@ function scripts.delete(data)
    return scripts_private.delete({uuid = data.uuid})
 end
 
-function scripts.get_list(type)
-   return scripts_private.get_list({type = type})
+function scripts.get_list(type, tag)
+   return scripts_private.get_list({type = type, tag = tag})
 end
 
-function scripts.create(name, type, object)
+function scripts.get_tags()
+   local tags_table_raw = {}
+   local tags_table_processed = {}
+
+   for _, tuple in scripts_private.storage.index.type:pairs() do
+      local current_tag = tuple["specific_data"]["tag"]
+      if (current_tag ~= nil) then
+         tags_table_raw[current_tag] = current_tag
+      end
+   end
+
+   for _, tag in pairs(tags_table_raw) do
+      table.insert(tags_table_processed, tag)
+   end
+
+   return tags_table_processed
+end
+
+function scripts.copy(name, uuid)
+   return scripts_private.copy({name = name, uuid = uuid})
+end
+
+function scripts.create(name, type, object, tag, comment, body)
    if (name ~= nil and name ~= "" and type ~= nil and scripts.type[type] ~= nil) then
-      local new_object
-      if (object ~= nil) then new_object = string.gsub(object, "+", " ") end
       local table = scripts_private.create({type = type,
-                                            name = string.gsub(name, "+", " "),
-                                            object = new_object,
-                                            body = scripts_private.generate_init_body(type)
+                                            name = name,
+                                            object = object,
+                                            tag = tag,
+                                            comment = comment,
+                                            body = body
                                           })
       return true, table
    else
@@ -296,6 +343,10 @@ end
 
 function scripts.update(data)
    return scripts_private.update(data)
+end
+
+function scripts.update_worktime(uuid, time_ms)
+   scripts_private.worktime:upsert({uuid, 0}, {{"+", 2, time_ms}})
 end
 
 function scripts.get_all(data)

@@ -48,7 +48,7 @@ end
 
 function backup_restore_private.archive_dump_files(comment)
    comment = comment:gsub("%s", "_")
-   local filename = "gluebackup_"..os.time().."_"..comment..".tar.gz"
+   local filename = "glialbackup_"..os.time().."_"..comment..".tar.gz"
    local backup_path = config.dir.BACKUP.."/"..filename
    local files_path = config.dir.DUMP_FILES
    local command = "tar -czf '"..backup_path.."' '"..files_path.."' 2>&1"
@@ -124,6 +124,13 @@ function backup_restore.create_backup(comment)
       return false, message
    end
    fiber.yield()
+   result, msg = backup_restore_private.remove_space_files()
+   if (result == false) then
+      local message = "Backup failed on space-clean stage: "..(msg or "")
+      logger.add_entry(logger.ERROR, "Backup-restore system", message)
+      return false, message
+   end
+   fiber.yield()
    result = backup_restore_private.archive_dump_files(comment)
    if (result == false) then
       local message = "Backup failed on archive stage"
@@ -188,7 +195,7 @@ function backup_restore.http_api(req)
       local files_list = backup_restore.get_backup_files()
       local current_time = os.time()
       for i, filename in pairs(files_list) do
-         local _, _, time_epoch, comment = string.find(filename, "backup/gluebackup_(%d+)_([A-Za-z0-9_%(%)]+)%.tar%.gz")
+         local _, _, time_epoch, comment = string.find(filename, "backup/glialbackup_(%d+)_([A-Za-z0-9_%(%)]+)%.tar%.gz")
          comment = comment or ""
          comment = comment:gsub("_", " ")
          local diff_time_text = system.format_seconds(current_time - (time_epoch or 0)).." ago"

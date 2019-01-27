@@ -6,6 +6,7 @@ local log = require 'log'
 local inspect = require 'libs/inspect'
 local box = box
 local clock = require 'clock'
+local fiber = require 'fiber'
 
 local system = require 'system'
 local config = require 'config'
@@ -16,8 +17,29 @@ logger.ERROR = "ERROR"
 logger.REBOOT = "REBOOT"
 logger.USER = "USER"
 
+local user_truncate_threshold_percent = 80
 
 ------------------↓ Private functions ↓------------------
+
+function logger_private.log_rotate_worker()
+   while true do
+      local _, _, arena_used_ratio = string.find(box.slab.info().arena_used_ratio, "(.+)%%$")
+      arena_used_ratio = tonumber(arena_used_ratio)
+
+      if (arena_used_ratio > user_truncate_threshold_percent) then
+         local iterator = 0
+         for _, tuple in logger.storage.index.level:pairs(logger.USER) do
+            logger.storage.index.timestamp:delete(tuple["timestamp"])
+            iterator = iterator + 1
+         end
+
+         iterator = iterator / 1000
+         logger.add_entry(logger.WARNING, "Logger", "Remove all USER level logs(arena used ratio > 80%): "..iterator.."k entries", "", "")
+         fiber.sleep(50)
+      end
+      fiber.sleep(5)
+   end
+end
 
 ------------------↓ HTTP API functions ↓------------------
 function logger_private.http_api_get_logs(params, req)
@@ -32,19 +54,24 @@ function logger_private.http_api_get_logs(params, req)
             end
          end
          if (params["level"] ~= nil and params["level"] ~= "") then
-            if (params["level"] ~= tuple["level"] and tuple["level"] ~= logger.REBOOT) then
-               do break end
+            if (params["level"] == "!USER") then
+               if (tuple["level"] == logger.USER) then
+                  do break end
+               end
+            else
+               if (params["level"] ~= tuple["level"] and tuple["level"] ~= logger.REBOOT and params["level"] ~= "ALL") then
+                  do break end
+               end
             end
          end
-         local time_in_sec = math.ceil(tuple["timestamp"]/10000)
+         local time_in_ms = tuple["timestamp"]/10
          local processed_tuple = {
             level = tuple["level"],
             source = tuple["source"],
             uuid_source = tuple["uuid_source"],
             entry = tuple["entry"],
-            time = time_in_sec,
+            time_ms = math.floor(time_in_ms),
             trace = tuple["trace"],
-            date_abs = os.date("%Y-%m-%d, %H:%M:%S", time_in_sec),
          }
          table.insert(processed_table, processed_tuple)
       until true
@@ -85,8 +112,9 @@ function logger_private.tarantool_pipe_log_handler(req)
       type ~= nil and
       message ~= nil and
       string.find(message, "Empty input string") == nil and
-      string.find(message, "^Tarantool .+") == nil and
-      string.find(message, "^log level .+") == nil and
+      string.find(message, "too long WAL write") == nil and
+      string.find(message, "^Tarantool.+") == nil and
+      string.find(message, "^log level.+") == nil and
       string.find(body, "LOGGER:") == nil
          ) then
       if (type == "W") then
@@ -127,8 +155,7 @@ function logger.generate_log_functions(uuid, name)
 
    local function log_info(msg, ...)
       msg = system.concatenate_args(msg, ...)
-      local trace = debug.traceback("", 2)
-      logger.add_entry(logger.INFO, name, msg, uuid, trace)
+      logger.add_entry(logger.INFO, name, msg, uuid, "")
    end
 
    local function log_warning(msg, ...)
@@ -139,21 +166,14 @@ function logger.generate_log_functions(uuid, name)
 
    local function log_user(msg, ...)
       msg = system.concatenate_args(msg, ...)
-      local trace = debug.traceback("", 2)
-      logger.add_entry(logger.USER, name, msg, uuid, trace)
+      logger.add_entry(logger.USER, name, msg, uuid, "")
    end
 
    return log_error, log_warning, log_info, log_user
 end
 
 function logger.add_entry(level, source, entry, uuid_source, trace)
-   local local_trace = trace or debug.traceback()
-   local_trace = tostring(local_trace)
-
-   uuid_source = uuid_source or "No UUID"
-   source = source or "No source"
-
-   if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER and level ~= logger.REBOOT) then
+   if (entry == nil) then
       return
    end
 
@@ -163,22 +183,30 @@ function logger.add_entry(level, source, entry, uuid_source, trace)
       entry = tostring(entry)
    end
 
-   if (entry == nil) then
+   if (level ~= logger.INFO and level ~= logger.WARNING and level ~= logger.ERROR and level ~= logger.USER and level ~= logger.REBOOT) then
       return
    end
 
+   trace = tostring(trace or debug.traceback())
+   uuid_source = uuid_source or "No UUID"
+   source = source or "No source"
 
-   logger.storage:insert{logger_private.gen_id(), level, source, uuid_source, entry, local_trace}
+   if (level == logger.REBOOT) then
+      for _, tuple in logger.storage.index.level:pairs(logger.REBOOT) do
+         logger.storage.index.timestamp:update(tuple["timestamp"], {{"=", 2, logger.INFO}})
+      end
+   end
 
-   if (level == logger.INFO) then
+   logger.storage:insert{logger_private.gen_id(), level, source, uuid_source, entry, trace}
+
+   if (level == logger.INFO and source ~= "Tarantool logs adapter") then
       log.info("LOGGER:"..(source or "")..":"..(entry or "no entry"))
-   elseif (level == logger.WARNING) then
+   elseif (level == logger.WARNING and source ~= "Tarantool logs adapter") then
       log.warn("LOGGER:"..(source or "")..":"..(entry or "no entry"))
-   elseif (level == logger.ERROR) then
+   elseif (level == logger.ERROR and source ~= "Tarantool logs adapter") then
       log.error("LOGGER:"..(source or "")..":"..(entry or "no entry"))
    end
 end
-
 
 function logger.storage_init()
    local format = {
@@ -194,6 +222,8 @@ function logger.storage_init()
    logger.storage:create_index('timestamp', {parts = {'timestamp'}, if_not_exists = true})
    logger.storage:create_index('level', {parts = {'level'}, if_not_exists = true, unique = false})
    logger.storage:create_index('uuid_source', {parts = {'uuid_source'}, if_not_exists = true, unique = false})
+
+   fiber.create(logger_private.log_rotate_worker)
 end
 
 function logger.http_init()
@@ -201,6 +231,5 @@ function logger.http_init()
    http_system.endpoint_config("/system_logger_ext", logger_private.tarantool_pipe_log_handler)
    http_system.endpoint_config("/logger", logger_private.http_api)
 end
-
 
 return logger

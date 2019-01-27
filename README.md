@@ -1,34 +1,37 @@
-# Как запустить Glue?
+# Glial
+[![](https://img.shields.io/travis/glial-iot/glial/develop.svg?label=integration%20tests)](https://travis-ci.org/glial-iot/glial) ![](https://img.shields.io/github/last-commit/glial-iot/glial.svg) ![](https://img.shields.io/github/commit-activity/y/glial-iot/glial.svg) ![](https://img.shields.io/github/tag-date/glial-iot/glial.svg?label=last%20version)  
+![](https://img.shields.io/github/languages/top/glial-iot/glial.svg) ![](https://img.shields.io/github/languages/code-size/glial-iot/glial.svg) ![](https://img.shields.io/github/repo-size/glial-iot/glial.svg) ![](https://img.shields.io/github/license/glial-iot/glial.svg)  
 
-1. Установите [Tarantool](https://www.tarantool.io/en/download/)
-1. Клонируйте репозиторий: ```git clone https://github.com/vvzvlad/glue.git && cd glue```
-1. Установите http: ```tarantoolctl rocks install http```
-1. Установите mqtt(необходим mosquitto-dev): ```tarantoolctl rocks install mqtt```
-1. Установите dump: ```tarantoolctl rocks install dump```
-1. Установите cron-parser: ```tarantoolctl rocks install cron-parser```
-1. Запустите серверную часть: ```./glue.lua``` (запустится HTTP сервер на порту 8080)
-1. Установите и запустите панель управления [Glue Webapp](https://github.com/vvzvlad/glue_web_app)
-1. При необходимости, укажите адрес HTTP сервера Tarantool на странице настроек в панели управления, если он отличается от localhost:8080
+<!-- ![](https://img.shields.io/github/issues-raw/glial-iot/glial.svg) ![](https://img.shields.io/github/issues-closed-raw/glial-iot/glial.svg) -->
 
-# Что это?
-- Glue — это система управления IoT-устройствами, предоставляющая:
+
+## Как запустить Glial?
+
+1. Установите [Tarantool](https://www.tarantool.io/en/download/) и libmosquitto-dev(из репозитория вашей системы)
+1. Клонируйте репозиторий: ```git clone https://github.com/glial-iot/glial.git && cd glial```
+1. Установите дополнительные пакеты: tarantoolctl rocks install http && tarantoolctl rocks install mqtt && tarantoolctl rocks install dump && tarantoolctl rocks install cron-parser
+1. Запустите Glial: ```./glial.lua``` 
+1. Откройте панель управления по адресу localhost:8080
+
+## Что это?
+Glial — это система управления IoT-устройствами, предоставляющая:
 - интерфейс для разработки драйверов, которые получают и конвертируют данные с устройств
 - интерфейс для разработки скриптов, которые обеспечивают взаимодействие устройств между собой
 - центральную шину данных для хранения текущих данных подключенных устройств
 - панель управления для визуализации данных, просмотра логов и настройки системы
 
-# Документация
+## Документация
 
-[Подробная документация](https://github.com/vvzvlad/glue_docs)
+[Подробная документация](https://glial.pro/docs/)
 
-# Зачем?
+## Зачем?
 Устройства интернета вещей — весьма различны в своих возможностях и характеристиках. Из-за физических ограничений они оперируют множеством протоколов и стандартов: modbus, ethernet, knx, 6lowpan, zigbee, LoRa, и многими другими.
 
 Принять какой-либо стандарт в качестве единого невозможно, так как на данном этапе развития технологий невозможно обеспечить избыточность в стандарте, достаточную для удовлетворения всех задач одновременно: кому-то необходима высокая скорость связи и mesh-сеть, кому-то большая дальность, в каких-то условиях вообще невозможно использовать радио-протоколы.
 
 Таким образом, текущая ситуация в современном интернете вещей заключается в том, что у нас есть множество стандартов передачи данных, и решения этой проблемы в ближайшие годы не предвидится.
 
-## Чем Glue не является?
+### Чем Glial не является?
 - Генератором красивых веб-панелей управления
 - Графическим конфигуратором
 - Панелью управления умным домом
@@ -38,7 +41,7 @@
 - Закрытой вендорским продуктом с принципом "что дали тем и пользуйтесь"
 - Системой с готовым набором драйверов и скриптов на все случаи жизни
 
-## Тогда что такое Glue?
+### Тогда что такое Glial?
 - Система, ориентированная на разработчиков: предполагается, что писать код вам привычнее, чем расставлять курсором элементы
 - Система, ориентированная на простоту разработки: по нашему мнению, разработчик логики не должен вникать в работу системы на низком уровне.
-- Системой с открытом кодом: Glue(а так же Tarantool и Lua, которые лежат в его основе) имеют открытый код, что позволяет легко предлагать и дописывать новый функционал.
+- Системой с открытом кодом: Glial(а так же Tarantool и Lua, которые лежат в его основе) имеют открытый код, что позволяет легко предлагать и дописывать новый функционал.

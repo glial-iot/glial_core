@@ -16,6 +16,31 @@ local http_system = require 'http_system'
 
 local drivers_script_bodies = {}
 
+drivers_private.init_body = [[-- The generated script is filled with the default content --
+
+masks = {"/test/1", "/test/2"}
+
+local function main()
+   while true do
+      print("Test driver loop")
+      fiber.sleep(600)
+   end
+end
+
+function init()
+   store.fiber_object = fiber.create(main)
+end
+
+function destroy()
+   if (store.fiber_object:status() ~= "dead") then
+      store.fiber_object:cancel()
+   end
+end
+
+function topic_update_callback(value, topic, timestamp)
+   print("Test driver callback:", value, topic)
+end]]
+
 local function log_drivers_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Drivers subsystem", msg, uuid, "")
 end
@@ -158,8 +183,8 @@ function drivers_private.unload(uuid)
    end
 
    if (returned_data == false) then
-      log_drivers_warning('Driver "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
+      log_drivers_warning('Driver "'..script_params.name..'" not stopped, need restart glial', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glial'})
       return false
    end
 
@@ -187,12 +212,29 @@ end
 ------------------↓ HTTP API functions ↓------------------
 
 function drivers_private.http_api_get_list(params, req)
-   local table = scripts.get_list(scripts.type.DRIVER)
+   local tag
+   if (params["tag"] ~= nil) then tag = digest.base64_decode(params["tag"]) end
+   local table = scripts.get_list(scripts.type.DRIVER, tag)
+   return req:render{ json = table }
+end
+
+function drivers_private.http_api_get_tags(params, req)
+   local table = scripts.get_tags()
    return req:render{ json = table }
 end
 
 function drivers_private.http_api_create(params, req)
-   local status, table, err_msg = scripts.create(params["name"], scripts.type.DRIVER)
+   local data = {}
+   if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+   if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
+   if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+   if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
+   local status, table, err_msg = scripts.create(data.name, scripts.type.DRIVER, data.object, data.tag, data.comment, drivers_private.init_body)
+   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
+end
+
+function drivers_private.http_api_copy(params, req)
+   local status, table, err_msg = scripts.copy(digest.base64_decode(params["name"]), params["uuid"])
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
@@ -209,8 +251,8 @@ function drivers_private.http_api_delete(params, req)
          if (table.unload_result == true) then
             table.delete_result = scripts.delete({uuid = params["uuid"]})
          else
-            log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), maybe, need restart glue', script_table.uuid)
-            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), maybe, need restart glue'})
+            log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), maybe, need restart glial', script_table.uuid)
+            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), maybe, need restart glial'})
          end
          return req:render{ json = table }
       else
@@ -254,7 +296,10 @@ function drivers_private.http_api_update(params, req)
          local data = {}
          data.uuid = params["uuid"]
          data.active_flag = params["active_flag"]
-         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
+         if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+         if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
+         if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+         if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
          local table = scripts.update(data)
          table.reload_result = drivers_private.reload(params["uuid"])
          return req:render{ json = table }
@@ -281,7 +326,9 @@ function drivers_private.http_api_update_body(params, req)
       data.body = text_decoded
       if (scripts.get({uuid = uuid}) ~= nil) then
          local table = scripts.update(data)
-         table.reload_result = drivers_private.reload(params["uuid"])
+         if (params["reload"] ~= "none") then
+            table.reload_result = drivers_private.reload(params["uuid"])
+         end
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Drivers API body update: UUID not found"} }
@@ -298,12 +345,16 @@ function drivers_private.http_api(req)
       return_object = drivers_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = drivers_private.http_api_get_list(params, req)
+   elseif (params["action"] == "get_tags") then
+      return_object = drivers_private.http_api_get_tags(params, req)
    elseif (params["action"] == "update") then
       return_object = drivers_private.http_api_update(params, req)
    elseif (params["action"] == "update_body") then
       return_object = drivers_private.http_api_update_body(params, req)
    elseif (params["action"] == "create") then
       return_object = drivers_private.http_api_create(params, req)
+   elseif (params["action"] == "copy") then
+      return_object = drivers_private.http_api_copy(params, req)
    elseif (params["action"] == "delete") then
       return_object = drivers_private.http_api_delete(params, req)
    elseif (params["action"] == "get") then
@@ -323,7 +374,7 @@ function drivers.init()
    http_system.endpoint_config("/drivers", drivers_private.http_api)
 end
 
-function drivers.process(topic, value, source_uuid)
+function drivers.process(topic, value, source_uuid, timestamp)
    for uuid, script_table in pairs(drivers_script_bodies) do
       local script_params = scripts.get({uuid = uuid})
       if (script_params.status == scripts.statuses.NORMAL and
@@ -335,10 +386,11 @@ function drivers.process(topic, value, source_uuid)
             for _, mask in pairs(masks) do
                mask = "^"..mask.."$"
                if (string.find(topic, mask) ~= nil) then
-                  local status, returned_data = pcall(callback, value, topic)
+                  local status, returned_data, time = system.pcall_timecalc(callback, value, topic, timestamp)
+                  scripts.update_worktime(uuid, time)
                   if (status ~= true) then
                      returned_data = tostring(returned_data)
-                     log_drivers_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+                     log_drivers_error('Driver event "'..script_params.name..'" generate error: '..(returned_data or ""), script_params.uuid)
                      scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Driver event error: '..(returned_data or "")})
                   end
                   fiber.yield()

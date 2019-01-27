@@ -5,6 +5,7 @@ local bus_private = {}
 local inspect = require 'libs/inspect'
 local clock = require 'clock'
 local json = require 'json'
+local digest = require 'digest'
 local box = box
 
 local scripts_busevents = require 'scripts_busevents'
@@ -14,26 +15,55 @@ local fiber = require 'fiber'
 local logger = require 'logger'
 local config = require 'config'
 
-bus.TYPE = {SHADOW = "SHADOW", NORMAL = "NORMAL"}
-bus.check_flag = {CHECK_VALUE = "CHECK_VALUE"}
-
 bus.fifo_saved_rps = 0
 bus.bus_saved_rps = 0
 bus.max_fifo_count = 0
 
 ------------------↓ Private functions ↓------------------
 
+function bus_private.get_value_from_fifo_s()
+   local tuple = bus.fifo_storage.index.id:min()
+   if (tuple ~= nil) then
+      bus.fifo_storage.index.id:delete(tuple['id'])
+      local count = bus.fifo_storage.index.id:count()
+      if (count > bus.max_fifo_count) then bus.max_fifo_count = count end
+      --print("get_value_from_fifo_s:", tuple['topic'], tuple["metadata"], "\n\n")
+      return tuple['topic'], tuple["metadata"]
+   end
+end
 
 function bus_private.fifo_storage_worker()
    while true do
-      local topic, value, shadow_flag, source_uuid = bus_private.get_value_from_fifo()
-      if (value ~= nil and topic ~= nil) then
-         if (shadow_flag == bus.TYPE.NORMAL) then
-            scripts_busevents.process(topic, value, source_uuid)
-            scripts_drivers.process(topic, value, source_uuid)
+      local topic, metadata = bus_private.get_value_from_fifo_s()
+      if (topic ~= nil and metadata ~= nil and type(metadata) == "table") then
+
+         if (metadata.check == true and bus.get_value(topic) == tostring(metadata.value)) then --неправильная логика
+            metadata.value = nil
          end
-         local timestamp = os.time()
-         bus.storage:upsert({topic, value, timestamp, "", {}, "false"}, {{"=", 2, value} , {"=", 3, timestamp}})
+
+         metadata.time = tonumber(metadata.time/1000/1000) --convert us to seconds
+         if (metadata.shadow ~= true and metadata.value ~= nil) then
+            scripts_busevents.process(topic, metadata.value, metadata.uuid, metadata.time)
+            scripts_drivers.process(topic, metadata.value, metadata.uuid, metadata.time)
+         end
+
+         local new_data = {
+                           topic,
+                           metadata.value or "",
+                           metadata.time or 0,
+                           metadata.type or "",
+                           setmetatable((metadata.tags or {}), {__serialize = 'array'})
+                          }
+
+         local update_data = {}
+         if (metadata.time ~= nil) then table.insert(update_data, {"=", 3, metadata.time}) end
+         if (metadata.value ~= nil) then table.insert(update_data, {"=", 2, metadata.value}) end
+         if (metadata.type ~= nil) then table.insert(update_data, {"=", 4, metadata.type}) end
+         if (metadata.tags ~= nil) then table.insert(update_data, {"=", 5, metadata.tags}) end
+
+         --print("fifo_storage_worker:\n", inspect(new_data), ",", inspect(update_data))
+
+         bus.storage:upsert(new_data, update_data)
          bus.bus_saved_rps = bus.bus_saved_rps + 1
          fiber.yield()
       else
@@ -43,40 +73,20 @@ function bus_private.fifo_storage_worker()
 end
 
 function bus_private.bus_rps_stat_worker()
+   local cycle_seconds = 5
    fiber.sleep(2)
    while true do
-      if (bus.bus_saved_rps >= 15) then bus.bus_saved_rps = bus.bus_saved_rps - 15 end
-      bus.set_value("/glue/bus/fifo_saved", bus.fifo_saved_rps/5)
-      bus.set_value("/glue/bus/bus_saved", bus.bus_saved_rps/5)
-      bus.set_value("/glue/bus/fifo_max", bus.max_fifo_count)
+      if (bus.bus_saved_rps >= cycle_seconds*3) then bus.bus_saved_rps = bus.bus_saved_rps - cycle_seconds*3 end
+      bus.update{topic = "/glial/bus/fifo_saved", value = bus.fifo_saved_rps/cycle_seconds, type = "record/sec", tags={"system"}}
+      bus.update{topic = "/glial/bus/bus_saved", value = bus.bus_saved_rps/cycle_seconds, type = "record/sec", tags={"system"}}
+      bus.update{topic = "/glial/bus/fifo_max", value = bus.max_fifo_count, type = "records", tags={"system"}}
       bus.fifo_saved_rps = 0
       bus.bus_saved_rps = 0
-      fiber.sleep(5)
+      fiber.sleep(cycle_seconds)
    end
 end
 
-function bus_private.add_value_to_fifo(topic, value, shadow_flag, source_uuid, update_time)
-   if (topic ~= nil and value ~= nil and shadow_flag ~= nil and source_uuid ~= nil) then
-      value = tostring(value)
-      local id = bus_private.gen_fifo_id(update_time)
-      bus.fifo_storage:insert{id, topic, value, shadow_flag, source_uuid}
-      bus.fifo_saved_rps = bus.fifo_saved_rps + 1
-      return true
-   end
-   return false
-end
-
-function bus_private.get_value_from_fifo()
-   local tuple = bus.fifo_storage.index.timestamp:min()
-   if (tuple ~= nil) then
-      bus.fifo_storage.index.timestamp:delete(tuple['timestamp'])
-      local count = bus.fifo_storage.index.timestamp:count()
-      if (count > bus.max_fifo_count) then bus.max_fifo_count = count end
-      return tuple['topic'], tuple["value"], tuple['shadow_flag'], tuple["source_uuid"]
-   end
-end
-
-function bus_private.get_tags(table_tags)
+function bus_private.tags_convert_to_string(table_tags)
    local string_tags = ""
    for i, tag in pairs(table_tags) do
       string_tags = string_tags..tag
@@ -87,32 +97,19 @@ function bus_private.get_tags(table_tags)
    return string_tags
 end
 
-function bus_private.update_type(topic, type)
-   if (topic ~= nil and type ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
-      bus.storage.index.topic:update(topic, {{"=", 4, type}})
-      return true
-   else
-      return false
-   end
-end
 
-function bus_private.update_tags(topic, tags)
-   if (topic ~= nil and tags ~= nil and bus.storage.index.topic:get(topic) ~= nil) then
-      local processed_tags = tags:gsub("%%20", " ")
-      processed_tags = processed_tags:gsub(" ", "")
-      local table_tags = setmetatable({}, {__serialize = 'array'})
-      for tag in processed_tags:gmatch("([^,]+)") do
-         local copy_flag = false
-         for _, table_tag in pairs(table_tags) do
-            if (tag == table_tag) then copy_flag = true end
-         end
-         if (copy_flag == false) then table.insert(table_tags, tag) end
+function bus_private.tags_convert_to_table(tags)
+   local processed_tags = tags:gsub("%%20", " ")
+   processed_tags = processed_tags:gsub(" ", "")
+   local table_tags = {}
+   for tag in processed_tags:gmatch("([^,]+)") do
+      local copy_flag = false
+      for _, table_tag in pairs(table_tags) do
+         if (tag == table_tag) then copy_flag = true end
       end
-      bus.storage.index.topic:update(topic, {{"=", 5, table_tags}})
-      return true
-   else
-      return false
+      if (copy_flag == false) then table.insert(table_tags, tag) end
    end
+   return table_tags
 end
 
 function bus_private.delete_topics(topic)
@@ -127,10 +124,9 @@ function bus_private.delete_topics(topic)
    return false
 end
 
-function bus_private.gen_fifo_id(update_time)
-   local current_time = update_time or clock.realtime()
-   local new_id = current_time*10000
-   while bus.fifo_storage.index.timestamp:get(new_id) do
+function bus_private.gen_fifo_id(update_time_us)
+   local new_id = update_time_us or clock.time64()/1000
+   while bus.fifo_storage.index.id:get(new_id) do
       new_id = new_id + 1
    end
    return new_id
@@ -147,23 +143,19 @@ function bus.init()
       {name='update_time',  type='number'},   --3
       {name='type',         type='string'},   --4
       {name='tags',         type='array'},    --5
-      {name='tsdb',         type='string'},   --6
    }
    bus.storage = box.schema.space.create('storage', {if_not_exists = true, format = format, id = config.id.bus})
    bus.storage:create_index('topic', {parts = {'topic'}, if_not_exists = true})
 
 
-
    ---------↓ Space "fifo_storage"(fifo storage) ↓---------
    local fifo_format = {
-      {name='timestamp',      type='number'},   --1
+      {name='id',             type='number'},   --1
       {name='topic',          type='string'},   --2
-      {name='value',          type='string'},   --3
-      {name='shadow_flag',    type='string'},   --4
-      {name='source_uuid',    type='string'},   --5
+      {name='metadata',       type='map'},      --3
    }
    bus.fifo_storage = box.schema.space.create('fifo_storage', {if_not_exists = true, temporary = true, format = fifo_format, id = config.id.bus_fifo})
-   bus.fifo_storage:create_index('timestamp', {parts={'timestamp'}, if_not_exists = true})
+   bus.fifo_storage:create_index('id', {parts={'id'}, if_not_exists = true})
 
 
    --------- End storage's config ---------
@@ -172,41 +164,64 @@ function bus.init()
    fiber.create(bus_private.bus_rps_stat_worker)
 
    local http_system = require 'http_system'
-   http_system.endpoint_config("/system_bus", bus.http_api_handler)
-
-   bus.storage:upsert({"/glue/bus/fifo_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
-   bus.storage:upsert({"/glue/bus/bus_saved", "0", os.time(), "record/sec", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
-   bus.storage:upsert({"/glue/bus/fifo_max", "0", os.time(), "records", {"system"}, "false"}, {{"=", 2, "0"} , {"=", 3, os.time()}})
+   http_system.endpoint_config("/system_bus", bus.http_api)
 end
 
-function bus.set_value_generator(uuid)
-   return function(topic, value, check_flag, update_time)
-      if (check_flag == bus.check_flag.CHECK_VALUE) then
-         if (bus.get_value(topic) ~= tostring(value)) then
-            return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid, update_time)
-         end
-      else
-         return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, uuid, update_time)
-      end
+function bus.update_generator(uuid)
+   return function(table)
+      if (table == nil) then return false, "No variable" end
+      if (type(table) ~= "table") then return false, "Variable not table" end
+      if (type(table.topic) ~= "string") then return false, "Not topic variable in table or not string" end
+
+      local id = bus_private.gen_fifo_id()
+      local map = setmetatable({}, {__serialize = 'map'})
+
+      table.time = tonumber(table.time)
+      if (type(table.value) == "string") then map.value = table.value end
+      if (type(table.value) == "number") then map.value = tostring(table.value) end
+      if (type(table.value) == "boolean") then map.value = tostring(table.value) end
+      if (type(table.type) == "string") then map.type = table.type end
+      if (type(uuid) == "string") then map.uuid = uuid end
+      if (type(table.tags) == "table") then map.tags = table.tags end
+      if (type(table.shadow) == "boolean") then map.shadow = table.shadow end
+      if (type(table.check) == "boolean") then map.check = table.check end
+      if (type(table.time) == "number") then map.time = table.time else map.time = clock.time64()/1000 end
+
+      bus.fifo_storage:insert{id, table.topic, map}
+      bus.fifo_saved_rps = bus.fifo_saved_rps + 1
+      return true
    end
 end
 
-function bus.set_value(topic, value)
-   return bus_private.add_value_to_fifo(topic, value, bus.TYPE.NORMAL, "0")
-end
-
-function bus.shadow_set_value(topic, value)
-   return bus_private.add_value_to_fifo(topic, value, bus.TYPE.SHADOW, "0")
-end
+bus.update = bus.update_generator()
 
 function bus.get_value(topic)
    local tuple = bus.storage.index.topic:get(topic)
 
    if (tuple ~= nil) then
-      return tuple["value"], tuple["update_time"], tuple["type"], tuple["tags"]
+      return tuple["value"], tuple["update_time"], tuple["type"], setmetatable(tuple["tags"], nil)
    else
       return nil
    end
+end
+
+function bus.get_bus(pattern)
+   local bus_table = {}
+
+   for _, tuple in bus.storage.index.topic:pairs() do
+      local topic = tuple["topic"].."/"
+
+      if (topic:find(pattern or "")) then
+         local local_table = {}
+         local_table.value = tuple["value"]
+         local_table.update_time = tuple["update_time"]
+         local_table.topic = tuple["topic"]
+         local_table.type = tuple["type"]
+         local_table.tags = setmetatable(tuple["tags"], nil)
+         table.insert(bus_table, local_table)
+      end
+   end
+   return bus_table
 end
 
 function bus.serialize(pattern)
@@ -229,7 +244,7 @@ function bus.serialize(pattern)
          local_table.update_time = tuple["update_time"]
          local_table.topic = tuple["topic"]
          local_table.type = tuple["type"]
-         local_table.tags = tuple["tags"]
+         local_table.tags = setmetatable(tuple["tags"], nil)
       end
    end
    return bus_table
@@ -257,13 +272,13 @@ function bus.serialize_v2(pattern)
          local_table.__data__.update_time = tuple["update_time"]
          local_table.__data__.topic = tuple["topic"]
          local_table.__data__.type = tuple["type"]
-         local_table.__data__.tags = bus_private.get_tags(tuple["tags"])
+         local_table.__data__.tags = bus_private.tags_convert_to_string(tuple["tags"])
       end
    end
    return bus_table
 end
 
-function bus.http_api_handler(req)
+function bus.http_api(req)
    local params = req:param()
    local return_object
 
@@ -271,24 +286,25 @@ function bus.http_api_handler(req)
       if (params["topic"] == nil or params["value"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or value" } }
       else
-         local result = bus.set_value(params["topic"], params["value"])
-         return_object = req:render{ json = { result = result } }
+         local result, err = bus.update{topic = params["topic"], value = params["value"]}
+         return_object = req:render{ json = { result = result, err = err } }
       end
 
    elseif (params["action"] == "update_type") then
       if (params["topic"] == nil or params["type"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or type" } }
       else
-         local result = bus_private.update_type(params["topic"], params["type"])
-         return_object = req:render{ json = { result = result } }
+         local result, err = bus.update{topic = params["topic"], type = params["type"]}
+         return_object = req:render{ json = { result = result, err = err  } }
       end
 
    elseif (params["action"] == "update_tags") then
       if (params["topic"] == nil or params["tags"] == nil) then
          return_object = req:render{ json = { result = false, msg = "No valid param topic or tags" } }
       else
-         local result = bus_private.update_tags(params["topic"], params["tags"])
-         return_object = req:render{ json = { result = result } }
+         local tags_table = bus_private.tags_convert_to_table(params["tags"])
+         local result, err = bus.update{topic = params["topic"], tags = tags_table}
+         return_object = req:render{ json = { result = result, err = err  } }
       end
 
    elseif (params["action"] == "delete_topics") then
@@ -314,10 +330,10 @@ function bus.http_api_handler(req)
          local time = tuple["update_time"]
          local value = tuple["value"]
          local type = tuple["type"]
-         local tags = bus_private.get_tags(tuple["tags"])
+         local tags = bus_private.tags_convert_to_string(tuple["tags"])
 
          if (params["mask"] ~= nil and params["mask"] ~= "") then
-            local mask = "^"..params["mask"].."$"
+            local mask = "^"..digest.base64_decode(params["mask"]).."$"
             if (string.find(topic, mask) ~= nil) then
                table.insert(data_object, {topic = topic, time = time, value = value, type = type, tags = tags})
             end

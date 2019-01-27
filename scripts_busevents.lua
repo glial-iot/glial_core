@@ -16,6 +16,13 @@ local digest = require 'digest'
 
 local bus_events_main_scripts_table = {}
 
+bus_events_private.init_body = [[-- The generated script is filled with the default content --
+function event_handler(value, topic, timestamp)
+    store.old_value = store.old_value or 0
+    store.old_value = store.old_value + value
+    log_info(store.old_value)
+end]]
+
 local function log_bus_events_error(msg, uuid)
    logger.add_entry(logger.ERROR, "Bus-events subsystem", msg, uuid, "")
 end
@@ -124,8 +131,14 @@ function bus_events_private.load(uuid)
 end
 
 function bus_events_private.unload(uuid)
-   local body = bus_events_main_scripts_table[uuid].body
    local script_params = scripts.get({uuid = uuid})
+
+   if (bus_events_main_scripts_table[uuid] == nil) then
+      log_bus_events_error('Attempt to stop bus-event script "'..script_params.name..'": no loaded', script_params.uuid)
+      return false
+   end
+
+   local body = bus_events_main_scripts_table[uuid].body
 
    if (script_params.type ~= scripts.type.BUS_EVENT) then
       log_bus_events_error('Attempt to stop non-bus-event script "'..script_params.name..'"', script_params.uuid)
@@ -160,8 +173,8 @@ function bus_events_private.unload(uuid)
          return false
       end
       if (destroy_returned_data == false) then
-         log_bus_events_warning('Bus-event script "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
+         log_bus_events_warning('Bus-event script "'..script_params.name..'" not stopped, need restart glial', script_params.uuid)
+         scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glial'})
          return false
       end
    end
@@ -223,7 +236,7 @@ function bus_events_private.run_once(uuid)
    local pcall_status, returned_data = pcall(body.event_handler, value, topic)
    if (pcall_status ~= true) then
       returned_data = tostring(returned_data)
-      log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or "")..')', script_params.uuid)
+      log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..(returned_data or ""), script_params.uuid)
       scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..(returned_data or "")})
    end
 
@@ -248,12 +261,29 @@ end
 ------------------↓ HTTP API functions ↓------------------
 
 function bus_events_private.http_api_get_list(params, req)
-   local table = scripts.get_list(scripts.type.BUS_EVENT)
+   local tag
+   if (params["tag"] ~= nil) then tag = digest.base64_decode(params["tag"]) end
+   local table = scripts.get_list(scripts.type.BUS_EVENT, tag)
+   return req:render{ json = table }
+end
+
+function bus_events_private.http_api_get_tags(params, req)
+   local table = scripts.get_tags()
    return req:render{ json = table }
 end
 
 function bus_events_private.http_api_create(params, req)
-   local status, table, err_msg = scripts.create(params["name"], scripts.type.BUS_EVENT, params["object"])
+   local data = {}
+   if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+   if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
+   if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+   if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
+   local status, table, err_msg = scripts.create(data.name, scripts.type.BUS_EVENT, data.object, data.tag, data.comment, bus_events_private.init_body)
+   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
+end
+
+function bus_events_private.http_api_copy(params, req)
+   local status, table, err_msg = scripts.copy(digest.base64_decode(params["name"]), params["uuid"])
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
@@ -261,15 +291,19 @@ function bus_events_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local script_table = scripts.get({uuid = params["uuid"]})
       if (script_table ~= nil) then
-         local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
-         table.unload_result = bus_events_private.unload(params["uuid"])
-         if (table.unload_result == true) then
-            table.delete_result = scripts.delete({uuid = params["uuid"]})
+         if (script_table.status ~= scripts.statuses.STOPPED) then
+            script_table.unload_result = bus_events_private.unload(params["uuid"])
+            if (script_table.unload_result == true) then
+               script_table.delete_result = scripts.delete({uuid = params["uuid"]})
+            else
+               log_bus_events_warning('Bus-event script "'..script_table.name..'" not deleted(not stopped), need restart glial', script_table.uuid)
+               scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glial'})
+            end
+            return req:render{ json = script_table }
          else
-            log_bus_events_warning('Bus-event script "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
-            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+            script_table.delete_result = scripts.delete({uuid = params["uuid"]})
+            return req:render{ json = script_table }
          end
-         return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Bus-events API delete: UUID not found"} }
       end
@@ -320,8 +354,10 @@ function bus_events_private.http_api_update(params, req)
          data.uuid = params["uuid"]
          data.active_flag = params["active_flag"]
          data.object = params["object"]
-         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
-         --if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
+         if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+         if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
+         if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+         if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
          local table = scripts.update(data)
          table.reload_result = bus_events_private.reload(params["uuid"])
          return req:render{ json = table }
@@ -348,7 +384,9 @@ function bus_events_private.http_api_update_body(params, req)
       data.body = text_decoded
       if (scripts.get({uuid = uuid}) ~= nil) then
          local table = scripts.update(data)
-         table.reload_result = bus_events_private.reload(uuid)
+         if (params["reload"] ~= "none") then
+            table.reload_result = bus_events_private.reload(uuid)
+         end
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Bus-events API body update: UUID not found"} }
@@ -365,6 +403,8 @@ function bus_events_private.http_api(req)
       return_object = bus_events_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = bus_events_private.http_api_get_list(params, req)
+   elseif (params["action"] == "get_tags") then
+      return_object = bus_events_private.http_api_get_tags(params, req)
    elseif (params["action"] == "update") then
       return_object = bus_events_private.http_api_update(params, req)
    elseif (params["action"] == "update_body") then
@@ -373,6 +413,8 @@ function bus_events_private.http_api(req)
       return_object = bus_events_private.http_api_run_once(params, req)
    elseif (params["action"] == "create") then
       return_object = bus_events_private.http_api_create(params, req)
+   elseif (params["action"] == "copy") then
+      return_object = bus_events_private.http_api_copy(params, req)
    elseif (params["action"] == "delete") then
       return_object = bus_events_private.http_api_delete(params, req)
    elseif (params["action"] == "get") then
@@ -387,7 +429,7 @@ end
 
 ------------------↓ Public functions ↓------------------
 
-function bus_events.process(topic, value, source_uuid)
+function bus_events.process(topic, value, source_uuid, timestamp)
    for uuid, current_script_table in pairs(bus_events_main_scripts_table) do
       local script_params = scripts.get({uuid = uuid})
       if (script_params.status == scripts.statuses.NORMAL and
@@ -395,10 +437,11 @@ function bus_events.process(topic, value, source_uuid)
          script_params.uuid ~= (source_uuid or "0")) then
          local mask = "^"..current_script_table.mask.."$"
          if (string.find(topic, mask) ~= nil) then
-            local status, err_msg = pcall(current_script_table.body.event_handler, value, topic)
+            local status, err_msg, worktime = system.pcall_timecalc(current_script_table.body.event_handler, value, topic, timestamp)
+            scripts.update_worktime(uuid, worktime)
             if (status ~= true) then
                err_msg = tostring(err_msg) or ""
-               log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..err_msg..')', script_params.uuid)
+               log_bus_events_error('Bus-event "'..script_params.name..'" generate error: '..err_msg, script_params.uuid)
                scripts.update({uuid = script_params.uuid, status = scripts.statuses.ERROR, status_msg = 'Event: error: '..err_msg})
             end
          end

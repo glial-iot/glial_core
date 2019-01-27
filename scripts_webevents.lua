@@ -12,11 +12,28 @@ local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
 local scripts = require 'scripts'
-local http_script_system = require 'http_script_system'
 local fiber = require 'fiber'
 
 local web_events_script_bodies = {}
 web_events.bodies = web_events_script_bodies
+
+web_events_private.path_table = {}
+web_events_private.main_path = "/we/:name"
+
+web_events_private.init_body = [[-- The generated script is filled with the default content --
+function http_callback(params, req)
+
+   -- The script will receive parameters in the params table with this kind of query: /we/object?action=print_test
+   if (params["action"] == "print_test") then
+      return {print_text = "test"}
+      --return nil, "OK" --The direct output option without convert to json(see doc on http-tarantool)
+   else
+      return {no_data = "yes"}
+   end
+   -- The table returned by the script will be given as json: { "print_text": "test" } or {"no_data": "yes"}
+
+end
+]]
 
 ------------------↓ Private functions ↓------------------
 
@@ -92,12 +109,12 @@ function web_events_private.load(uuid)
    web_events_script_bodies[uuid] = nil
    web_events_script_bodies[uuid] = body
 
-   local callback = http_script_system.generate_callback_func(web_events_script_bodies[uuid].http_callback)
+   local callback = web_events_private.generate_callback_func(web_events_script_bodies[uuid].http_callback)
 
-   local attach_result = http_script_system.attach_path(script_params.object, callback, uuid)
+   local attach_result = web_events_private.attach_path(script_params.object, callback, uuid)
 
    if (attach_result == false) then
-      log_web_events_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'"', script_params.uuid)
+      log_web_events_error('Web-event "'..script_params.name..'" not start (duplicate path "'..(script_params.object or '')..'")', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: duplicate path'})
    else
       log_web_events_info('Web-event "'..script_params.name..'" started and attached path "'..(script_params.object or '')..'"', script_params.uuid)
@@ -122,7 +139,7 @@ function web_events_private.unload(uuid)
       return false
    end
 
-   http_script_system.remove_path(script_params.object)
+   web_events_private.remove_path(script_params.object)
 
    log_web_events_info('Web-event "'..script_params.name..'" stopped', script_params.uuid)
    scripts.update({uuid = uuid, status = scripts.statuses.STOPPED, status_msg = 'Stopped'})
@@ -145,16 +162,94 @@ function web_events_private.reload(uuid)
    end
 end
 
+function web_events_private.generate_callback_func(handler)
+   return function(req)
+      local params = req:param()
+      local return_object
+
+      local json_result, raw_result = handler(params, req)
+      if (json_result ~= nil) then
+         return_object = req:render{ json = json_result }
+      else
+         if (raw_result ~= nil) then
+            return_object = raw_result
+         else
+            return_object = req:render{ json = {} }
+         end
+      end
+
+      return system.add_headers(return_object)
+   end
+end
+
+function web_events_private.attach_path(path, handler, uuid)
+   if (web_events_private.path_table[path] ~= nil) then
+      return false
+   else
+      web_events_private.path_table[path] = {}
+      web_events_private.path_table[path].handler = handler
+      web_events_private.path_table[path].uuid = uuid
+      return true
+   end
+
+end
+
+function web_events_private.remove_path(path)
+   web_events_private.path_table[path] = nil
+end
+
+function web_events_private.main_handler(req)
+   local name = req:stash('name')
+   local return_object
+   if (web_events_private.path_table[name] ~= nil) then
+      local status, returned_data, time = system.pcall_timecalc(web_events_private.path_table[name].handler, req)
+      scripts.update_worktime(web_events_private.path_table[name].uuid, time)
+      if (status == true) then
+         return_object = returned_data
+      else
+         logger.add_entry(logger.ERROR, "Web-events subsystem", returned_data, web_events_private.path_table[name].uuid, "")
+         return_object = req:render{ json = {result = false, msg = returned_data } }
+      end
+
+   else
+      local avilable_endpoints = {}
+      for endpoint, _ in pairs(web_events_private.path_table) do
+         table.insert(avilable_endpoints, endpoint)
+      end
+
+      return_object = req:render{ json = {result = false, msg = "Endpoint '"..name.."' not found",  avilable_endpoints = avilable_endpoints} }
+   end
+
+   return system.add_headers(return_object)
+end
+
 
 ------------------↓ HTTP API functions ↓------------------
 
 function web_events_private.http_api_get_list(params, req)
-   local table = scripts.get_list(scripts.type.WEB_EVENT)
+   local tag
+   if (params["tag"] ~= nil) then tag = digest.base64_decode(params["tag"]) end
+   local table = scripts.get_list(scripts.type.WEB_EVENT, tag)
+   return req:render{ json = table }
+end
+
+function web_events_private.http_api_get_tags(params, req)
+   local table = scripts.get_tags()
    return req:render{ json = table }
 end
 
 function web_events_private.http_api_create(params, req)
-   local status, table, err_msg = scripts.create(params["name"], scripts.type.WEB_EVENT, params["object"])
+   local data = {}
+   if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+   if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
+   if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+   if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
+   local status, table, err_msg = scripts.create(data.name, scripts.type.WEB_EVENT, data.object, data.tag, data.comment, web_events_private.init_body)
+   return req:render{ json = {result = status, script = table, err_msg = err_msg} }
+end
+
+function web_events_private.http_api_copy(params, req)
+   local status, table, err_msg = scripts.copy(digest.base64_decode(params["name"]), params["uuid"])
    return req:render{ json = {result = status, script = table, err_msg = err_msg} }
 end
 
@@ -162,15 +257,19 @@ function web_events_private.http_api_delete(params, req)
    if (params["uuid"] ~= nil and params["uuid"] ~= "") then
       local script_table = scripts.get({uuid = params["uuid"]})
       if (script_table ~= nil) then
-         local table = scripts.update({uuid = params["uuid"], active_flag = scripts.flag.NON_ACTIVE})
-         table.unload_result = web_events_private.unload(params["uuid"])
-         if (table.unload_result == true) then
-            table.delete_result = scripts.delete({uuid = params["uuid"]})
+         if (script_table.status ~= scripts.statuses.STOPPED) then
+            script_table.unload_result = web_events_private.unload(params["uuid"])
+            if (script_table.unload_result == true) then
+               script_table.delete_result = scripts.delete({uuid = params["uuid"]})
+            else
+               log_web_events_warning('Timer-event script "'..script_table.name..'" not deleted(not stopped), need restart glial', script_table.uuid)
+               scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glial'})
+            end
+            return req:render{ json = script_table }
          else
-            log_web_events_warning('Web-event script "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
-            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+            script_table.delete_result = scripts.delete({uuid = params["uuid"]})
+            return req:render{ json = script_table }
          end
-         return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Web-events API delete: UUID not found"} }
       end
@@ -212,8 +311,10 @@ function web_events_private.http_api_update(params, req)
          local data = {}
          data.uuid = params["uuid"]
          data.active_flag = params["active_flag"]
-         if (params["name"] ~= nil) then data.name = string.gsub(params["name"], "+", " ") end
-         if (params["object"] ~= nil) then data.object = string.gsub(params["object"], "+", " ") end
+         if (params["name"] ~= nil) then data.name = digest.base64_decode(params["name"]) end
+         if (params["object"] ~= nil) then data.object = digest.base64_decode(params["object"]) end
+         if (params["comment"] ~= nil) then data.comment = digest.base64_decode(params["comment"]) end
+         if (params["tag"] ~= nil) then data.tag = digest.base64_decode(params["tag"]) end
          local table = scripts.update(data)
          table.reload_result = web_events_private.reload(params["uuid"])
          return req:render{ json = table }
@@ -240,7 +341,9 @@ function web_events_private.http_api_update_body(params, req)
       data.body = text_decoded
       if (scripts.get({uuid = uuid}) ~= nil) then
          local table = scripts.update(data)
-         table.reload_result = web_events_private.reload(params["uuid"])
+         if (params["reload"] ~= "none") then
+            table.reload_result = web_events_private.reload(params["uuid"])
+         end
          return req:render{ json = table }
       else
          return req:render{ json = {result = false, error_msg = "Web-events API body update: UUID not found"} }
@@ -257,12 +360,16 @@ function web_events_private.http_api(req)
       return_object = web_events_private.http_api_reload(params, req)
    elseif (params["action"] == "get_list") then
       return_object = web_events_private.http_api_get_list(params, req)
+   elseif (params["action"] == "get_tags") then
+      return_object = web_events_private.http_api_get_tags(params, req)
    elseif (params["action"] == "update") then
       return_object = web_events_private.http_api_update(params, req)
    elseif (params["action"] == "update_body") then
       return_object = web_events_private.http_api_update_body(params, req)
    elseif (params["action"] == "create") then
       return_object = web_events_private.http_api_create(params, req)
+   elseif (params["action"] == "copy") then
+      return_object = web_events_private.http_api_copy(params, req)
    elseif (params["action"] == "delete") then
       return_object = web_events_private.http_api_delete(params, req)
    elseif (params["action"] == "get") then
@@ -280,6 +387,7 @@ end
 function web_events.init()
    web_events.start_all()
    http_system.endpoint_config("/webevents", web_events_private.http_api)
+   http_system.endpoint_config(web_events_private.main_path, web_events_private.main_handler)
 end
 
 function web_events.start_all()
