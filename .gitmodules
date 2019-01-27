@@ -1,0 +1,3 @@
+[submodule "debian/rocks"]
+	path = debian/rocks
+	url = https://github.com/glial-iot/glial_rocks.git
