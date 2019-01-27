@@ -12,7 +12,7 @@ math.randomseed(os.time())
 require("functions")
 
 describe("Launch #tarantool (required for #script, #logs, #bus, #functions and #backups tests)" , function()
-    test("Make system call to launch Glue with parameters", function()
+    test("Make system call to launch glial with parameters", function()
         local tarantool_pid = startTarantool()
         assert.are_not.equal(false, tarantool_pid)
         assert.are_not.equal(nil, tarantool_pid)
@@ -169,12 +169,12 @@ describe("Testing advanced #script system functionality", function()
         updateScriptBody("driver", driver_script.uuid, script_body)
         setScriptActiveFlag("driver", driver_script.uuid, "ACTIVE")
 
-        test("Script can't be deleted without Glue restart", function()
+        test("Script can't be deleted without glial restart", function()
             deleteScript("driver", driver_script.uuid)
             local script_list_after_delete = getScriptsList("driver")
             assert.are_not.equal(nil, string.match(script_list_after_delete, driver_script.name))
         end)
-        test("Script can be deleted after Glue restart", function()
+        test("Script can be deleted after glial restart", function()
             restartTarantool()
             deleteScript("driver", driver_script.uuid)
             local script_list_after_delete = getScriptsList("driver")
@@ -366,8 +366,8 @@ end)
 describe("Testing #backups", function()
 
     test("Check backup creation, wipe and restore from backup.)", function()
-        -- Save initial glue pid for further checks
-        local initial_glue_pid = getGluePid()
+        -- Save initial glial pid for further checks
+        local initial_glial_pid = getglialPid()
 
         -- Create scripts that write to logs and bus.
         local creates_logs_script = createScriptFromFile("driver", "./test_scripts/creates_logs.lua")
@@ -395,15 +395,15 @@ describe("Testing #backups", function()
         local backup = createBackup()
         sleep(300)
 
-        -- Wipe storage, restart Glue and check that PID has changed
+        -- Wipe storage, restart glial and check that PID has changed
         local wipe_time = os.time()*1000
         wipeStorage()
         sleep(1000)
         restartTarantool()
         sleep(1000)
-        local glue_pid_start_after_wipe = getGluePid()
-        assert.is_not_false(glue_pid_start_after_wipe)
-        assert.are_not.equal(initial_glue_pid, glue_pid_start_after_wipe)
+        local glial_pid_start_after_wipe = getglialPid()
+        assert.is_not_false(glial_pid_start_after_wipe)
+        assert.are_not.equal(initial_glial_pid, glial_pid_start_after_wipe)
 
         -- Check that there are no old logs after wipe.
         local logs_after_restart = getLogs()
@@ -426,15 +426,15 @@ describe("Testing #backups", function()
         assert.are.equal(true, restore_status.result)
         sleep(3000)
 
-        -- Check that Glue is stopped after backup restore
-        local glue_pid_after_restore = getGluePid()
-        assert.is_false(glue_pid_after_restore)
+        -- Check that glial is stopped after backup restore
+        local glial_pid_after_restore = getglialPid()
+        assert.is_false(glial_pid_after_restore)
 
-        -- Start Glue after backup restore and check that it's pid changed
+        -- Start glial after backup restore and check that it's pid changed
         startTarantool()
-        local glue_pid_start_after_restore = getGluePid()
-        assert.is_not_false(glue_pid_start_after_restore)
-        assert.are_not.equal(glue_pid_start_after_wipe, glue_pid_start_after_restore)
+        local glial_pid_start_after_restore = getglialPid()
+        assert.is_not_false(glial_pid_start_after_restore)
+        assert.are_not.equal(glial_pid_start_after_wipe, glial_pid_start_after_restore)
 
         -- Check that drivers are restored
         local scripts_list_after_restore = getScriptsList("driver")

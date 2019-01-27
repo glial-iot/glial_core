@@ -183,8 +183,8 @@ function drivers_private.unload(uuid)
    end
 
    if (returned_data == false) then
-      log_drivers_warning('Driver "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
-      scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
+      log_drivers_warning('Driver "'..script_params.name..'" not stopped, need restart glial', script_params.uuid)
+      scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glial'})
       return false
    end
 
@@ -251,8 +251,8 @@ function drivers_private.http_api_delete(params, req)
          if (table.unload_result == true) then
             table.delete_result = scripts.delete({uuid = params["uuid"]})
          else
-            log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), maybe, need restart glue', script_table.uuid)
-            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), maybe, need restart glue'})
+            log_drivers_warning('Driver "'..script_table.name..'" not deleted(not stopped), maybe, need restart glial', script_table.uuid)
+            scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), maybe, need restart glial'})
          end
          return req:render{ json = table }
       else

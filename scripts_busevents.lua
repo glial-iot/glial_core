@@ -173,8 +173,8 @@ function bus_events_private.unload(uuid)
          return false
       end
       if (destroy_returned_data == false) then
-         log_bus_events_warning('Bus-event script "'..script_params.name..'" not stopped, need restart glue', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glue'})
+         log_bus_events_warning('Bus-event script "'..script_params.name..'" not stopped, need restart glial', script_params.uuid)
+         scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glial'})
          return false
       end
    end
@@ -296,8 +296,8 @@ function bus_events_private.http_api_delete(params, req)
             if (script_table.unload_result == true) then
                script_table.delete_result = scripts.delete({uuid = params["uuid"]})
             else
-               log_bus_events_warning('Bus-event script "'..script_table.name..'" not deleted(not stopped), need restart glue', script_table.uuid)
-               scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glue'})
+               log_bus_events_warning('Bus-event script "'..script_table.name..'" not deleted(not stopped), need restart glial', script_table.uuid)
+               scripts.update({uuid = script_table.uuid, status = scripts.statuses.WARNING, status_msg = 'Not deleted(not stopped), need restart glial'})
             end
             return req:render{ json = script_table }
          else

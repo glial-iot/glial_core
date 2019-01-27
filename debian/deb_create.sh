@@ -20,46 +20,46 @@ cd ./debian
 mkdir ./temp_deb_packet_create
 cd ./temp_deb_packet_create
 
-mkdir -p ./glue/usr/share/tarantool/glue
-cp ../../*.lua ./glue/usr/share/tarantool/glue
-cp -r ../../libs ./glue/usr/share/tarantool/glue
-cp -r ../../.rocks ./glue/usr/share/tarantool/glue
-cp -r ../../panel ./glue/usr/share/tarantool/glue
+mkdir -p ./glial/usr/share/tarantool/glial
+cp ../../*.lua ./glial/usr/share/tarantool/glial
+cp -r ../../libs ./glial/usr/share/tarantool/glial
+cp -r ../../.rocks ./glial/usr/share/tarantool/glial
+cp -r ../../panel ./glial/usr/share/tarantool/glial
 
-mkdir -p ./glue/etc/tarantool/instances.enabled/
-rm ./glue/usr/share/tarantool/glue/glue_start.lua
-cp ../wb_instance_glue_start.lua ./glue/etc/tarantool/instances.enabled/glue.lua
+mkdir -p ./glial/etc/tarantool/instances.enabled/
+rm ./glial/usr/share/tarantool/glial/glial_start.lua
+cp ../wb_instance_glial_start.lua ./glial/etc/tarantool/instances.enabled/glial.lua
 
 # Change owner
-chown -R root:root ./glue/
-chown -R tarantool:tarantool ./glue/etc/tarantool/
-chown -R tarantool:tarantool ./glue/usr/share/tarantool/
+chown -R root:root ./glial/
+chown -R tarantool:tarantool ./glial/etc/tarantool/
+chown -R tarantool:tarantool ./glial/usr/share/tarantool/
 
 # Make deb metainfo
-mkdir -p ./glue/DEBIAN
+mkdir -p ./glial/DEBIAN
 
-cp ../control ./glue/DEBIAN/control
+cp ../control ./glial/DEBIAN/control
 
 VERSION=`git describe --dirty --always --tags | cut -c 2-`
 VERSION_FOR_CONTROL="Version: "$VERSION
-echo $VERSION_FOR_CONTROL >> ./glue/DEBIAN/control
+echo $VERSION_FOR_CONTROL >> ./glial/DEBIAN/control
 
-SIZE=`du -sk  ./glue |awk '{print $1}'`
+SIZE=`du -sk  ./glial |awk '{print $1}'`
 SIZE_FOR_CONTROL="Installed-Size: "$SIZE
-echo $SIZE_FOR_CONTROL >> ./glue/DEBIAN/control
+echo $SIZE_FOR_CONTROL >> ./glial/DEBIAN/control
 
-cp ../dirs ./glue/DEBIAN/dirs
-cp ../prerm ./glue/DEBIAN/prerm
-cp ../postinst ./glue/DEBIAN/postinst
+cp ../dirs ./glial/DEBIAN/dirs
+cp ../prerm ./glial/DEBIAN/prerm
+cp ../postinst ./glial/DEBIAN/postinst
 
 
 # Add version file
-echo $VERSION > ./glue/usr/share/tarantool/glue/VERSION
+echo $VERSION > ./glial/usr/share/tarantool/glial/VERSION
 
 # Buld
-dpkg-deb --build glue
+dpkg-deb --build glial
 
-mv glue.deb ../glue_$VERSION.deb
+mv glial.deb ../glial_$VERSION.deb
 
 # Clear
 cd ..
