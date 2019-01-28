@@ -1,6 +1,6 @@
 # Glial
-[![](https://img.shields.io/travis/glial-iot/glial/develop.svg?label=integration%20tests)](https://travis-ci.org/glial-iot/glial) ![](https://img.shields.io/github/last-commit/glial-iot/glial.svg) ![](https://img.shields.io/github/commit-activity/y/glial-iot/glial.svg) ![](https://img.shields.io/github/tag-date/glial-iot/glial.svg?label=last%20version)  
-![](https://img.shields.io/github/languages/top/glial-iot/glial.svg) ![](https://img.shields.io/github/languages/code-size/glial-iot/glial.svg) ![](https://img.shields.io/github/repo-size/glial-iot/glial.svg) ![](https://img.shields.io/github/license/glial-iot/glial.svg)  
+[![](https://img.shields.io/travis/glial-iot/glial_core/develop.svg?label=integration%20tests)](https://travis-ci.org/glial-iot/glial_core) ![](https://img.shields.io/github/last-commit/glial-iot/glial_core.svg) ![](https://img.shields.io/github/commit-activity/y/glial-iot/glial_core.svg) ![](https://img.shields.io/github/tag-date/glial-iot/glial_core.svg?label=last%20version)  
+![](https://img.shields.io/github/languages/top/glial-iot/glial_core.svg) ![](https://img.shields.io/github/languages/code-size/glial-iot/glial_core.svg) ![](https://img.shields.io/github/repo-size/glial-iot/glial_core.svg) ![](https://img.shields.io/github/license/glial-iot/glial_core.svg)  
 
 <!-- ![](https://img.shields.io/github/issues-raw/glial-iot/glial.svg) ![](https://img.shields.io/github/issues-closed-raw/glial-iot/glial.svg) -->
 
@@ -8,7 +8,7 @@
 ## Как запустить Glial?
 
 1. Установите [Tarantool](https://www.tarantool.io/en/download/) и libmosquitto-dev(из репозитория вашей системы)
-1. Клонируйте репозиторий: ```git clone https://github.com/glial-iot/glial.git && cd glial```
+1. Клонируйте репозиторий: ```git clone https://github.com/glial-iot/glial_core.git && cd glial```
 1. Установите дополнительные пакеты: tarantoolctl rocks install http && tarantoolctl rocks install mqtt && tarantoolctl rocks install dump && tarantoolctl rocks install cron-parser
 1. Запустите Glial: ```./glial.lua``` 
 1. Откройте панель управления по адресу localhost:8080
