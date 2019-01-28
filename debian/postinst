@@ -1,3 +1,0 @@
-#!/bin/sh
-/usr/bin/tarantoolctl stop glial
-/usr/bin/tarantoolctl start glial

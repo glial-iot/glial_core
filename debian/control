@@ -1,8 +1,0 @@
-Package: glial
-Maintainer: vvzvlad <vvzvlad@gmail.com>
-Architecture: armhf
-Section: misc
-Description: IoT management system by Nokia IoT Lab
-Priority: optional
-Origin: vvzvlad <vvzvlad@gmail.com>
-Depends: tarantool, libmosquitto-dev, tarantool-dev
