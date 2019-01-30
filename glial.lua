@@ -67,7 +67,7 @@ local function start()
    logger.add_entry(logger.INFO, "System", "Starting script subsystem...")
    scripts.init()
 
-   if (tonumber(os.getenv('GLUE_SAFEMODE')) == 1 and tonumber(os.getenv('TARANTOOL_CONSOLE')) ~= 1) then
+   if (tonumber(os.getenv('SAFEMODE')) == 1 and tonumber(os.getenv('TARANTOOL_CONSOLE')) ~= 1) then
       scripts.safe_mode_error_all()
    else
       logger.add_entry(logger.INFO, "System", "Starting web-events...")
