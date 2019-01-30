@@ -61,7 +61,7 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
 
 end
 
-function getGluePid()
+function getGlialPid()
     local response_body = makeApiCall("system_event", "GET", "action=get_pid")
     local result = json.decode(response_body)
     if (result ~= nil) then
@@ -125,35 +125,35 @@ function readFile(path)
 end
 
 function startTarantool()
-    local tarantool_pid = getGluePid()
+    local tarantool_pid = getGlialPid()
     if (tarantool_pid == false) then
         os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
     end
-    return getGluePid()
+    return getGlialPid()
 end
 
 function stopTarantool()
-    local tarantool_pid = getGluePid()
+    local tarantool_pid = getGlialPid()
     if (tarantool_pid ~= false) then
         os.execute("kill ".. tarantool_pid)
         os.execute("sleep 1")
     end
-    return getGluePid()
+    return getGlialPid()
 end
 
 function restartTarantool()
-    local tarantool_pid = getGluePid()
+    local tarantool_pid = getGlialPid()
     if (tarantool_pid ~= false) then
         os.execute("kill ".. tarantool_pid)
         os.execute("sleep 1")
         os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
-        return getGluePid()
+        return getGlialPid()
     else
         os.execute(tarantool_start_cmd)
         os.execute("sleep 1")
-        return getGluePid()
+        return getGlialPid()
     end
 end
 
