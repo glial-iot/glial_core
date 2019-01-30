@@ -1,5 +1,5 @@
 # Glial
-[![](https://img.shields.io/travis/glial-iot/glial_core/develop.svg?label=integration%20tests)](https://travis-ci.org/glial-iot/glial_core) ![](https://img.shields.io/github/last-commit/glial-iot/glial_core.svg) ![](https://img.shields.io/github/commit-activity/y/glial-iot/glial_core.svg) ![](https://img.shields.io/github/tag-date/glial-iot/glial_core.svg?label=last%20version)  
+[![](https://img.shields.io/travis/glial-iot/glial_core/master.svg?label=integration%20tests)](https://travis-ci.org/glial-iot/glial_core) ![](https://img.shields.io/github/last-commit/glial-iot/glial_core.svg) ![](https://img.shields.io/github/commit-activity/y/glial-iot/glial_core.svg) ![](https://img.shields.io/github/tag-date/glial-iot/glial_core.svg?label=last%20version)  
 ![](https://img.shields.io/github/languages/top/glial-iot/glial_core.svg) ![](https://img.shields.io/github/languages/code-size/glial-iot/glial_core.svg) ![](https://img.shields.io/github/repo-size/glial-iot/glial_core.svg) ![](https://img.shields.io/github/license/glial-iot/glial_core.svg)  
 
 <!-- ![](https://img.shields.io/github/issues-raw/glial-iot/glial.svg) ![](https://img.shields.io/github/issues-closed-raw/glial-iot/glial.svg) -->
