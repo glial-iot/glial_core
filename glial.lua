@@ -25,7 +25,7 @@ local function start()
    local log_type = os.getenv('LOG_TYPE') or "PIPE"
    local log_point
    if (log_type ~= "NONE") then
-      log_point = "pipe: PORT="..glial_http_port.."./http_pipe_logger.lua"
+      log_point = "pipe: PORT="..glial_http_port.." ./http_pipe_logger.lua"
    end
 
    system.dir_check(tarantool_wal_dir)
