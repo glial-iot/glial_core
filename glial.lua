@@ -25,7 +25,7 @@ local function start()
    local log_type = os.getenv('LOG_TYPE') or "PIPE"
    local log_point
    if (log_type ~= "NONE") then
-      log_point = "pipe: PORT="..glial_http_port.."./http_pipe_logger.lua"
+      log_point = "pipe: PORT="..glial_http_port.." ./http_pipe_logger.lua"
    end
 
    system.dir_check(tarantool_wal_dir)
@@ -67,7 +67,7 @@ local function start()
    logger.add_entry(logger.INFO, "System", "Starting script subsystem...")
    scripts.init()
 
-   if (tonumber(os.getenv('GLUE_SAFEMODE')) == 1 and tonumber(os.getenv('TARANTOOL_CONSOLE')) ~= 1) then
+   if (tonumber(os.getenv('SAFEMODE')) == 1 and tonumber(os.getenv('TARANTOOL_CONSOLE')) ~= 1) then
       scripts.safe_mode_error_all()
    else
       logger.add_entry(logger.INFO, "System", "Starting web-events...")

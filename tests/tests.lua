@@ -367,7 +367,7 @@ describe("Testing #backups", function()
 
     test("Check backup creation, wipe and restore from backup.)", function()
         -- Save initial glial pid for further checks
-        local initial_glial_pid = getglialPid()
+        local initial_glial_pid = getGlialPid()
 
         -- Create scripts that write to logs and bus.
         local creates_logs_script = createScriptFromFile("driver", "./test_scripts/creates_logs.lua")
@@ -401,7 +401,7 @@ describe("Testing #backups", function()
         sleep(1000)
         restartTarantool()
         sleep(1000)
-        local glial_pid_start_after_wipe = getglialPid()
+        local glial_pid_start_after_wipe = getGlialPid()
         assert.is_not_false(glial_pid_start_after_wipe)
         assert.are_not.equal(initial_glial_pid, glial_pid_start_after_wipe)
 
@@ -427,12 +427,12 @@ describe("Testing #backups", function()
         sleep(3000)
 
         -- Check that glial is stopped after backup restore
-        local glial_pid_after_restore = getglialPid()
+        local glial_pid_after_restore = getGlialPid()
         assert.is_false(glial_pid_after_restore)
 
         -- Start glial after backup restore and check that it's pid changed
         startTarantool()
-        local glial_pid_start_after_restore = getglialPid()
+        local glial_pid_start_after_restore = getGlialPid()
         assert.is_not_false(glial_pid_start_after_restore)
         assert.are_not.equal(glial_pid_start_after_wipe, glial_pid_start_after_restore)
 
