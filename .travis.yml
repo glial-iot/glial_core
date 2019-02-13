@@ -19,15 +19,15 @@ after_success:
   - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
   - git tag $TRAVIS_TAG
 
-  # Install reprepro, decrypt keys required to sign repository, configure gpg
+  # Install reprepro, clone Glial repository, decrypt keys required to sign repository, configure gpg
   - sudo apt-get update
   - sudo apt-get install -y reprepro
+  - git clone https://github.com/glial-iot/glial.git
   - echo $DECRYPT_KEY | gpg --passphrase-fd 0 ./glial/keys.asc.gpg
   - gpg --import ./glial/keys.asc
   - echo "personal-digest-preferences SHA256 SHA384 SHA512 SHA224 RIPEMD160" >> ~/.gnupg/gpg.conf
 
   # Clone Glial repository, create stable version package, create and sign repo, push it to github
-  - git clone https://github.com/glial-iot/glial.git
   - make -C ./glial
   - mkdir ./debian_stable && cd ./debian_stable
   - git init
