@@ -2,24 +2,24 @@ language: lua
 sudo: required
 
 before_install:
-  # Build Docker container to run tests
+  # Build Docker container to run tests.
   - docker build -t nokia_tarantool ./
   - docker run --name tarantool_test -itd --restart=unless-stopped -e "TZ=Europe/Moscow" nokia_tarantool
   - docker exec -i tarantool_test mkdir -p ./logs
 
 script:
-  # Run integration tests
+  # Run integration tests.
   - docker exec -i tarantool_test mkdir -p ./logs
   - docker exec -i tarantool_test busted tests.lua
   - docker exec -i tarantool_test rm -rf ../test_db
 
 after_success:
-  # Configure git and add tag to commit (required for Github releases)
+  # Configure git and add tag to commit (required for Github releases).
   - git config --global user.email "matuhin86@gmail.com" && git config --global user.name "matnick"
   - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
   - git tag $TRAVIS_TAG
 
-  # Install reprepro, clone Glial repository, decrypt keys required to sign repository, configure gpg
+  # Install reprepro, clone Glial repository, decrypt keys required to sign repository, configure gpg.
   - sudo apt-get update
   - sudo apt-get install -y reprepro
   - git clone https://github.com/glial-iot/glial.git
@@ -27,7 +27,7 @@ after_success:
   - gpg --import ./glial/keys.asc
   - echo "personal-digest-preferences SHA256 SHA384 SHA512 SHA224 RIPEMD160" >> ~/.gnupg/gpg.conf
 
-  # Clone Glial repository, create stable version package, create and sign repo, push it to github
+  # Clone Glial repository, create stable version package, create and sign repo, push it to github.
   - make -C ./glial
   - mkdir ./debian_stable && cd ./debian_stable
   - git init
@@ -43,7 +43,7 @@ after_success:
   - git commit --message "Travis build $TRAVIS_BUILD_NUMBER"
   - git push --quiet --set-upstream origin-pages master
 
-  # Delete directory to prevent any errors, clone the Glial repo again, repeat repository creation process, push to github
+  # Delete directory to prevent any errors, clone the Glial repo again, repeat repository creation process, push to github.
   - cd ..
   - rm -rf ./glial
   - git clone https://github.com/glial-iot/glial.git
