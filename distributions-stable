@@ -1,0 +1,7 @@
+Origin: glial-iot.github.io/glial-stable
+Label: glial-iot.github.io/glial-stable
+Codename: stretch
+Architectures: armhf amd64
+Components: main
+Description:  Glial stable version
+SignWith: 1AA4D0B5A94D2C8A

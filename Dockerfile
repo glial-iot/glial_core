@@ -1,6 +1,6 @@
 FROM tarantool/tarantool:1.10.0
 
-RUN apk add --no-cache tzdata git bash lua-dev gcc musl-dev
+RUN apk add --no-cache tzdata git bash lua-dev gcc musl-dev make
 
 RUN luarocks install inspect
 RUN luarocks install luasocket
@@ -20,4 +20,3 @@ RUN tarantoolctl rocks install dump
 RUN tarantoolctl rocks install cron-parser
 
 WORKDIR /glial_dist/tests
-#EXPOSE 8080
