@@ -21,10 +21,10 @@ function settings_private.http_api_get(params, req)
       if (status == true) then
          return req:render{ json = {param = param, value = value, description = description} }
       else
-         return req:render{ json = {result = false, error_msg = "No found param"} }
+         return req:render{ json = {result = false, error_msg = "No found param '"..params["param"].."'"} }
       end
    else
-      return req:render{ json = {result = false, error_msg = "No param param"} }
+      return req:render{ json = {result = false, error_msg = "No param param(tram param pam)"} }
    end
 end
 
