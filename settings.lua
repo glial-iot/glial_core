@@ -31,7 +31,7 @@ end
 function settings_private.http_api_set_param(params, req)
    if (params["param"] ~= nil and params["value"] ~= nil) then
       settings.set(params["param"], params["value"], params["description"])
-      return req:render{ result = true }
+      return req:render{ json = {result = false, error_msg = "No param name"} }
    end
 
    return req:render{ result = false, error_msg = "No param param or value" }
