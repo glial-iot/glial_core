@@ -12,6 +12,7 @@ local inspect = require 'libs/inspect'
 local logger = require 'logger'
 local config = require 'config'
 local system = require 'system'
+local settings = require 'settings'
 
 scripts.statuses = {ERROR = "ERROR", WARNING = "WARNING", NORMAL = "NORMAL", STOPPED = "STOPPED"}
 scripts.flag = {ACTIVE = "ACTIVE", NON_ACTIVE = "NON_ACTIVE"}
@@ -263,6 +264,7 @@ function scripts.generate_body(script_params, log_script_name)
    body._script_uuid = script_params.uuid
    body.get_value, body.bus_serialize, body.get_bus = bus.get_value, bus.serialize, bus.get_bus
    body.update = bus.update_generator(script_params.uuid)
+   body.get_settings_value = settings.get
    body.fiber = {}
    body.fiber.create = scripts.generate_fibercreate(script_params.uuid, log_script_name)
    body.fiber.sleep, body.fiber.kill, body.fiber.yield, body.fiber.self, body.fiber.status = fiber.sleep, fiber.kill, fiber.yield, fiber.self, fiber.status
