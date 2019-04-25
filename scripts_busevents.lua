@@ -95,30 +95,6 @@ function bus_events_private.load(uuid)
       return false
    end
 
-   if (body.destroy ~= nil) then --TODO: на самом деле, можно убрать отсюда init/destroy, после того, как в drivers будут маски
-      if (type(body.destroy) ~= "function") then
-         log_bus_events_error('Bus-event script "'..script_params.name..'" not start (destroy not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy not function'})
-         return false
-      end
-   end
-
-   if (body.init ~= nil) then
-      if (type(body.init) ~= "function") then
-         log_bus_events_error('Bus-event script "'..script_params.name..'" not start (init not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init not function'})
-         return false
-      end
-
-      local init_status, init_returned_data = pcall(body.init)
-
-      if (init_status ~= true) then
-         log_bus_events_error('Bus-event script "'..script_params.name..'" not start (init function error: '..(init_returned_data or "")..')', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init function error: '..(init_returned_data or "")})
-         return false
-      end
-   end
-
    bus_events_main_scripts_table[uuid] = nil
    bus_events_main_scripts_table[uuid] = {}
    bus_events_main_scripts_table[uuid].body = body
@@ -145,38 +121,10 @@ function bus_events_private.unload(uuid)
       return false
    end
 
-   if (body == nil) then
+   if (body == nil) then --он не может быть nil, потому что при изменениях происходит рестарт
       log_bus_events_error('Bus-event script "'..script_params.name..'" not stop (script body error)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: script body error'})
       return false
-   end
-
-   if (body.init ~= nil) then
-      if (type(body.init) ~= "function") then
-         log_bus_events_error('Bus-event script "'..script_params.name..'" not stop (init not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: init not function'})
-         return false
-      end
-   end
-
-   if (body.destroy ~= nil) then
-      if (type(body.destroy) ~= "function") then
-         log_bus_events_error('Bus-event script "'..script_params.name..'" not stop (destroy not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy not function'})
-         return false
-      end
-
-      local destroy_status, destroy_returned_data = pcall(body.destroy)
-      if (destroy_status ~= true) then
-         log_bus_events_error('Bus-event script "'..script_params.name..'" not stop (destroy function error: '..(destroy_returned_data or "")..')', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(destroy_returned_data or "")})
-         return false
-      end
-      if (destroy_returned_data == false) then
-         log_bus_events_warning('Bus-event script "'..script_params.name..'" not stopped, need restart glial', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glial'})
-         return false
-      end
    end
 
    log_bus_events_info('Bus-event script "'..script_params.name..'" set status to non-active', script_params.uuid)

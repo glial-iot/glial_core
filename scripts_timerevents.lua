@@ -80,30 +80,6 @@ function timer_events_private.load(uuid)
       return false
    end
 
-   if (body.destroy ~= nil) then
-      if (type(body.destroy) ~= "function") then
-         log_timer_events_error('Timer-event script "'..script_params.name..'" not start (destroy not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: destroy not function'})
-         return false
-      end
-   end
-
-   if (body.init ~= nil) then
-      if (type(body.init) ~= "function") then
-         log_timer_events_error('Timer-event script "'..script_params.name..'" not start (init not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init not function'})
-         return false
-      end
-
-      local init_status, init_returned_data = pcall(body.init)
-
-      if (init_status ~= true) then
-         log_timer_events_error('Timer-event script "'..script_params.name..'" not start (init function error: '..(init_returned_data or "")..')', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: init function error: '..(init_returned_data or "")})
-         return false
-      end
-   end
-
    if (body.event_handler == nil or type(body.event_handler) ~= "function") then
       log_timer_events_error('Timer-event "'..script_params.name..'" not start ("event_handler" function not found or no function)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Start: "event_handler" function not found or no function'})
@@ -146,33 +122,6 @@ function timer_events_private.unload(uuid)
       log_timer_events_error('Timer-event script "'..script_params.name..'" not stop (script body error)', script_params.uuid)
       scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: script body error'})
       return false
-   end
-
-   if (body.init ~= nil) then
-      if (type(body.init) ~= "function") then
-         log_timer_events_error('Timer-event script "'..script_params.name..'" not stop (init not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: init not function'})
-         return false
-      end
-   end
-
-   if (body.destroy ~= nil) then
-      if (type(body.destroy) ~= "function") then
-         log_timer_events_error('Timer-event script "'..script_params.name..'" not stop (destroy not function)', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy not function'})
-         return false
-      end
-      local destroy_status, destroy_returned_data = pcall(body.destroy)
-      if (destroy_status ~= true) then
-         log_timer_events_error('Timer-event script "'..script_params.name..'" not stop (destroy function error: '..(destroy_returned_data or "")..')', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.ERROR, status_msg = 'Stop: destroy function error: '..(destroy_returned_data or "")})
-         return false
-      end
-      if (destroy_returned_data == false) then
-         log_timer_events_warning('Timer-event script "'..script_params.name..'" not stopped, need restart glial', script_params.uuid)
-         scripts.update({uuid = uuid, status = scripts.statuses.WARNING, status_msg = 'Not stopped, need restart glial'})
-         return false
-      end
    end
 
    log_timer_events_info('Timer-event script "'..script_params.name..'" set status to non-active', script_params.uuid)
