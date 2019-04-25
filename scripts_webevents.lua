@@ -123,7 +123,6 @@ function web_events_private.load(uuid)
 
 end
 
-
 function web_events_private.unload(uuid)
    local body = web_events_script_bodies[uuid]
    local script_params = scripts.get({uuid = uuid})
@@ -146,7 +145,6 @@ function web_events_private.unload(uuid)
    web_events_script_bodies[uuid] = nil
    return true
 end
-
 
 function web_events_private.reload(uuid)
    local data = scripts.get({uuid = uuid})
