@@ -6,6 +6,7 @@ local log = require 'log'
 local inspect = require 'libs/inspect'
 local box = box
 local clock = require 'clock'
+local digest = require 'digest'
 
 local system = require 'system'
 local config = require 'config'
@@ -42,7 +43,12 @@ function settings_private.http_api_set_param(params, req)
       return req:render{ json = {result = false, error_msg = "No parameter value"} }
    end
 
-   local result = settings.set(params["name"], params["value"], params["description"])
+   local description
+   if (params["description"] ~= nil) then
+      description = digest.base64_decode(params["description"])
+   end
+
+   local result = settings.set(params["name"], params["value"], description or "")
    return req:render{ json = {result = result} }
 end
 
