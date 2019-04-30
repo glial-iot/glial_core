@@ -44,11 +44,17 @@ function settings_private.http_api_set_param(params, req)
    end
 
    local description
+   local value
+
    if (params["description"] ~= nil) then
       description = digest.base64_decode(params["description"])
    end
 
-   local result = settings.set(params["name"], params["value"], description or "")
+   if (params["value"] ~= nil) then
+      value = digest.base64_decode(params["value"])
+   end
+
+   local result = settings.set(params["name"], value, description or "")
    return req:render{ json = {result = result} }
 end
 
