@@ -524,7 +524,7 @@ describe("Testing #functions", function()
 
         -- Check that script is created
         local scripts_list = getScriptsList("driver")
-        assert.are_not.equal(nil, string.match(scripts_list, round_function_script.name))
+        assert.are_not.equal(nil, string.match(scripts_list, settings_function_script.name))
         sleep(200)
 
         -- Check that bus contains setting name, value, description and bool.
