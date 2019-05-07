@@ -515,6 +515,7 @@ describe("Testing #functions", function()
     test("Check get_settings_value() function.", function()
         -- Create test setting
         local setting = setTestSetting("test_setting", 100, "test_description")
+        print(inspect(setting))
         sleep(200)
 
         -- Create driver that creates bus entries from test setting name, value and description

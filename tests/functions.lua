@@ -231,5 +231,5 @@ function getLatestUserBackup ()
 end
 
 function setTestSetting (setting_name, setting_value, setting_description)
-    return json.decode(makeApiCall("settings", "GET", "action=set&name=" .. setting_name .. "&value=" .. setting_value .. "&description=" .. setting_description))
+    return json.decode(makeApiCall("settings", "GET", "action=set&name=" .. setting_name .. "&value=" .. base64.encode(setting_value) .. "&description=" .. base64.encode(setting_description)))
 end
