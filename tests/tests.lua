@@ -512,6 +512,43 @@ describe("Testing #functions", function()
 
     end)
 
+    test("Check get_settings_value() function.", function()
+        -- Create test setting
+        local setting = setTestSetting("test_setting", 100, "test_description")
+        sleep(200)
+
+        -- Create driver that creates bus entries from test setting name, value and description
+        local settings_function_script = createScriptFromFile("driver", "./test_scripts/modifies_bus_setting_values.lua")
+        setScriptActiveFlag("driver", settings_function_script.uuid, "ACTIVE")
+        sleep(200)
+
+        -- Check that script is created
+        local scripts_list = getScriptsList("driver")
+        assert.are_not.equal(nil, string.match(scripts_list, round_function_script.name))
+        sleep(200)
+
+        -- Check that bus contains setting name, value, description and bool.
+        local bus_topic_setting_bool = getBusTopicsByMask("/test/functions/setting_bool", 1)
+        local bus_topic_setting_value = getBusTopicsByMask("/test/functions/setting_value", 1)
+        local bus_topic_setting_name = getBusTopicsByMask("/test/functions/setting_name", 1)
+        local bus_topic_setting_description = getBusTopicsByMask("/test/functions/setting_description", 1)
+        assert.are.equal("true", bus_topic_setting_bool[1].value)
+        assert.are.equal(100, tonumber(bus_topic_setting_value[1].value))
+        assert.are.equal("test_setting", bus_topic_setting_name[1].value)
+        assert.are.equal("test_description", bus_topic_setting_description[1].value)
+
+        -- Check that bus contains setting bool and value of unexisting setting called with default value
+        local bus_topic_unex_setting_bool = getBusTopicsByMask("/test/functions/unex_setting_bool", 1)
+        local bus_topic_unex_setting_value = getBusTopicsByMask("/test/functions/unex_setting_value", 1)
+        assert.are.equal("true", bus_topic_unex_setting_bool[1].value)
+        assert.are.equal(200, tonumber(bus_topic_unex_setting_value[1].value))
+
+        -- Check that bus contains false value of unexisting setting called without default value
+        local bus_topic_real_unex_setting_bool = getBusTopicsByMask("/test/functions/real_unex_setting_bool", 1)
+        assert.are.equal("false", bus_topic_real_unex_setting_bool[1].value)
+
+    end)
+
 end)
 
 test("Kill #tarantool (required for #script, #logs, #bus, #functions and #backups tests)", function()

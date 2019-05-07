@@ -27,7 +27,8 @@ function makeApiCall (type , method, parameters, payload, web_event_endpoint)
         ["backup"] = "/backups",
         ["log"] = "/logger",
         ["system_event"] = "/system_event",
-        ["system_bus"] = "/system_bus"
+        ["system_bus"] = "/system_bus",
+        ["settings"] = "/settings"
     }
     local active_endpoint = tarantool_url .. endpoints[type]
 
@@ -227,4 +228,8 @@ function getLatestUserBackup ()
         return x.comment == "User created backup" and string.match(x.time_text, "seconds")
     end, backups_list))
     return recent_backups[1]
+end
+
+function setTestSetting (setting_name, setting_value, setting_description)
+    return json.decode(makeApiCall("settings", "GET", "action=set&name=" .. setting_name .. "&value=" .. setting_value .. "&description=" .. setting_description))
 end
