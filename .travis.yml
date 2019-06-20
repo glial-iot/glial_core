@@ -61,3 +61,6 @@ after_success:
   - git add --all
   - git commit --message "Travis build $TRAVIS_BUILD_NUMBER"
   - git push --quiet --set-upstream origin-pages master
+
+  # Trigger Docker Hub autobuild of glial/glial container.
+  - curl -X POST https://cloud.docker.com/api/build/v1/source/6890a10e-b3cd-47e9-a976-117c3b119792/trigger/${DOCKER_HUB_URL_PART}/call/
