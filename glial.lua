@@ -35,6 +35,9 @@ local function start()
    box.cfg {
       hot_standby = true, --С этой опцией он может использовать заблокированный журнал, что полезно при запуске после горячей перезагрузки, когда файл блокировки не удаляется
 --    force_recovery = true, --С этой опцией он будет пытаться прочитать поврежденный журнал, но при bad magic это не помогает
+--    wal_mode = "fsync",
+      checkpoint_interval = 120,
+      checkpoint_count  = 2,
       listen = tarantool_bin_port,
       log_level = 4,
       memtx_dir = tarantool_wal_dir,
