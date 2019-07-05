@@ -4,6 +4,7 @@ local private = {}
 local logger = require 'logger'
 local system = require 'system'
 local fiber = require 'fiber'
+local settings = require 'settings'
 
 function private.update(req)
    local _, version_type = system.version()
@@ -39,7 +40,8 @@ function private.system_action_http_api(req)
       return_object = req:render{ json = { result = true } }
    elseif (params["action"] == "get_git_version") then
       local version, version_type = system.version()
-      return_object = req:render{ json = { version = version, version_type = version_type } }
+      local _, company_name = settings.get("company_name", "")
+      return_object = req:render{ json = { version = version, version_type = version_type, company_name = company_name } }
    elseif (params["action"] == "get_pid") then
       return_object = req:render{ json = { pid = require('tarantool').pid() } }
    elseif (params["action"] == "update") then
