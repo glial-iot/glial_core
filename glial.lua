@@ -18,7 +18,7 @@ local config = require 'config'
 local backup_restore = require 'backup_restore'
 local settings = require 'settings'
 
-local function get_config(tarantool_bin_port, tarantool_wal_dir)
+local function get_config(tarantool_bin_port, tarantool_wal_dir, log_point)
    return {
       hot_standby = true, --С этой опцией он может использовать заблокированный журнал, что полезно при запуске после горячей перезагрузки, когда файл блокировки не удаляется
 --    force_recovery = true, --С этой опцией он будет пытаться прочитать поврежденный журнал, но при bad magic это не помогает
@@ -48,7 +48,7 @@ local function start()
    system.dir_check(config.dir.BACKUP)
    system.dir_check(config.dir.DUMP_FILES)
 
-   box.cfg(get_config(tarantool_bin_port, tarantool_wal_dir))
+   box.cfg(get_config(tarantool_bin_port, tarantool_wal_dir, log_point))
 
    if (tarantool_bin_port ~= nil) then
       print("Tarantool server runned on "..tarantool_bin_port.." port")
