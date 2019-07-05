@@ -35,7 +35,7 @@ function private.system_action_http_api(req)
       system.wait_and_exit()
       return_object = req:render{ json = { result = true } }
    elseif (params["action"] == "wipe_storage") then
-      os.execute("rm -rf ./db")
+      os.execute("rm -rf ./db") --не будет удалять папку, если она называется по-другому
       system.wait_and_exit()
       return_object = req:render{ json = { result = true } }
    elseif (params["action"] == "get_git_version") then
