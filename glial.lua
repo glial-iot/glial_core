@@ -18,6 +18,20 @@ local config = require 'config'
 local backup_restore = require 'backup_restore'
 local settings = require 'settings'
 
+local box_config = {
+      hot_standby = true, --С этой опцией он может использовать заблокированный журнал, что полезно при запуске после горячей перезагрузки, когда файл блокировки не удаляется
+--    force_recovery = true, --С этой опцией он будет пытаться прочитать поврежденный журнал, но при bad magic это не помогает
+--    wal_mode = "fsync", --надо добавить в сеттингс, снижает производительность, но улучшает отказоустойчивость: сбрасывает кеш на диск после каждой операции записи
+      checkpoint_interval = 120,
+      checkpoint_count  = 2,
+      listen = tarantool_bin_port,
+      log_level = 4,
+      memtx_dir = tarantool_wal_dir,
+      vinyl_dir = tarantool_wal_dir,
+      wal_dir = tarantool_wal_dir,
+      log = log_point
+   }
+
 local function start()
    local tarantool_bin_port = tonumber(os.getenv('TARANTOOL_BIN_PORT'))
    local glial_http_port = tonumber(os.getenv('HTTP_PORT')) or config.HTTP_PORT
@@ -32,19 +46,7 @@ local function start()
    system.dir_check(config.dir.BACKUP)
    system.dir_check(config.dir.DUMP_FILES)
 
-   box.cfg {
-      hot_standby = true, --С этой опцией он может использовать заблокированный журнал, что полезно при запуске после горячей перезагрузки, когда файл блокировки не удаляется
---    force_recovery = true, --С этой опцией он будет пытаться прочитать поврежденный журнал, но при bad magic это не помогает
---    wal_mode = "fsync",
-      checkpoint_interval = 120,
-      checkpoint_count  = 2,
-      listen = tarantool_bin_port,
-      log_level = 4,
-      memtx_dir = tarantool_wal_dir,
-      vinyl_dir = tarantool_wal_dir,
-      wal_dir = tarantool_wal_dir,
-      log = log_point
-   }
+   box.cfg(box_config)
 
    if (tarantool_bin_port ~= nil) then
       print("Tarantool server runned on "..tarantool_bin_port.." port")
