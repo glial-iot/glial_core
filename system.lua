@@ -96,6 +96,19 @@ function system.dir_check(dir_path)
    return true
 end
 
+function system.wal_files_check(dir_path)
+   local xlog = require('xlog')
+   local files_list = system.get_files_in_dir(dir_path, ".+")
+
+   for i, filename in pairs(files_list) do
+      result = pcall(xlog.pairs, filename)
+      if (result == false) then
+         return false
+      end
+   end
+   return true
+end
+
 function system.get_files_in_dir(path, mask)
    local files = {}
    local i = 1
