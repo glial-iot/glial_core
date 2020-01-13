@@ -1,6 +1,6 @@
 FROM tarantool/tarantool:1.10.0
 
-RUN apk add --no-cache tzdata git bash lua-dev gcc musl-dev make
+RUN apk add --no-cache tzdata git bash lua-dev gcc musl-dev make cmake
 
 RUN luarocks install inspect
 RUN luarocks install luasocket
