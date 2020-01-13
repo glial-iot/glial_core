@@ -170,7 +170,7 @@ function web_events_private.generate_callback_func(handler)
          return_object = req:render{ json = json_result }
       else
          if (raw_result ~= nil) then
-            return_object = raw_result
+            return_object = {body = raw_result}
          else
             return_object = req:render{ json = {} }
          end
